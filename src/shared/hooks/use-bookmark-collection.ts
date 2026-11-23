@@ -22,11 +22,11 @@ const ITEMS_PER_PAGE = 24;
 export function useBookmarkCollection() {
   const isMounted = useMounted();
   const libraryItemsMap = useLibraryStore((state) => state.items);
-  const libraryItems = Object.values(libraryItemsMap);
-  const explicitNsfwRefs = new Set(
+  const libraryItems = React.useMemo(() => Object.values(libraryItemsMap), [libraryItemsMap]);
+  const explicitNsfwRefs = React.useMemo(() => new Set(
     libraryItems.filter(item => item.isNsfw === true)
       .map(item => canonicalSourceKey(item.sourceId, item.mangaId))
-  );
+  ), [libraryItems]);
   const historyItemsMap = useHistoryStore((state) => state.items);
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);

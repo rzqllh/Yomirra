@@ -16,12 +16,12 @@ import { toast } from "sonner";
 export function useBookmarkReading() {
   const isMounted = useMounted();
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
-  useHistoryStore((state) => state.items);
+  const allHistoryItems = useHistoryStore((state) => state.items);
   const savedLibraryItems = useLibraryStore((state) => state.items);
-  const explicitNsfwRefs = new Set(
+  const explicitNsfwRefs = React.useMemo(() => new Set(
     Object.values(savedLibraryItems).filter(item => item.isNsfw === true)
       .map(item => canonicalSourceKey(item.sourceId, item.mangaId))
-  );
+  ), [savedLibraryItems]);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
@@ -34,7 +34,8 @@ export function useBookmarkReading() {
     [nsfwSourceIds]
   );
 
-  const rawHistoryItems = isMounted ? getHistoryList() : [];
+  const rawHistoryItems = React.useMemo(() => isMounted ? getHistoryList() : [],
+    [isMounted, getHistoryList, allHistoryItems]);
 
   let historyItems = rawHistoryItems.filter((item) => {
     const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
