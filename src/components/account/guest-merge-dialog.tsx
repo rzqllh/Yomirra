@@ -363,18 +363,18 @@ export function GuestMergeDialog() {
 
         {/* All preferred-source conflicts are presented in one review, never
             resolved by last-write-wins or another title's chapter progress. */}
-        {diff.conflictingPreferredSources.length > 0 && (
+        {(diff.conflictingPreferredSources?.length ?? 0) > 0 && (
           <section className="space-y-3 rounded-xl border border-border-default bg-surface-base p-3"
             aria-label="Konflik sumber utama">
             <h3 className="text-sm font-bold text-text-primary">
-              Pilih sumber utama ({diff.conflictingPreferredSources.length} judul)
+              Pilih sumber utama ({diff.conflictingPreferredSources?.length ?? 0} judul)
             </h3>
             <p className="text-xs text-text-secondary">
               Perangkat dan akun punya pilihan berbeda. Tentukan satu sumber untuk tiap judul.
               Pilihan ini disinkronkan setelah seluruh penggabungan berhasil.
             </p>
             <div className="max-h-48 overflow-y-auto space-y-2">
-              {diff.conflictingPreferredSources.map(conflict => (
+              {(diff.conflictingPreferredSources ?? []).map(conflict => (
                 <label key={conflict.canonicalId} className="block space-y-1">
                   <span className="block text-xs font-semibold text-text-primary break-all">{conflict.canonicalId}</span>
                   <select

@@ -53,7 +53,7 @@ export interface MergeDiff {
   guestOnlyHistoryCount: number;
   cloudOnlyHistoryCount: number;
   conflictingHistoryCount: number;
-  conflictingPreferredSources: PreferredSourceConflict[];
+  conflictingPreferredSources?: PreferredSourceConflict[];
   totalMergedLibraryCount: number;
   totalMergedHistoryCount: number;
 }
