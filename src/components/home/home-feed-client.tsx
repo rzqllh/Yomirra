@@ -78,6 +78,12 @@ export function HomeFeedClient({
   const historyItems = React.useMemo(() => {
     if (!isMounted || !historyItemsMap) return [];
 
+    const explicitNsfwRefs = new Set([
+      ...Object.values(savedLibraryMap),
+      ...Object.values(historyItemsMap),
+    ].filter(value => value.isNsfw === true).map(value =>
+      canonicalSourceKey(value.sourceId, value.mangaId)
+    ));
     const rawHistoryItems = getContinueReading(50);
     let result = rawHistoryItems.filter((item) => {
       const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
@@ -94,7 +100,8 @@ export function HomeFeedClient({
         result = [];
       } else {
         result = result.filter(
-          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw) &&
+            !explicitNsfwRefs.has(canonicalSourceKey(item.sourceId, item.mangaId))
         );
       }
     }
@@ -118,12 +125,18 @@ export function HomeFeedClient({
 
       const group = byKey.get(catalogKey);
       if (!group) {
-        cards.push(item);
+        cards.push({
+          ...item,
+          canonicalDetailHref: getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`),
+        });
         continue;
       }
 
       const bindings = group.sourceBindings.filter(ref =>
-        !hideNsfw || (nsfwStatus === "KNOWN" && !isFromNsfwSource(ref.sourceId))
+        !hideNsfw || (nsfwStatus === "KNOWN" &&
+          !isFromNsfwSource(ref.sourceId) &&
+          !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId, ref.mangaId))
+        )
       );
       if (!bindings.length) continue;
 
