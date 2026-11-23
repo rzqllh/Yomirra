@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MangaSourceSelector } from "../manga-source-selector";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ vi.mock("sonner", () => ({
 
 describe("MangaSourceSelector (Phase 6 UI)", () => {
   beforeEach(() => {
+    useSourcePreferencesStore.setState({ disabledSources: [] });
     useSettingsStore.setState({
       perTitleSourcePreferences: {},
     });
