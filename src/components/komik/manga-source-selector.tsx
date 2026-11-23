@@ -66,6 +66,9 @@ export function MangaSourceSelector({
   const isCurrentPreferred = perTitlePref ? perTitlePref === sourceId : false;
 
   const linkedSources = (libraryItem?.linkedSources || []).filter((linked) => {
+    // A heuristic match is not an identity binding and must never become
+    // another selectable preferred source without explicit confirmation.
+    if (linked.matchConfidence !== "CONFIRMED") return false;
     if (linked.sourceId === sourceId && linked.mangaId === mangaId) return false;
     const source = getSourceMetadata(linked.sourceId);
     if (!source || disabledSources.includes(linked.sourceId)) return false;
