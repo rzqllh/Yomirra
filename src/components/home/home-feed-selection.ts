@@ -64,6 +64,30 @@ function isVerifiedHomeDuplicate(
   return Boolean(a && b && a === b);
 }
 
+/**
+ * The recently-updated shelf must not merge distinct works just because their
+ * titles match. Only exact source refs or verified saved provenance dedupe.
+ */
+export function selectRecentlyUpdatedItems(
+  items: HomeFeedManga[],
+  personalizedKeys: ReadonlySet<string>,
+  limit = 50,
+  verifiedIndex: ReadonlyMap<string, string> = new Map(),
+): HomeFeedManga[] {
+  if (limit <= 0) return [];
+  const seen = new Set<string>();
+  const result: HomeFeedManga[] = [];
+  for (const item of items) {
+    const ref = canonicalSourceKey(item.sourceId, item.id);
+    const identity = verifiedIndex.get(ref) ?? ref;
+    if (personalizedKeys.has(identity) || seen.has(identity)) continue;
+    seen.add(identity);
+    result.push(item);
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
 function uniqueEligibleItems(
   items: HomeFeedManga[],
   verifiedIndex?: ReadonlyMap<string, string>,

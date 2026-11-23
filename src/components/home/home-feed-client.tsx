@@ -23,10 +23,10 @@ import { SectionStack } from "@/components/ui/section-stack";
 import { HomeHero } from "./home-hero";
 import {
   selectHeroCandidates,
+  selectRecentlyUpdatedItems,
   selectSpotlightItems,
   type HomeFeedManga,
 } from "./home-feed-selection";
-import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
@@ -198,14 +198,6 @@ export function HomeFeedClient({
     isFromNsfwSource,
   ]);
 
-  const personalizedIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    historyItems.forEach((item) =>
-      ids.add(`${item.sourceId}-${item.mangaId}`)
-    );
-    return ids;
-  }, [historyItems]);
-
   const filteredPopular = React.useMemo(() => {
     return unifiedPopular.filter((manga) => {
       if (isSourceDisabled(manga.sourceId)) return false;
@@ -241,6 +233,13 @@ export function HomeFeedClient({
     )),
     [savedLibraryMap],
   );
+
+  const personalizedKeys = React.useMemo(() => new Set(
+    historyItems.map(item => {
+      const ref = canonicalSourceKey(item.sourceId, item.mangaId);
+      return verifiedDiscoveryIndex.get(ref) ?? ref;
+    })
+  ), [historyItems, verifiedDiscoveryIndex]);
 
   const spotlightItems = React.useMemo(
     () => selectSpotlightItems(discoveryItems, 10, verifiedDiscoveryIndex),
@@ -328,25 +327,10 @@ export function HomeFeedClient({
   const currentSpotlight =
     spotlightItems[spotlightIndex] ?? spotlightItems[0];
 
-  const updateHariIni = React.useMemo(() => {
-    const seenTitles = new Set<string>();
-    const result: HomeFeedManga[] = [];
-
-    for (const item of filteredLatest) {
-      if (personalizedIds.has(`${item.sourceId}-${item.id}`)) continue;
-
-      const norm = normalizeTitle(item.title);
-      const dedupeKey = norm || `${item.sourceId}-${item.id}`;
-
-      if (seenTitles.has(dedupeKey)) continue;
-      seenTitles.add(dedupeKey);
-      result.push(item);
-
-      if (result.length >= 50) break;
-    }
-
-    return result;
-  }, [filteredLatest, personalizedIds]);
+  const updateHariIni = React.useMemo(
+    () => selectRecentlyUpdatedItems(filteredLatest, personalizedKeys, 50, verifiedDiscoveryIndex),
+    [filteredLatest, personalizedKeys, verifiedDiscoveryIndex]
+  );
 
   return (
     <SectionStack level="page">
