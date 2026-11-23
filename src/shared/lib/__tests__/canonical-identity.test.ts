@@ -77,7 +77,8 @@ describe("verified canonical grouping (non-destructive)", () => {
     const reverse = groupVerifiedCatalogEntries([b, a])[0];
     expect(forward.representative.id).toBe("a-cloud");
     expect(reverse.representative.id).toBe(forward.representative.id);
-    expect(forward.representative.coverUrl).toBe(reverse.representative.coverUrl);
+    expect(forward.representative).toMatchObject({ coverUrl: "/komiku-cover.png" });
+    expect(reverse.representative).toMatchObject({ coverUrl: "/komiku-cover.png" });
   });
 
 });
