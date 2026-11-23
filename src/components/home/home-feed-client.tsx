@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import { useReducedMotion } from "motion/react";
-import { useHistoryStore } from "@/shared/store/history-store";
+import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import {
+  canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups,
+  canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases,
+} from "@/shared/lib/canonical-identity";
+import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
@@ -46,6 +53,8 @@ export function HomeFeedClient({
 
   const historyItemsMap = useHistoryStore((state) => state.items);
   const getContinueReading = useHistoryStore((state) => state.getContinueReading);
+  const savedLibraryMap = useLibraryStore((state) => state.items);
+  const perTitlePrefs = useSettingsStore((state) => state.perTitleSourcePreferences);
 
   const { isSourceDisabled } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
@@ -90,7 +99,77 @@ export function HomeFeedClient({
       }
     }
 
-    return result.slice(0, 10);
+    const verifiedGroups = groupVerifiedCatalogEntries(
+      Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
+    );
+    const lookup = indexVerifiedGroups(verifiedGroups);
+    const byKey = new Map(verifiedGroups.map(group => [group.displayKey, group]));
+    const seen = new Set<string>();
+    const cards: Array<HistoryItem & {
+      canonicalDetailHref?: string;
+      resumeHref?: string;
+    }> = [];
+
+    for (const item of result) {
+      const refKey = canonicalSourceKey(item.sourceId, item.mangaId);
+      const catalogKey = lookup.get(refKey) ?? refKey;
+      if (seen.has(catalogKey)) continue;
+      seen.add(catalogKey);
+
+      const group = byKey.get(catalogKey);
+      if (!group) {
+        cards.push(item);
+        continue;
+      }
+
+      const bindings = group.sourceBindings.filter(ref =>
+        !hideNsfw || (nsfwStatus === "KNOWN" && !isFromNsfwSource(ref.sourceId))
+      );
+      if (!bindings.length) continue;
+
+      const aliases = canonicalGroupPreferenceAliases(group);
+      const preferenceKey = canonicalGroupPreferenceKey(group);
+      const choice = perTitlePrefs[preferenceKey];
+      const legacyChoices = aliases.map(key => perTitlePrefs[key]).filter(Boolean);
+      const hasConflict = !choice && new Set(legacyChoices).size > 1;
+      const preferredSourceId = choice ?? legacyChoices[0];
+
+      const missing = bindings.filter(ref => {
+        const source = dynamicSourceRegistry.get(ref.sourceId);
+        return source?.status === "unavailable" || source?.status === "in-fix";
+      }).map(ref => ref.sourceId);
+
+      const decision = !hasConflict
+        ? resolveCanonicalResume({
+            bindings,
+            preferredSourceId,
+            lastRead: result.filter(history =>
+              bindings.some(ref =>
+                ref.sourceId === history.sourceId && ref.mangaId === history.mangaId
+              )
+            ).map(history => ({
+              sourceId: history.sourceId,
+              mangaId: history.mangaId,
+              chapterId: history.chapterId,
+              readAt: Number(history.readAt) || 0,
+            })),
+            disabledSourceIds: bindings.filter(ref => isSourceDisabled(ref.sourceId))
+              .map(ref => ref.sourceId),
+            unavailableSourceIds: missing,
+          })
+        : { action: "pick-source" as const };
+      const linkId = group.members[0].id ??
+        `${group.members[0].sourceId}::${group.members[0].mangaId}`;
+      const canonicalDetailHref = getCanonicalSavedDetailHref(linkId);
+      const resumeHref = decision.action === "resume"
+        ? decision.chapterId
+          ? getReaderHref(decision.source.sourceId, decision.source.mangaId, decision.chapterId, "/")
+          : getMangaDetailHref(decision.source.sourceId, decision.source.mangaId, "/")
+        : canonicalDetailHref;
+      cards.push({ ...item, canonicalDetailHref, resumeHref });
+    }
+
+    return cards.slice(0, 10);
   }, [
     isMounted,
     historyItemsMap,
@@ -99,6 +178,8 @@ export function HomeFeedClient({
     isSourceDisabled,
     hideNsfw,
     nsfwStatus,
+    savedLibraryMap,
+    perTitlePrefs,
     isFromNsfwSource,
   ]);
 
