@@ -491,34 +491,7 @@ export function ContinuousVerticalReader({
             <Warning size={18} weight="fill" className="shrink-0" />
             <span>{failedPageIndices.size} halaman gagal dimuat</span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {onRefreshChapter && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 text-xs px-2.5 rounded-lg"
-                onClick={async () => {
-                  const fresh = await onRefreshChapter();
-                  if (fresh) {
-                    setFailedPageIndices(new Set());
-                    toast.success("Halaman chapter disegarkan");
-                  }
-                }}
-              >
-                Segarkan
-              </Button>
-            )}
-            {onOpenAlternateSource && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs px-2.5 rounded-lg border-semantic-warning/40 text-semantic-warning hover:bg-semantic-warning/10 font-bold"
-                onClick={onOpenAlternateSource}
-              >
-                Ganti Sumber
-              </Button>
-            )}
-          </div>
+          <span className="text-text-muted text-right">Coba lagi pada gambar yang gagal</span>
         </div>
       )}
 
