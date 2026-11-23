@@ -313,6 +313,25 @@ export function useSync(options = { autoSync: true }) {
         console.error("Failed to pull source preferences during sync", error);
       }
 
+      // Canonical source preferences are owner-scoped and independently retried.
+      // Never copy an unverified guest preference into a logged-in cloud account.
+      if (isCurrentUser()) {
+        const api = await import("@/shared/lib/canonical-preference-cloud");
+        const store = useSettingsStore.getState();
+        const pending = store.pendingCanonicalOwnerUid === uid
+          ? { ...store.pendingCanonicalSourcePrefs } : {};
+        for (const [canonicalId, sourceId] of Object.entries(pending)) {
+          if (!isCurrentUser()) return;
+          await api.writeCanonicalPreferredSource(uid, canonicalId, sourceId);
+          if (!isCurrentUser()) return;
+          useSettingsStore.getState().acknowledgeCanonicalSourcePref(uid, canonicalId, sourceId);
+        }
+        if (!isCurrentUser()) return;
+        const remoteSources = await api.readCanonicalPreferredSources(uid);
+        if (!isCurrentUser()) return;
+        useSettingsStore.getState().applyCloudCanonicalSourcePrefs(uid, remoteSources);
+      }
+
       try {
         const cloudCollections = await pullCustomCollections(); cloudCollectionsResult = cloudCollections;
         if (isCurrentUser() && cloudCollections) {
@@ -428,6 +447,7 @@ export function useSync(options = { autoSync: true }) {
     let unsubscribeLibrary: (() => void) | undefined;
     let unsubscribeHistory: (() => void) | undefined;
     let unsubscribePreferences: (() => void) | undefined;
+    let unsubscribeCanonicalPreferences: (() => void) | undefined;
 
     initFirebase().then(async ({ db, auth }) => {
       if (!db || isCancelled) return;
@@ -493,6 +513,21 @@ export function useSync(options = { autoSync: true }) {
           );
         }
       }, (error) => console.error("Pref sync error", error));
+
+      unsubscribeCanonicalPreferences = onSnapshot(
+        doc(db, `users/${uid}/preferences`, "canonicalSources"),
+        preferenceSnapshot => {
+          if (!isCurrentAccount()) return;
+          void import("@/shared/lib/canonical-preference-cloud").then(api => {
+            if (!isCurrentAccount()) return;
+            useSettingsStore.getState().applyCloudCanonicalSourcePrefs(
+              uid,
+              api.decodeCanonicalPreferenceMap(preferenceSnapshot.data()?.values),
+            );
+          });
+        },
+        error => console.error("Canonical source preference listener error", error),
+      );
     }).catch((error) => console.error("Failed to start realtime sync", error));
 
     return () => {
@@ -500,6 +535,7 @@ export function useSync(options = { autoSync: true }) {
       unsubscribeLibrary?.();
       unsubscribeHistory?.();
       unsubscribePreferences?.();
+      unsubscribeCanonicalPreferences?.();
     };
   }, [userUid, isBlockedByMerge]);
 
