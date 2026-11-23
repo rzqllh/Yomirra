@@ -7,7 +7,13 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { HistoryCard } from "@/components/komik/card/history-card";
-import { getLibraryHref, getSearchHref, getCanonicalSavedDetailHref } from "@/shared/lib/routes";
+import { getLibraryHref, getSearchHref, getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { canonicalSourceKey } from "@/shared/lib/canonical-identity";
 import { getRelativeTime } from "@/shared/utils/date";
 
 export { getRelativeTime };
@@ -21,6 +27,7 @@ export interface ReadingTabProps {
     sourceName?: string;
     latestReadAt: number;
     chapters: Array<any>;
+    preferenceKey?: string;
   }>;
   pendingDeletions: Set<string>;
   onRemoveHistory: (sourceId: string, mangaId: string, mangaTitle: string) => void;
@@ -32,6 +39,19 @@ export function ReadingTab({
   onRemoveHistory,
 }: ReadingTabProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const perTitlePrefs = useSettingsStore(state => state.perTitleSourcePreferences);
+  const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
+  const [deviceOffline, setDeviceOffline] = React.useState(false);
+  React.useEffect(() => {
+    const check = () => setDeviceOffline(navigator.onLine === false);
+    check();
+    window.addEventListener("online", check);
+    window.addEventListener("offline", check);
+    return () => {
+      window.removeEventListener("online", check);
+      window.removeEventListener("offline", check);
+    };
+  }, []);
 
   const visibleHistory = React.useMemo(
     () =>
@@ -127,11 +147,42 @@ export function ReadingTab({
               mangaTitle: chapter.mangaTitle || group.mangaTitle,
               coverUrl: chapter.coverUrl || group.coverUrl,
             };
+            const canonicalHref = getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`);
+            const bindings = Array.from(new Map(group.chapters.map(ch => [
+              canonicalSourceKey(ch.sourceId, ch.mangaId),
+              { sourceId: ch.sourceId as string, mangaId: ch.mangaId as string },
+            ])).values());
+            const preferredSourceId = (group.preferenceKey ? perTitlePrefs[group.preferenceKey] : undefined)
+              ?? group.chapters.map(ch => perTitlePrefs[`${ch.sourceId}::${ch.mangaId}`]).find(Boolean);
+            const staleSources = bindings.filter(ref => {
+              const source = dynamicSourceRegistry.get(ref.sourceId) ?? getSourceMetadata(ref.sourceId);
+              return !source || source.isEnabled === false || source.isInstalled === false ||
+                source.status === "unavailable" || source.status === "in-fix";
+            }).map(ref => ref.sourceId);
+            const decision = resolveCanonicalResume({
+              bindings,
+              preferredSourceId,
+              disabledSourceIds: disabledSources,
+              unavailableSourceIds: staleSources,
+              deviceOffline,
+              lastRead: group.chapters.map(ch => ({
+                sourceId: ch.sourceId as string, mangaId: ch.mangaId as string,
+                chapterId: ch.chapterId as string, readAt: Number(ch.readAt) || 0,
+              })),
+            });
+            // Fail closed to canonical detail/picker if source cannot be chosen
+            // safely (offline, unavailable, multiple candidates, conflicts).
+            const resumeHref = decision.action === "resume"
+              ? decision.chapterId
+                ? getReaderHref(decision.source.sourceId, decision.source.mangaId, decision.chapterId, "/library")
+                : getMangaDetailHref(decision.source.sourceId, decision.source.mangaId, "/library")
+              : canonicalHref;
             return (
               <HistoryCard
                 key={`${group.sourceId}::${group.mangaId}`}
                 item={item}
-                canonicalDetailHref={getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`)}
+                canonicalDetailHref={canonicalHref}
+                resumeHref={resumeHref}
                 className="bg-surface-raised border border-border-subtle hover:border-border-default shadow-xs w-full max-w-none snap-none"
                 onDeleteOverride={(sourceId, mangaId, title) => onRemoveHistory(sourceId, mangaId, title)}
               />

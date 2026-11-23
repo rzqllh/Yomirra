@@ -220,6 +220,7 @@ export interface MangaCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
   sourceBindings?: SourceBinding[];
   canonicalDetailHref?: string;
+  resumeHref?: string;
   showBookmarkAction?: boolean;
   rank?: number;
   latestChapterTime?: string;
@@ -243,6 +244,7 @@ export function MangaCard({
   showSourceBadge = false,
   sourceBindings,
   canonicalDetailHref,
+  resumeHref,
   showBookmarkAction = true,
   rank,
   latestChapterTime,
@@ -365,7 +367,7 @@ export function MangaCard({
   if (variant === "progress") {
     const effChapterId = chapterId || historyItem?.chapterId || "";
     const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? "Chapter" : "Detail");
-    const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath);
+    const readerHref = resumeHref ?? (effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath));
     const detailHref = canonicalDetailHref ?? getMangaDetailHref(sourceId, manga.id, fullPath);
 
     const updateItem =
@@ -504,7 +506,7 @@ export function MangaCard({
                   href={readerHref}
                   prefetch={false}
                   onClick={() => beginNavigationIntent(readerHref)}
-                  aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
+                  aria-label={resumeHref ? `Lanjut membaca ${manga.title}` : `Lanjut baca ${manga.title}, ${effChapterTitle}`}
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs",
                     "bg-accent text-accent-on hover:bg-accent-hover active:scale-95 focus-visible:outline-2 focus-visible:outline-accent",
