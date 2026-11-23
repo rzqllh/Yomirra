@@ -542,8 +542,9 @@ export function ContinuousVerticalReader({
                 onRefreshUrl={async () => {
                   if (onRefreshChapter) {
                     const fresh = await onRefreshChapter();
-                    if (fresh && fresh[item.pageIndex]) {
-                      return fresh[item.pageIndex].url;
+                    const replacement = fresh?.find(page => page.index === item.pageIndex);
+                    if (replacement) {
+                      return replacement.url;
                     }
                   }
                   return null;
