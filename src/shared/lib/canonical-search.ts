@@ -216,3 +216,25 @@ export function deduplicateResultsBySource(
 
   return clusterCanonicalResults(flattened);
 }
+
+/**
+ * A cached search-intelligence candidate may have inherited heuristic source
+ * links from an older index. Only keep alternates with the same verified work
+ * identity as the selected source; otherwise expose that one source alone.
+ */
+export function filterVerifiedSourceBindings<T extends { sourceId: string; mangaId: string }>(
+  candidates: readonly T[],
+  selected: T,
+  verifiedIndex: ReadonlyMap<string, string>,
+): T[] {
+  const selectedRef = JSON.stringify([selected.sourceId, selected.mangaId]);
+  const verifiedWork = verifiedIndex.get(selectedRef);
+  const seen = new Set<string>();
+  const safe = [selected, ...candidates].filter(candidate => {
+    const ref = JSON.stringify([candidate.sourceId, candidate.mangaId]);
+    if (seen.has(ref)) return false;
+    seen.add(ref);
+    return ref === selectedRef || Boolean(verifiedWork && verifiedIndex.get(ref) === verifiedWork);
+  });
+  return safe;
+}

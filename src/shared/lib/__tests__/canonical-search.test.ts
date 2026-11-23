@@ -2,10 +2,21 @@ import { describe, it, expect } from "vitest";
 import {
   clusterCanonicalResults,
   deduplicateResultsBySource,
+  filterVerifiedSourceBindings,
 } from "../canonical-search";
 import type { MangaItem } from "@/shared/sources/source-types";
 
 describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () => {
+  it("does not resurrect an unverified alternative from legacy cached semantic catalog", () => {
+    const a = { sourceId: "shinigami", mangaId: "first" };
+    const b = { sourceId: "asurascans", mangaId: "second" };
+    const c = { sourceId: "komiku", mangaId: "third" };
+    const index = new Map([[JSON.stringify([a.sourceId, a.mangaId]), "verified:1"], [JSON.stringify([b.sourceId,b.mangaId]), "verified:1"]]);
+    expect(filterVerifiedSourceBindings([a,b,c], a, index)).toEqual([a,b]);
+    expect(filterVerifiedSourceBindings([a,b,c], c, index)).toEqual([c]);
+    expect(filterVerifiedSourceBindings([a,b,c], a, new Map())).toEqual([a]);
+  });
+
   it("ignores repeated rows from the same provider without inventing another work", () => {
     const sameManga: MangaItem = {
       id: "solo-md",

@@ -18,7 +18,7 @@ import {
 } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
-import { clusterCanonicalResults } from "@/shared/lib/canonical-search";
+import { clusterCanonicalResults, filterVerifiedSourceBindings } from "@/shared/lib/canonical-search";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
 import {
@@ -512,15 +512,17 @@ export function useSearchCatalog() {
         : undefined;
       const primaryBinding = availableBindings[0] ?? fallbackBinding;
       if (!primaryBinding) return [];
+      const safeBindings = filterVerifiedSourceBindings(
+        availableBindings,
+        primaryBinding,
+        verifiedSourceIndex,
+      );
 
       return [
         {
           canonicalKey: candidate.canonicalKey,
           sourceId: primaryBinding.sourceId,
-          sourceBindings:
-            availableBindings.length > 0
-              ? availableBindings
-              : [primaryBinding],
+          sourceBindings: safeBindings,
           manga: {
             id: primaryBinding.mangaId,
             title: candidate.title,
@@ -533,15 +535,12 @@ export function useSearchCatalog() {
             status: candidate.status,
             score: candidate.score,
             sourceId: primaryBinding.sourceId,
-            sourceBindings:
-              availableBindings.length > 0
-                ? availableBindings
-                : [primaryBinding],
+            sourceBindings: safeBindings,
           },
         },
       ];
     });
-  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds]);
+  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex]);
 
   const combinedResults = React.useMemo(() => {
     const merged = new Map(
