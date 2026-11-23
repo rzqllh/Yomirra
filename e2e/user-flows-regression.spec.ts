@@ -52,8 +52,19 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
   });
 
   test("2. Returning reader state: displays continue reading card with milestone data", async ({ page }) => {
+    // This fixture uses a safe title from a provider now disabled by default.
+    // Opt in for this test only; do not change user defaults.
+    await page.context().addCookies([{
+      name: "yomirra-disabled-sources",
+      value: encodeURIComponent("[]"),
+      url: process.env.BASE_URL || "http://localhost:3000",
+    }]);
     // Seed a real HistoryItem shape and explicit settings to isolate the history UI.
     await page.addInitScript(() => {
+      localStorage.setItem("yomirra-source-preferences", JSON.stringify({
+        state: { disabledSources: [], hiddenFromHomeSources: [] },
+        version: 2,
+      }));
       localStorage.setItem("yomirra-settings", JSON.stringify({
         state: { hideNsfw: false }, version: 2,
       }));
