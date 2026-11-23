@@ -34,7 +34,7 @@ route
 → stores / queries / API client
 ```
 
-Search, Library, dan Rak Buku sudah memakai pola ini.
+Cari, Jelajah, dan Library sudah memakai pola ini.
 
 Ownership komponen lintas feature saat ini:
 
@@ -64,7 +64,7 @@ Shared contract ada di `src/shared/sources/source-types.ts`.
 
 Satu source gagal tidak boleh menggagalkan hasil source lain.
 
-Health runtime dan preferensi user adalah dua domain terpisah. Health menjelaskan apakah source saat ini dapat digunakan; preference menjelaskan apakah source ikut Beranda/Library/Populer. Recovery source tidak boleh menghapus preference user.
+Health runtime dan preferensi user adalah dua domain terpisah. Health menjelaskan apakah source saat ini dapat digunakan; preference menjelaskan apakah source ikut Beranda/Jelajah/Populer. Recovery source tidak boleh menghapus preference user.
 
 ## 4. Multi-source identity
 
@@ -84,7 +84,7 @@ Detail ada di [IDENTITY.md](IDENTITY.md).
 
 ## 5. Search flow
 
-Global Search bersifat multi-source dan independen dari Library/Popular source toggle.
+Cari global bersifat multi-source dan independen dari toggle sumber di Jelajah/Populer.
 
 ```text
 query
@@ -133,7 +133,7 @@ Tidak ada dependency AI untuk recommendation core.
 
 Smart Collections adalah derived state dari Library + History.
 
-Ia tidak menulis automatic membership ke persisted collection store. Koleksi buatan user dan Smart Collections adalah dua domain berbeda di UI Rak Buku.
+Ia tidak menulis automatic membership ke persisted collection store. Koleksi buatan user dan Smart Collections adalah dua domain berbeda di UI Library.
 
 ## 8. State ownership
 
@@ -154,7 +154,7 @@ Dipakai untuk persistent/local application state, misalnya:
 
 Dipakai untuk remote request state, caching di browser, dan request lifecycle.
 
-Catalog query key harus memuat context yang mengubah hasil, seperti source, query, filter, sort, page, dan policy konten. Revisit memakai cache yang masih valid/previous data tanpa menyimpan response besar ke localStorage. Pagination disimpan di URL dan filter Library yang perlu bertahan selama Back navigation disimpan secara session-scoped.
+Catalog query key harus memuat context yang mengubah hasil, seperti source, query, filter, sort, page, dan policy konten. Revisit memakai cache yang masih valid/previous data tanpa menyimpan response besar ke localStorage. Pagination disimpan di URL dan filter Jelajah yang perlu bertahan selama Back navigation disimpan secara session-scoped.
 
 Jangan memindahkan query state ke Zustand hanya untuk mengurangi jumlah hook.
 
@@ -219,7 +219,7 @@ Authentication tidak menggantikan Firestore authorization rules.
 
 Full/realtime sync memakai canonical `users/{uid}/libraryV2` dan `users/{uid}/history`. Penghapusan dicatat dengan `_deleted` dan `deletedAt`; pada timestamp sama tombstone menang, tetapi re-add/progress eksplisit yang lebih baru bisa dipertahankan. Listener `removed` dan full sync harus menghormati penghapusan agar item lama tidak hidup kembali. Operasi full sync dikoordinasikan per UID; kegagalan manual sync tidak boleh ditutupi.
 
-Custom collection dan membership didukung pada sinkronisasi akun; `readingStatusByManga` masih local-only. Jangan mengklaim semua state Rak Buku sudah cloud-synced.
+Custom collection dan membership didukung pada sinkronisasi akun; `readingStatusByManga` masih local-only. Jangan mengklaim semua state Library sudah cloud-synced.
 
 ## 13. Motion dan navigation boundary
 
@@ -252,7 +252,7 @@ Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang memb
 
 ## 16. Boundary yang sengaja dipertahankan
 
-- Search/Library filter drawer: Vaul.
+- Cari/Jelajah filter drawer: Vaul.
 - Reader panel: Motion.
 - Source adapter: server-only.
 - User-created collections: persisted.
