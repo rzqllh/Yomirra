@@ -91,6 +91,23 @@ describe("KomikuSource", () => {
     expect((await source.getPopular(1)).mangas).toEqual([]);
   });
 
+  it("searches through maintained API catalog with pagination", async () => {
+    const get = vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><div class="kan"><a href="/manga/search-result/"><h3>Result</h3></a></div></div>'
+    );
+    const result = await source.search("hello", 2);
+    expect(get).toHaveBeenCalledWith("/manga/page/2", { s: "hello" });
+    expect(result.mangas[0]?.id).toBe("search-result");
+  });
+
+  it("prefers real page image data-src over lazy placeholder src", async () => {
+    vi.spyOn(source["client"], "getHtml").mockResolvedValue(
+      '<div id="Baca_Komik"><img src="/assets/lazy.jpg" data-src="https://img.komiku.org/real.webp"></div>'
+    );
+    const result = await source.getPages("chapter");
+    expect(result.pages[0]?.url).toBe("https://img.komiku.org/real.webp");
+  });
+
   it("should parse manga detail HTML correctly", async () => {
     const mockHtml = `
       <h1>Komik Solo Leveling</h1>

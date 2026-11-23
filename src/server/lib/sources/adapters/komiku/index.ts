@@ -157,73 +157,11 @@ export class KomikuSource implements MangaSource {
   async search(
     query: string,
     page: number,
-    filters?: Record<string, string | string[]>
+    _filters?: Record<string, string | string[]>
   ): Promise<MangaPageResult> {
-    if (!query || query.trim().length === 0) {
-      return this.getPopular(page);
-    }
-
-    try {
-      const apiRes = await fetch(
-        `https://api.komiku.org/?s=${encodeURIComponent(query.trim())}`,
-        {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            Referer: "https://komiku.org/",
-          },
-          signal: AbortSignal.timeout(8000),
-        }
-      );
-
-      if (apiRes.ok) {
-        const html = await apiRes.text();
-        const $ = cheerio.load(html);
-        const mangas: any[] = [];
-        const seenIds = new Set<string>();
-
-        $(".bge").each((_, el) => {
-          const $el = $(el);
-          const a = $el.find(".kan a, .bgei a").first();
-          const href = a.attr("href") || "";
-          const title = $el.find(".kan h3, h3").first().text().trim();
-          const coverUrl = this.extractCoverUrl($el.find("img").first());
-          const latestChapter = $el.find(".new1").last().text().replace(/\s+/g, " ").trim();
-
-          if (
-            href &&
-            title &&
-            title !== "Untitled" &&
-            (href.includes("/manga/") || href.includes("/komik/"))
-          ) {
-            const id = href
-              .replace(/https?:\/\/komiku\.org/g, "")
-              .replace(/^\/manga\//, "")
-              .replace(/^\/komik\//, "")
-              .replace(/\//g, "");
-
-            if (id && !seenIds.has(id)) {
-              seenIds.add(id);
-              mangas.push({
-                id,
-                title,
-                coverUrl,
-                latestChapter: latestChapter || undefined,
-                format: "Manga",
-              });
-            }
-          }
-        });
-
-        if (mangas.length > 0) {
-          return { mangas, hasNextPage: false };
-        }
-      }
-    } catch {
-      // Fallback to standard html search if API endpoint fails
-    }
-
-    const html = await this.client.getHtml(`/?s=${encodeURIComponent(query.trim())}`);
+    if (!query?.trim()) return this.getPopular(page);
+    const path = page <= 1 ? "/manga" : `/manga/page/${page}`;
+    const html = await this.catalogClient.getHtml(path, { s: query.trim() });
     return this.parseMangaList(html);
   }
 
