@@ -2,6 +2,8 @@
 
 Mulai dari [README proyek](../README.md) untuk gambaran produk. Pilih panduan berdasarkan pekerjaan berikutnya.
 
+**Navigasi produk:** **Jelajah** (`/library`) adalah katalog lintas sumber; **Library** (`/bookmark`) menyimpan bacaan pribadi; **Cari** (`/search`) untuk penelusuran langsung. Ketiga istilah ini tidak saling menggantikan.
+
 ## Untuk pembaca
 
 | Tujuan | Panduan |
