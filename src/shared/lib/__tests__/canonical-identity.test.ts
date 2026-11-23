@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups } from "../canonical-identity";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "../canonical-identity";
 
 const entry = (sourceId: string, mangaId: string, extra: Record<string, unknown> = {}) =>
   ({ sourceId, mangaId, id: `${sourceId}:${mangaId}`, ...extra });
@@ -50,4 +50,20 @@ describe("verified canonical grouping (non-destructive)", () => {
     expect(() => groupVerifiedCatalogEntries([saved])).not.toThrow();
     expect(saved.linkedSources).toBe(links);
   });
+  it("resolves the same preferred-source key across reordered saved records and old aliases", () => {
+    const groupA = groupVerifiedCatalogEntries([
+      entry("shinigami", "work-a", {
+        id: "z-local",
+        linkedSources: [{ sourceId: "asurascans", mangaId: "work-b", matchConfidence: "CONFIRMED" }],
+      }),
+      entry("asurascans", "work-b", { id: "a-cloud" }),
+    ])[0];
+    const groupB = groupVerifiedCatalogEntries([...groupA.members].reverse())[0];
+    expect(canonicalGroupPreferenceKey(groupA)).toBe("a-cloud");
+    expect(canonicalGroupPreferenceKey(groupB)).toBe("a-cloud");
+    expect(canonicalGroupPreferenceAliases(groupA)).toEqual(expect.arrayContaining([
+      "a-cloud", "z-local", "shinigami::work-a", "asurascans::work-b",
+    ]));
+  });
+
 });

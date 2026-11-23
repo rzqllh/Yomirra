@@ -114,3 +114,32 @@ export function indexVerifiedGroups<T extends CanonicalEvidenceEntry>(
   });
   return result;
 }
+
+/**
+ * A deterministic preference anchor for a user's verified group. Unlike a title
+ * slug, this uses saved identity/provenance; existing per-source IDs remain
+ * readable through canonicalGroupPreferenceAliases during migration.
+ *
+ * If the membership changes, legacy aliases are still checked before the
+ * preference is overwritten. Never use this display-derived ID as a global ID.
+ */
+export function canonicalGroupPreferenceKey<T extends CanonicalEvidenceEntry>(
+  group: VerifiedCatalogGroup<T>,
+): string {
+  const ids = group.members.map(member => member.id).filter((id): id is string => Boolean(id));
+  if (ids.length > 0) return [...ids].sort()[0];
+  const refs = group.sourceBindings.map(ref => canonicalSourceKey(ref.sourceId, ref.mangaId)).sort();
+  return `source:${refs[0] ?? "none"}`;
+}
+
+export function canonicalGroupPreferenceAliases<T extends CanonicalEvidenceEntry>(
+  group: VerifiedCatalogGroup<T>,
+): string[] {
+  return Array.from(new Set([
+    canonicalGroupPreferenceKey(group),
+    ...group.members.flatMap(member => [
+      member.id,
+      `${member.sourceId}::${member.mangaId}`,
+    ]).filter((id): id is string => Boolean(id)),
+  ]));
+}
