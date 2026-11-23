@@ -6,18 +6,18 @@ Panduan ini mengikuti fitur di repository. Tampilan dan ketersediaan sumber dapa
 
 ## Cari dan simpan bacaan pertama
 
-1. Buka [Yomirra](https://www.yomirra.web.id/) dan cari judul dari Beranda atau Search. Coba judul alternatif bila hasil belum sesuai. Tag diawali `#` membantu memilih genre, format, atau status yang didukung.
+1. Buka [Yomirra](https://www.yomirra.web.id/) dan cari judul dari Beranda atau Cari. Coba judul alternatif bila hasil belum sesuai. Tag diawali `#` membantu memilih genre, format, atau status yang didukung.
 2. Periksa judul, cover, bahasa, dan sumber. Judul mirip belum tentu karya atau edisi yang sama; hasil lintas sumber tidak selalu dapat digabungkan.
 3. Buka detail komik dan pilih chapter yang tersedia. Chapter terkunci atau belum tersedia tetap mengikuti pembatasan sumber.
-4. Gunakan tombol bookmark untuk menyimpan judul ke **Rak Buku**. Rating atau koleksi tidak otomatis membuat bookmark.
+4. Gunakan tombol bookmark untuk menyimpan judul ke **Library**. Rating atau koleksi tidak otomatis membuat bookmark.
 
-**Library** menampilkan katalog sumber, sedangkan **Rak Buku** menampung bacaan pribadi. Koleksi buatan sendiri membantu mengelompokkan judul; Smart Collections seperti Lanjut Dibaca dihitung dari data Library pribadi dan riwayat, tanpa membuat salinan judul baru.
+**Jelajah** (`/library`) menampilkan katalog sumber, sedangkan **Library** (`/bookmark`) menampung bacaan pribadi. Koleksi buatan sendiri membantu mengelompokkan judul; Smart Collections seperti Lanjut Dibaca dihitung dari data Library pribadi dan riwayat, tanpa membuat salinan judul baru.
 
 ## Pilih sumber dan bahasa
 
-Buka **Sumber** untuk melihat layanan dan preferensi penjelajahan. Toggle penjelajahan mengubah Beranda, Library, dan Populer. Search global tetap mencari di sumber yang tersedia, termasuk sumber yang toggle penjelajahannya dimatikan.
+Buka **Sumber** untuk melihat layanan dan preferensi penjelajahan. Toggle penjelajahan mengubah Beranda, Jelajah, dan Populer. Cari global tetap mencari di sumber yang tersedia, termasuk sumber yang toggle penjelajahannya dimatikan.
 
-**Under Maintenance** menandakan sumber sedang dijeda dari katalog dan pencarian default setelah kegagalan. Memilih sumber tidak memperbaiki layanan yang gagal. Tautan judul tersimpan masih dapat dibuka jika layanan sumber mengizinkan.
+Status **Maintenance** atau **Dijeda sementara** menunjukkan masalah operasional sumber, bukan pilihan pengguna untuk menyembunyikan sumber. Memilih sumber tidak memperbaiki layanan yang gagal. Tautan judul tersimpan masih dapat dibuka jika layanan sumber mengizinkan.
 
 Di **Pengaturan → Bahasa utama**, pilih prioritas bahasa chapter. Ini hanya memengaruhi sumber yang mendukung preferensi bahasa; pilihan tersebut tidak menerjemahkan halaman komik.
 
@@ -25,7 +25,7 @@ Di **Pengaturan → Bahasa utama**, pilih prioritas bahasa chapter. Ini hanya me
 
 Buka kontrol Reader dan **Pengaturan pembaca**. Pilih cakupan **Khusus judul ini** atau **Semua komik** sebelum menyesuaikan latar belakang, ukuran gambar, jarak antar halaman, arah baca, kontrol pembaca, dan muat awal gambar. Mode vertikal mengikuti scroll; arah LTR/RTL memakai navigasi halaman.
 
-Posisi halaman disimpan secara lokal. Kembali ke Beranda dan periksa **Lanjut Baca**, atau buka bacaan dari Rak Buku. Posisi terakhir dan milestone chapter tertinggi adalah catatan berbeda: membaca ulang chapter lama tidak seharusnya menghapus milestone lebih tinggi. Membuka chapter saja bukan bukti seluruh chapter sudah dibaca.
+Posisi halaman disimpan secara lokal. Kembali ke Beranda dan periksa **Lanjut Baca**, atau buka bacaan dari Library. Posisi terakhir dan milestone chapter tertinggi adalah catatan berbeda: membaca ulang chapter lama tidak seharusnya menghapus milestone lebih tinggi. Membuka chapter saja bukan bukti seluruh chapter sudah dibaca.
 
 Pilih tema **Terang**, **Gelap**, atau **Sistem** di Pengaturan. Animasi yang mendukungnya mengikuti preferensi pengurangan gerakan sistem. Zoom mengikuti browser/perangkat. Bila kontrol, fokus keyboard, atau pembaca layar bermasalah, [laporkan konteks dan langkahnya](TROUBLESHOOTING.md#melaporkan-bug); panduan ini bukan klaim sertifikasi aksesibilitas.
 
@@ -68,7 +68,7 @@ Domain yang didukung mencakup Library/bookmark, riwayat/progres, preferensi sumb
 1. Buka **Pengaturan → Ekspor / pulihkan cadangan data → Ekspor cadangan**. Simpan JSON di tempat pribadi yang aman.
 2. Untuk memulihkan, pilih **Pulihkan dari cadangan**, lalu pilih cadangan Yomirra.
 3. Periksa pratinjau validasi dan konflik. **Gabungkan** menggabungkan data; **Ganti data saat ini** menimpa data lokal yang dipulihkan. Ekspor data perangkat lebih dulu sebelum mode ganti.
-4. Pilih **Pulihkan data**, lalu periksa Rak Buku, koleksi, dan beberapa posisi baca. Sinkronisasi cloud adalah langkah terpisah; pemulihan lokal tidak menghapus seluruh akun cloud.
+4. Pilih **Pulihkan data**, lalu periksa Library, koleksi, dan beberapa posisi baca. Sinkronisasi cloud adalah langkah terpisah; pemulihan lokal tidak menghapus seluruh akun cloud.
 
 Batas berkas 10 MB; schema cadangan Yomirra 1–3 diterima. Berkas cadangan dirancang spesifik untuk format data internal Yomirra dan tidak menjamin kompatibilitas dengan aplikasi pihak ketiga. Gambar unduhan dan kredensial tidak disertakan; konten NSFW dikecualikan sesuai kebijakan ekspor. Cadangan mengandung informasi bacaan pribadi: jangan unggah ke issue publik. [Kontrak data bacaan](READING_DATA.md) menjelaskan retensi dan konflik.
 

@@ -18,17 +18,17 @@ _Avoid_: Identitas karya permanen
 
 ## Penjelajahan dan koleksi pribadi
 
-**Library**:
-Katalog penjelajahan gabungan yang dibentuk dari sumber pilihan pengguna; bukan koleksi judul pribadi yang disimpan.
-_Avoid_: Rak Buku, bookmark
+**Jelajah**:
+Katalog penjelajahan gabungan dari sumber pilihan pengguna pada rute `/library`; bukan daftar judul pribadi.
+_Avoid_: Library pribadi, bookmark
 
 **Cari**:
-Penelusuran lintas sumber yang memenuhi syarat, termasuk sumber yang tidak dipilih untuk tampil dalam Library.
+Penelusuran lintas sumber yang memenuhi syarat, termasuk sumber yang tidak dipilih untuk tampil dalam Jelajah.
 _Avoid_: Pencarian Library
 
-**Rak Buku**:
-Ruang pribadi pengguna untuk judul tersimpan dan keadaan membacanya, terpisah dari katalog penjelajahan.
-_Avoid_: Library, katalog umum
+**Library**:
+Ruang pribadi pengguna pada rute `/bookmark` untuk judul tersimpan, riwayat, dan koleksinya, terpisah dari katalog penjelajahan.
+_Avoid_: Jelajah, katalog umum
 
 ## Identitas dan keadaan membaca
 
@@ -80,7 +80,7 @@ _Avoid_: Sumber online, sumber sehat
 
 **Kondisi Sumber**:
 Keadaan operasional sumber berdasarkan hasil pemeriksaan yang relevan, terpisah dari apakah pengguna memilih sumber tersebut.
-_Avoid_: Status dipilih, toggle Library
+_Avoid_: Status dipilih, toggle Jelajah
 
 ## Pemulihan sumber
 
@@ -93,7 +93,7 @@ Perubahan hubungan sumber baca utama suatu karya yang disimpan pengguna setelah 
 _Avoid_: Fallback sementara, pencarian sumber alternatif
 
 **Katalog Penjelajahan (Discovery Catalog)**:
-Kumpulan judul yang dapat dijelajahi pengguna berdasarkan sumber yang dipilih serta aturan kelayakan katalog. Library adalah nama tampilan produk untuk katalog ini.
+Kumpulan judul yang dapat dijelajahi pengguna berdasarkan sumber yang dipilih serta aturan kelayakan katalog. Jelajah adalah nama tampilan produk untuk katalog ini.
 _Avoid_: Koleksi pribadi, Saved Titles
 
 **Judul Tersimpan (Saved Title)**:

@@ -7,7 +7,10 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 820, height: 1180 
     await page.addInitScript(() => localStorage.setItem("yomirra-onboarding", JSON.stringify({ state: { hasCompletedOnboarding: true }, version: 0 })));
     await page.route("**/api/sources", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({ data: [{ id: "komiku", name: "Fixture source", isEnabled: true, isInstalled: true, isNsfw: false, status: "online", capabilities: { search: true } }] }) }));
     await page.goto("/");
-    // Safari hydration can lag under GitHub Actions' concurrent build/test load.\n    // Keep the real boot-to-app assertion (do not bypass the splash), but allow\n    // the production boot watchdog window rather than Playwright's 5s default.\n    await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0, { timeout: 15_000 });
+    // Safari hydration can lag under GitHub Actions' concurrent build/test load.
+    // Keep the real boot-to-app assertion (do not bypass the splash), but allow
+    // the production boot watchdog window rather than Playwright's 5s default.
+    await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0, { timeout: 15_000 });
     if (viewport.width === 1366) {
       // A classic desktop scrollbar can disappear when Radix locks body scroll,
       // changing visual width without a visualViewport resize notification.
