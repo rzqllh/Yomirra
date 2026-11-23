@@ -165,7 +165,7 @@ export default function SourcesPage() {
               variant="compact"
               icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
               title="Sumber gagal dimuat"
-              description="Daftar sumber belum bisa dimuat. Coba lagi sebentar."
+              description="Daftar sumber belum bisa dimuat. Coba lagi nanti."
               className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
             />
           ) : filteredSources.length === 0 ? (

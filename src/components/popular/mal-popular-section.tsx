@@ -163,7 +163,7 @@ export function MalPopularSection({
         </h2>
         <p className="mt-2 text-sm text-text-secondary leading-relaxed">
           {activeFeed?.message ??
-            "Snapshot tren eksternal MyAnimeList sedang tidak tersedia atau belum dikonfigurasi. Kamu tetap dapat menikmati peringkat judul populer langsung dari sumber bacaan aktif di Yomirra."}
+            "Tren MyAnimeList belum tersedia. Lihat peringkat dari sumber bacaan Yomirra."}
         </p>
         {onSwitchToLocal && (
           <Button

@@ -151,8 +151,8 @@ export function SearchResults({
               }
               description={
                 activeSelectedSources.length === 1
-                  ? "Sumber ini belum bisa dihubungi. Coba lagi sebentar."
-                  : "Sumber yang kamu pilih belum bisa dihubungi. Coba lagi sebentar."
+                  ? "Sumber ini tidak merespons. Coba lagi nanti."
+                  : "Sumber yang dipilih tidak merespons. Coba lagi nanti."
               }
               action={
                 <Button

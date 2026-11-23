@@ -13,7 +13,7 @@ import { parseDisabledSourceIdsCookie, selectDiscoverySources } from "@/shared/s
 
 export const metadata: Metadata = {
   title: "Yomirra - Reader Komik Multi-Sumber",
-  description: "Baca Manga, Manhwa, dan Manhua dari berbagai sumber dalam satu antarmuka yang cepat dan terpadu.",
+  description: "Baca manga, manhwa, dan manhua dari berbagai sumber.",
 };
 
 export const dynamic = "force-dynamic";
