@@ -20,7 +20,7 @@ Yomirra dikembangkan secara aktif. Katalog, bahasa, kelengkapan chapter, dan ket
 | Menemukan bacaan | Pencarian lintas sumber, judul alternatif, tag/filter, discovery, dan rekomendasi tanpa AI | Hasil dan filter mengikuti kemampuan sumber; kecocokan judul dapat ambigu |
 | Mengatur koleksi | Bookmark, riwayat, koleksi buatan sendiri, dan Smart Collections dari data lokal | **Jelajah** (`/library`) adalah katalog; **Library** (`/bookmark`) adalah bacaan pribadi |
 | Melanjutkan bacaan | Progres halaman, navigator chapter, arah vertikal/LTR/RTL, preferensi per judul atau semua komik | Perbedaan penomoran chapter antar sumber dapat memerlukan pilihan manual |
-| Memulihkan sumber | Status layanan, kelompok **Under Maintenance**, dan pencarian sumber alternatif | Tidak menjamin judul tersedia atau progres dapat dipetakan otomatis |
+| Memulihkan sumber | Status layanan, penanda gangguan sementara, dan pencarian sumber alternatif | Tidak menjamin judul tersedia atau progres dapat dipetakan otomatis |
 | Membaca offline | Antrean unduhan pada PWA standalone dan pembacaan unduhan yang memenuhi klasifikasi aman | Browser biasa mengunduh ZIP; cache dapat dibuang perangkat |
 | Menjaga data | Penyimpanan lokal, ekspor/pulihkan JSON, dan sinkronisasi akun opsional | Gambar unduhan tidak masuk cadangan/cloud sync; status baca masih lokal |
 
