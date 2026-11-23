@@ -41,7 +41,7 @@ Komponen penting di `src/components/ui/`:
 | `IconButton` | icon-only control dengan label aksesibel |
 | `SearchInput` | search field + clear behavior |
 | `FilterChip` | selectable chip + `aria-pressed` |
-| `FilterDrawerShell` | Vaul drawer chrome untuk Search/Library |
+| `FilterDrawerShell` | Vaul drawer chrome untuk Cari/Jelajah |
 | `FilterSection` | section layout di filter drawer |
 | `Dialog` | modal/dialog primitives |
 | `SegmentedControl` | segmented/tabs control |
@@ -89,7 +89,7 @@ Skeleton feature/page harus mengikuti geometry final UI; jangan membuat placehol
 
 ## Filter drawer
 
-Search dan Library share presentation shell, bukan business logic.
+Cari dan Jelajah berbagi presentation shell, bukan business logic.
 
 `FilterDrawerShell` memiliki:
 
@@ -137,9 +137,9 @@ useSearchCatalog
 
 Search input/tag logic tetap berada di domain search, bukan di generic input primitive.
 
-## Library
+## Jelajah
 
-Library adalah browsing per source, bukan personal bookshelf.
+Jelajah adalah katalog per sumber, bukan koleksi bacaan pribadi.
 
 ```text
 library-page-view
@@ -151,9 +151,9 @@ library-filter-drawer
 useLibraryCatalog
 ```
 
-## Rak Buku
+## Library (bacaan pribadi)
 
-Rak Buku memiliki Reading dan Bookmark/Collection domain.
+Library memiliki domain Reading dan Bookmark/Collection.
 
 `useBookmarkCollection` menggabungkan bookmark list dengan:
 
