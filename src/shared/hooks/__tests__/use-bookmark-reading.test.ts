@@ -3,6 +3,7 @@ import { renderHook } from "@testing-library/react";
 import { useBookmarkReading } from "../use-bookmark-reading";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 vi.mock("@/shared/hooks/use-mounted", () => ({
   useMounted: () => true,
@@ -169,6 +170,27 @@ describe("useBookmarkReading - Chapter Progress Alignment", () => {
     } });
     const { result } = renderHook(() => useBookmarkReading());
     expect(result.current.groupedHistory).toHaveLength(2);
+  });
+
+  it("does not resurrect a hidden adult chapter through safe canonical grouping", () => {
+    const now = "2026-11-23T00:00:00.000Z";
+    useSettingsStore.setState({ hideNsfw: true });
+    useLibraryStore.setState({ items: {
+      a: { id: "a", sourceId: "mangadex", mangaId: "safe", title: "Work", addedAt: now, updatedAt: now,
+        isNsfw: false, linkedSources: [
+          { sourceId: "komiku", mangaId: "adult", matchConfidence: "CONFIRMED", addedAt: 1 },
+        ] },
+      b: { id: "b", sourceId: "komiku", mangaId: "adult", title: "Work", addedAt: now, updatedAt: now, isNsfw: true },
+    } });
+    useHistoryStore.setState({ items: {
+      a: { sourceId: "mangadex", mangaId: "safe", mangaTitle: "Work", chapterId: "ch1", readAt: 10 },
+      b: { sourceId: "komiku", mangaId: "adult", mangaTitle: "Work", chapterId: "ch2", readAt: 20 },
+    } });
+    const { result } = renderHook(() => useBookmarkReading());
+    expect(result.current.groupedHistory).toHaveLength(1);
+    expect(result.current.groupedHistory[0].chapters).toHaveLength(1);
+    expect(result.current.groupedHistory[0].chapters[0].sourceId).toBe("mangadex");
+    expect(Object.keys(useHistoryStore.getState().items)).toHaveLength(2);
   });
 
 });

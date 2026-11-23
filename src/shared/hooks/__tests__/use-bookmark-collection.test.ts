@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useBookmarkCollection } from "../use-bookmark-collection";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 
 vi.mock("@/shared/hooks/use-mounted", () => ({
@@ -117,6 +118,28 @@ describe("useBookmarkCollection smart filters", () => {
     act(() => result.current.setSourceFilter("source-b"));
     expect(result.current.filteredAndSortedLibraryItems).toHaveLength(1);
     expect(result.current.filteredAndSortedLibraryItems[0].id).toBe("a");
+  });
+
+  it("does not expose a known-NSFW alternate from a safe source in canonical cards", () => {
+    const now = "2026-11-23T00:00:00.000Z";
+    useSettingsStore.setState({ hideNsfw: true });
+    useLibraryStore.setState({ items: {
+      safe: {
+        id: "safe", sourceId: "mangadex", mangaId: "safe",
+        title: "Safe chapter", addedAt: now, updatedAt: now, isNsfw: false,
+        linkedSources: [{ sourceId: "komiku", mangaId: "adult", matchConfidence: "CONFIRMED", addedAt: 1 }],
+      },
+      adult: {
+        id: "adult", sourceId: "komiku", mangaId: "adult",
+        title: "Unsafe variant", addedAt: now, updatedAt: now, isNsfw: true,
+      },
+    } });
+    const { result } = renderHook(() => useBookmarkCollection());
+    expect(result.current.totalLibraryItemsCount).toBe(1);
+    expect(result.current.paginatedCollection).toHaveLength(1);
+    expect(result.current.paginatedCollection[0].sourceBindings).toEqual([
+      expect.objectContaining({ sourceId: "mangadex", mangaId: "safe" }),
+    ]);
   });
 
 });
