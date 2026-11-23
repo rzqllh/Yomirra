@@ -10,7 +10,7 @@ import {
   PartialBatchCommitError,
 } from "@/shared/lib/guest-merge-engine";
 import { useAuth } from "@/shared/hooks/use-auth";
-import { planPreferredSourceMerge } from "@/shared/lib/canonical-preference-merge";
+import { planVerifiedAliasPreferenceMerge } from "@/shared/lib/canonical-preference-alias";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -153,8 +153,10 @@ export function GuestMergeDialog() {
   const guestHistCount = Object.keys(guestSnapshot.history || {}).length;
   const cloudLibCount = Object.keys(cloudSnapshot.library || {}).length;
   const cloudHistCount = Object.keys(cloudSnapshot.history || {}).length;
-  const preferencePlan = planPreferredSourceMerge(
-    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {}, preferenceDecisions,
+  const preferencePlan = planVerifiedAliasPreferenceMerge(
+    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {},
+    Object.values(guestSnapshot.library ?? {}), Object.values(cloudSnapshot.library ?? {}),
+    preferenceDecisions,
   );
 
   const handleCancel = async () => {
@@ -373,8 +375,8 @@ export function GuestMergeDialog() {
               Pilih sumber utama ({diff.conflictingPreferredSources?.length ?? 0} judul)
             </h3>
             <p className="text-xs text-text-secondary">
-              Perangkat dan akun punya pilihan berbeda. Tentukan satu sumber untuk tiap judul.
-              Pilihan ini disinkronkan setelah seluruh penggabungan berhasil.
+              Ada lebih dari satu pilihan untuk karya yang sama, termasuk jika ID simpanan perangkat dan akun berbeda.
+              Tentukan satu sumber untuk tiap karya sebelum sinkronisasi.
             </p>
             <div className="max-h-48 overflow-y-auto space-y-2">
               {(diff.conflictingPreferredSources ?? []).map(conflict => (
@@ -388,12 +390,11 @@ export function GuestMergeDialog() {
                     }))}
                   >
                     <option value="">Pilih sumber utama…</option>
-                    <option value={conflict.guestSourceId}>
-                      Perangkat: {getSourceMetadata(conflict.guestSourceId)?.name ?? conflict.guestSourceId}
-                    </option>
-                    <option value={conflict.cloudSourceId}>
-                      Akun: {getSourceMetadata(conflict.cloudSourceId)?.name ?? conflict.cloudSourceId}
-                    </option>
+                    {conflict.choices.map(sourceId => (
+                      <option key={sourceId} value={sourceId}>
+                        {getSourceMetadata(sourceId)?.name ?? sourceId}
+                      </option>
+                    ))}
                   </select>
                 </label>
               ))}

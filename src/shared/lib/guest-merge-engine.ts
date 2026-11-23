@@ -3,7 +3,7 @@ export type { MilestoneComparison } from "@/shared/lib/milestone-comparator";
 export { commitMergedDataToFirestore, commitMergedDataSequentially, PartialBatchCommitError, getMergeRecoveryJournal, clearMergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 export type { MergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 import { compareMilestones } from "@/shared/lib/milestone-comparator";
-import { planPreferredSourceMerge, type PreferredSourceConflict } from "@/shared/lib/canonical-preference-merge";
+import { planVerifiedAliasPreferenceMerge, type AliasPreferenceConflict } from "@/shared/lib/canonical-preference-alias";
 import { readCanonicalPreferredSources, commitCanonicalPreferredSources } from "@/shared/lib/canonical-preference-cloud";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { commitMergedDataToFirestore } from "@/shared/lib/firestore-merge-committer";
@@ -53,7 +53,7 @@ export interface MergeDiff {
   guestOnlyHistoryCount: number;
   cloudOnlyHistoryCount: number;
   conflictingHistoryCount: number;
-  conflictingPreferredSources?: PreferredSourceConflict[];
+  conflictingPreferredSources?: AliasPreferenceConflict[];
   totalMergedLibraryCount: number;
   totalMergedHistoryCount: number;
 }
@@ -206,7 +206,10 @@ export function computeMergeDiff(
 
   const totalMergedLibraryCount = new Set([...guestLibKeys, ...cloudLibKeys]).size;
   const totalMergedHistoryCount = new Set([...guestHistKeys, ...cloudHistKeys]).size;
-  const prefPlan = planPreferredSourceMerge(guest.preferredSources ?? {}, cloud.preferredSources ?? {});
+  const prefPlan = planVerifiedAliasPreferenceMerge(
+    guest.preferredSources ?? {}, cloud.preferredSources ?? {},
+    Object.values(guest.library ?? {}), Object.values(cloud.library ?? {}),
+  );
 
   return {
     hasGuestData: guestLibKeys.length > 0 || guestHistKeys.length > 0 || Object.keys(guest.preferredSources ?? {}).length > 0,
@@ -393,8 +396,10 @@ export async function executeGuestMerge({
   const previousLocalLib = useLibraryStore.getState().items;
   const previousLocalHist = useHistoryStore.getState().items;
   const previousPrefs = useSettingsStore.getState().perTitleSourcePreferences;
-  const prefPlan = planPreferredSourceMerge(
-    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {}, preferenceDecisions,
+  const prefPlan = planVerifiedAliasPreferenceMerge(
+    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {},
+    Object.values(guestSnapshot.library ?? {}), Object.values(cloudSnapshot.library ?? {}),
+    preferenceDecisions,
   );
   if (!prefPlan.canCommit) throw new Error("CANONICAL_PREFERENCE_UNRESOLVED");
   let backupKey: string | undefined;
