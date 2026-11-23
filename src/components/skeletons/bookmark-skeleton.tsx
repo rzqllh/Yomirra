@@ -1,16 +1,12 @@
 import * as React from "react";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MangaCardSkeleton } from "@/components/komik/manga-card-skeleton";
 
 export function BookmarkSkeleton() {
   return (
     <>
-      <PageHeader
-        title="Library"
-        subtitle="Lanjutkan bacaan atau kelola bookmark."
-        hideDesktop={true}
-      />
+      <DestinationHeader destination="bookmark" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Skeleton className="h-10 w-full rounded-xl sm:w-64" />

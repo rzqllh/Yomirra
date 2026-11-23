@@ -5,8 +5,7 @@ import { PageContainer, PageToolbar } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
-import { PageHeader } from "@/components/chrome/header";
-import { Compass } from "@phosphor-icons/react";
+import { DestinationHeader } from "@/components/chrome/header";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
@@ -30,12 +29,7 @@ export function LibraryPageView() {
   return (
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Jelajah"
-          subtitle="Jelajahi katalog dari sumber yang kamu pilih."
-          icon={<Compass size={24} weight="regular" />}
-          hideDesktop={true}
-        />
+        <DestinationHeader destination="library" />
 
         <CatalogControls label="Pencarian dan filter Jelajah">
           <PageToolbar>

@@ -10,7 +10,7 @@ vi.mock('@/shared/hooks/use-auth', () => ({
 }));
 
 vi.mock('@/shared/store/onboarding-store', () => ({
-  useOnboardingStore: () => mockUseOnboardingStore(),
+  useOnboardingStore: (selector: (state: { _hasHydrated: boolean }) => boolean) => selector(mockUseOnboardingStore()),
 }));
 
 describe('SplashScreen', () => {

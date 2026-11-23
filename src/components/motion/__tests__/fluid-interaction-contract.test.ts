@@ -60,7 +60,9 @@ describe("Yomirra fluid interaction contracts", () => {
     expect(reader).not.toContain("whileTap={{ scale: 0.9 }}");
     expect(reader).toContain("reducedMotion ? undefined : { scale: 0.97 }");
     expect(splash).toContain("useReducedMotion()");
-    expect(splash).toContain("animate={reducedMotion ? { scale: 1, opacity: 0.35 }");
+    expect(splash).toContain("motion-safe:animate-spin");
+    expect(splash).not.toContain("MINIMUM_SPLASH_DURATION");
+    expect(splash).not.toContain("repeat: Infinity");
     expect(splash).toContain("transition={reducedMotion ? { duration: 0 }");
   });
 });

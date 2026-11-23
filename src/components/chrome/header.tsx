@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { CaretLeft, MagnifyingGlass } from "@phosphor-icons/react"
+import { Books, CalendarBlank, CaretLeft, Compass, Download, Fire, Gear, HardDrives, MagnifyingGlass, Question, UserCircle } from "@phosphor-icons/react"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
@@ -349,3 +349,37 @@ export function PageHeader({
   )
 }
 
+
+/** Single source of truth for destination headers, including loading states.
+ * Home and manga detail retain their specialized PageHeader contracts.
+ */
+const destinationHeaders = {
+  search: { title: "Cari", subtitle: "Cari komik dari sumber yang dipilih.", Icon: MagnifyingGlass },
+  library: { title: "Jelajah", subtitle: "Jelajahi katalog dari sumber yang kamu pilih.", Icon: Compass },
+  bookmark: { title: "Library", subtitle: "Bacaan dan komik yang kamu simpan.", Icon: Books },
+  popular: { title: "Populer", subtitle: "Peringkat komik teratas dari sumber aktif dan tren global.", Icon: Fire },
+  sources: { title: "Sumber", subtitle: "Atur sumber yang digunakan saat menjelajah.", Icon: HardDrives },
+  settings: { title: "Pengaturan", subtitle: "Atur akun, tampilan, bacaan, dan penyimpanan Yomirra.", Icon: Gear },
+  downloads: { title: "Unduhan", subtitle: "Kelola chapter yang tersimpan untuk dibaca offline.", Icon: Download },
+  account: { title: "Akun & Sinkronisasi", subtitle: "Kelola akun dan sinkronisasi bacaanmu.", Icon: UserCircle, showBack: true, backHref: "/settings" },
+  updates: { title: "Jadwal Mingguan", subtitle: "Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan.", Icon: CalendarBlank, showBack: true },
+  help: { title: "Pusat Bantuan", subtitle: "Panduan singkat saat mencari, membaca, dan menyimpan komik.", Icon: Question, showBack: true, backHref: "/" },
+} satisfies Record<string, {
+  title: string
+  subtitle: string
+  Icon: typeof MagnifyingGlass
+  showBack?: boolean
+  backHref?: string
+}>
+
+type Destination = keyof typeof destinationHeaders
+
+export function DestinationHeader({
+  destination,
+  ...props
+}: Omit<PageHeaderProps, "title" | "subtitle" | "description" | "icon" | "hideDesktop"> & {
+  destination: Destination
+}) {
+  const { Icon, ...preset } = destinationHeaders[destination]
+  return <PageHeader {...preset} {...props} icon={<Icon size={24} weight="regular" />} />
+}

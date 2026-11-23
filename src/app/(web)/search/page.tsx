@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { SearchPageView } from "@/components/search/search-page-view";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { PageContainer } from "@/components/ui/layout";
@@ -13,10 +13,7 @@ export default function SearchPage() {
       fallback={
         <Surface variant="base" className="w-full">
           <PageContainer hasMobileHeader>
-            <PageHeader
-              title="Cari"
-              subtitle="Cari judul dari semua sumber."
-            />
+            <DestinationHeader destination="search" />
             <SearchResultSkeleton />
           </PageContainer>
         </Surface>
