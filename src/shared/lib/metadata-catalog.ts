@@ -68,7 +68,7 @@ export function projectMetadataCatalogRows(
   return projected.map(row => {
     const identity = index.get(JSON.stringify([row.sourceId, row.manga.id]));
     const work = identity && byIdentity.get(identity);
-    if (!work || (row.sourceBindings?.length ?? 0) < 2) return row;
+    if (!identity || !work || (row.sourceBindings?.length ?? 0) < 2) return row;
     return {
       ...row,
       canonicalKey: identity,

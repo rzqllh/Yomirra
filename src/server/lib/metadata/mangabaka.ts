@@ -6,6 +6,7 @@ import { normalizeTitle } from "@/shared/lib/title-matcher";
 const ORIGIN = "https://api.mangabaka.org";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
 const MAX_MATCHES = 3;
+const MAX_DETAIL_LOOKUPS = 2;
 const MAX_BYTES = 512 * 1024;
 let pausedUntil = 0;
 let lastRequestAt = 0;
@@ -46,7 +47,10 @@ export function parseMangaBakaWork(value: unknown): MetadataWork | null {
   };
 }
 
-async function request(path: string): Promise<unknown> {
+async function request(path: string, followup = false): Promise<unknown> {
+  if (followup && Date.now() - lastRequestAt < 400) {
+    await new Promise<void>(resolve => setTimeout(resolve, 400 - (Date.now() - lastRequestAt)));
+  }
   const now = Date.now();
   // Per-instance pacing complements the existing route's admission limit.
   // Fail open to provider results rather than queue/retry and amplify traffic.
@@ -88,9 +92,9 @@ async function request(path: string): Promise<unknown> {
   return parsed.data;
 }
 
-/** A single title lookup per user query, never per rendered card.
- * No bulk harvesting, no pagination, no fallback fan-out. Only exact aliases
- * from the complete title array may be used; incomplete records fail closed.
+/** One title lookup and at most two bounded detail requests per cache miss.
+ * No per-card harvesting, pagination or retries. Only full v2 title records
+ * are used. Ambiguity or partial failures leave the original results intact.
  */
 export async function matchMangaBakaWorks(query: string): Promise<MetadataWork[]> {
   if (!isMangaBakaEnabled()) return [];
@@ -103,11 +107,31 @@ export async function matchMangaBakaWorks(query: string): Promise<MetadataWork[]
       if (!Array.isArray(data)) throw new Error("Metadata match schema mismatch");
       // A broad or ambiguous search must not silently pick a top result.
       if (data.length > MAX_MATCHES) return [];
-      const works = data.map(parseMangaBakaWork);
-      // If any candidate lacks the full title contract, do not pretend the
-      // remaining candidates establish uniqueness.
-      if (works.some(work => work === null)) return [];
-      return works.filter((work): work is MetadataWork => work !== null);
+      const works: MetadataWork[] = [];
+      let detailLookups = 0;
+      for (const candidate of data) {
+        const row = record(candidate);
+        if (!row || typeof row.id !== "number" || !Number.isSafeInteger(row.id) || row.id <= 0 ||
+            typeof row.type !== "string") return [];
+        // Novel/adaptation records are never eligible in the comic projection.
+        if (!comicFormat(row.type)) continue;
+        // A restricted candidate sharing an alias is a reason not to collapse
+        // the result, even if another candidate appears safe.
+        if (row.content_rating !== "safe") return [];
+        let work = parseMangaBakaWork(row);
+        if (!work) {
+          if (++detailLookups > MAX_DETAIL_LOOKUPS) return [];
+          const detail = await request(`/v2/series/${row.id}?schema=full`, true);
+          work = parseMangaBakaWork(detail);
+        }
+        if (!work || work.externalId !== row.id || work.format !== comicFormat(row.type)) return [];
+        // /match accepts phrase fragments; require the user's complete title
+        // to be present as an alias before any automatic projection.
+        if (work.aliases.some(title => normalizeTitle(title) === normalizeTitle(q))) {
+          works.push(work);
+        }
+      }
+      return works;
     }, CACHE_TTL_SECONDS, { allowStaleOnError: false });
   } catch {
     return [];

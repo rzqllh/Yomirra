@@ -214,6 +214,9 @@ export function SearchResults({
             </div>
 
             {isInitialLoading && <p role="status" className="text-xs text-text-secondary">Memuat sumber lainnya</p>}
+            {searchMangas.some(item => item.canonicalKey?.startsWith("metadata:mangabaka:")) && (
+              <p className="text-xs text-text-secondary">Pencocokan judul: <a className="text-accent underline" href="https://mangabaka.org/">MangaBaka</a> (<a className="underline" href="https://mangabaka.org/about/data-license">lisensi</a>). Hasil diadaptasi untuk katalog.</p>
+            )}
             <LayoutGroup id="search-listing-cards">
               <MangaGrid viewMode={listingViewMode}>
                 {searchMangas.map((item, index) =>

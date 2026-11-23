@@ -485,6 +485,7 @@ export function useSearchCatalog() {
       parsedQuery.textQuery,
       tagSignature,
       candidateSignature,
+      hideNsfw,
     ],
     queryFn: () =>
       apiClient.rankSearchIntelligence(
