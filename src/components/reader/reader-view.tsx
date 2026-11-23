@@ -293,12 +293,12 @@ function ReaderContent({
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<LockKey size={48} weight="duotone" className="text-status-warning-fg" />}
-            title="Chapter Terkunci"
-            description="Chapter ini berstatus early access / terkunci di sumber aslinya."
+            title="Chapter terkunci"
+            description="Chapter ini masih terkunci di sumber aslinya."
             action={
               <Button asChild variant="outline" className="min-h-11 rounded-sm shadow-sm mt-2 font-bold">
                 <Link href={detailHref} replace>
-                  Kembali ke Detail
+                  Kembali ke detail
                 </Link>
               </Button>
             }

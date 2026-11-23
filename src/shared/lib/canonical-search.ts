@@ -60,26 +60,73 @@ export function verifiedCatalogKey(
 /** Live metadata takes precedence over cache. Legacy title keys cannot
  * collapse independent provider records. This never mutates stored data.
  */
-export function reconcileCatalogRows<T extends {
+export interface CatalogSearchRow {
   canonicalKey: string;
   sourceId: string;
-  manga: { id: string };
-  sourceBindings?: readonly { sourceId: string; mangaId: string }[];
-}>(live: readonly T[], cached: readonly T[]): T[] {
-  const refs = new Set<string>();
+  manga: MangaItem & { sourceId?: string; sourceBindings?: SourceBinding[] };
+  sourceBindings?: SourceBinding[];
+}
+
+function catalogRowBindings(row: CatalogSearchRow): SourceBinding[] {
+  return row.sourceBindings?.length ? row.sourceBindings : [{
+    sourceId: row.sourceId,
+    mangaId: row.manga.id,
+    title: row.manga.title,
+    coverUrl: row.manga.coverUrl,
+    format: row.manga.format,
+    isNsfw: row.manga.isNsfw,
+    contentRating: row.manga.contentRating,
+  }];
+}
+
+function refKey(binding: { sourceId: string; mangaId: string }): string {
+  return JSON.stringify([binding.sourceId, binding.mangaId]);
+}
+
+export function reconcileCatalogRows(
+  live: readonly CatalogSearchRow[],
+  cached: readonly CatalogSearchRow[],
+  verifiedIndex: ReadonlyMap<string, string> = new Map(),
+): CatalogSearchRow[] {
   const keys = new Set<string>();
-  const output: T[] = [];
+  const output: CatalogSearchRow[] = [];
   for (const row of [...live, ...cached]) {
-    const primaryRef = JSON.stringify([row.sourceId, row.manga.id]);
-    const rowRefs = [primaryRef, ...(row.sourceBindings ?? []).map(
-      binding => JSON.stringify([binding.sourceId, binding.mangaId])
-    )];
-    if (refs.has(primaryRef)) continue;
+    const primaryRef = refKey({ sourceId: row.sourceId, mangaId: row.manga.id });
+    const bindings = catalogRowBindings(row);
+    const verified = verifiedIndex.get(primaryRef);
+    const match = verified ? output.findIndex(existing => {
+      if (verifiedIndex.get(refKey({ sourceId: existing.sourceId, mangaId: existing.manga.id })) !== verified) return false;
+      const existingSafety = classifyContent(existing.manga);
+      const rowSafety = classifyContent(row.manga);
+      if ((existingSafety === "NSFW") !== (rowSafety === "NSFW")) return false;
+      if (existing.manga.format && row.manga.format &&
+          normalizeTitle(existing.manga.format) !== normalizeTitle(row.manga.format)) return false;
+      // An ambiguous same-provider edition is not an interchangeable binding.
+      const existingBindings = catalogRowBindings(existing);
+      return !bindings.some(binding => existingBindings.some(previous =>
+        previous.sourceId === binding.sourceId && previous.mangaId !== binding.mangaId
+      ));
+    }) : -1;
+    if (match >= 0) {
+      const existing = output[match];
+      const merged = new Map(catalogRowBindings(existing).map(binding => [refKey(binding), binding]));
+      for (const binding of bindings) {
+        const key = refKey(binding);
+        if (verifiedIndex.get(key) === verified && !merged.has(key)) merged.set(key, binding);
+      }
+      const sourceBindings = [...merged.values()];
+      output[match] = {
+        ...existing,
+        sourceBindings,
+        manga: { ...existing.manga, sourceBindings },
+      };
+      continue;
+    }
+    if (output.some(existing => catalogRowBindings(existing).some(binding => refKey(binding) === primaryRef))) continue;
     const canonicalKey = keys.has(row.canonicalKey)
       ? `${row.canonicalKey}:source:${primaryRef}`
       : row.canonicalKey;
     keys.add(canonicalKey);
-    rowRefs.forEach(ref => refs.add(ref));
     output.push(canonicalKey === row.canonicalKey ? row : { ...row, canonicalKey });
   }
   return output;
@@ -145,6 +192,16 @@ export function clusterCanonicalResults(
       ) {
         continue;
       }
+      if (options.mergePolicy === "verified-only") {
+        const verifiedKey = options.verifiedIndex?.get(sourceReference);
+        if (verifiedKey && cluster.sourceBindings.some(ref =>
+          options.verifiedIndex?.get(refKey(ref)) === verifiedKey
+        )) {
+          matchedCluster = cluster;
+          break;
+        }
+        continue;
+      }
       const primaryCandidate: TitleCandidate = {
         sourceId: clusterPrimary.sourceId,
         mangaId: clusterPrimary.id,
@@ -181,17 +238,7 @@ export function clusterCanonicalResults(
         }
       }
 
-      // The user-facing canonical path may merge only identical verified
-      // work identities; title/author heuristics are insufficient evidence.
-      const verifiedKey = options.verifiedIndex?.get(sourceReference);
-      const verified = Boolean(verifiedKey && cluster.sourceBindings.some(ref =>
-        options.verifiedIndex?.get(JSON.stringify([ref.sourceId, ref.mangaId])) === verifiedKey
-      ));
-      if (
-        options.mergePolicy === "verified-only"
-          ? verified
-          : match.confidence === "HIGH_CONFIDENCE"
-      ) {
+      if (match.confidence === "HIGH_CONFIDENCE") {
         matchedCluster = cluster;
         break;
       }

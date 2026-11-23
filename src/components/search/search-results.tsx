@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence, LayoutGroup } from "motion/react";
+import { motion, LayoutGroup, useReducedMotion } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 import { WarningCircle, MagnifyingGlass } from "@phosphor-icons/react";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
@@ -36,7 +37,7 @@ export interface SearchResultsProps {
   errorsToDisplay: { sourceId: string; error: string }[];
   isInitialLoading: boolean;
   allSourcesFailed: boolean;
-  searchMangas: { manga: any; sourceId: string; sourceBindings?: any[] }[];
+  searchMangas: { canonicalKey?: string; manga: any; sourceId: string; sourceBindings?: any[] }[];
   query: string;
   hasActiveFilters: boolean;
   page: number;
@@ -62,6 +63,7 @@ export function SearchResults({
   hasSearchIntent,
 }: SearchResultsProps) {
   const sort = useSearchFilterStore((state) => state.sort);
+  const reducedMotion = useReducedMotion();
   const listingViewMode = useSettingsStore((state) => state.listingViewMode);
   const savedLibraryMap = useLibraryStore((state) => state.items);
   const verifiedCatalogLookup = React.useMemo(() => {
@@ -89,7 +91,7 @@ export function SearchResults({
 
   const headingTitle = React.useMemo(() => {
     if (query.trim().length > 0) {
-      return "Hasil Pencarian";
+      return "Hasil pencarian";
     }
     switch (sort) {
       case "popular":
@@ -98,7 +100,7 @@ export function SearchResults({
       case "update":
         return "Terbaru";
       case "rating":
-        return "Rating Tertinggi";
+        return "Rating tertinggi";
       case "title":
       case "alphabet":
       case "alphabetical":
@@ -119,13 +121,14 @@ export function SearchResults({
       )}
 
       {/* Content Area */}
-      <AnimatePresence mode="wait">
-        {activeSelectedSources.length === 0 ? (
+      {isInitialLoading && searchMangas.length === 0 ? (
+        <SearchResultSkeleton showControls={false} />
+      ) : activeSelectedSources.length === 0 ? (
           <motion.div
             key="no-source"
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
             className="pt-8"
           >
             <EmptyState
@@ -137,9 +140,9 @@ export function SearchResults({
         ) : !hasSearchIntent ? (
           <motion.div
             key="search-initial"
-            initial={{ opacity: 0, y: 8 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
             className="pt-8"
           >
             <EmptyState
@@ -148,21 +151,12 @@ export function SearchResults({
               description="Ketik judul atau kreator untuk mulai mencari."
             />
           </motion.div>
-        ) : isInitialLoading && searchMangas.length === 0 ? (
-          <motion.div
-            key="loading-skeleton"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <SearchResultSkeleton />
-          </motion.div>
         ) : allSourcesFailed && searchMangas.length === 0 ? (
           <motion.div
             key="global-error"
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
             className="pt-8"
           >
             <EmptyState
@@ -201,9 +195,9 @@ export function SearchResults({
         ) : searchMangas.length > 0 ? (
           <motion.div
             key="results-grid"
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
             className="space-y-4"
           >
             <div className="flex items-center justify-between">
@@ -219,12 +213,13 @@ export function SearchResults({
               </div>
             </div>
 
+            {isInitialLoading && <p role="status" className="text-xs text-text-secondary">Memuat sumber lainnya</p>}
             <LayoutGroup id="search-listing-cards">
               <MangaGrid viewMode={listingViewMode}>
                 {searchMangas.map((item, index) =>
                   listingViewMode === "compact" ? (
                     <CompactCard
-                      key={`${item.sourceId}-${item.manga.id}`}
+                      key={item.canonicalKey ?? JSON.stringify([item.sourceId, item.manga.id])}
                       sourceId={item.sourceId}
                       manga={item.manga}
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
@@ -236,7 +231,7 @@ export function SearchResults({
                     />
                   ) : (
                     <ShelfCard
-                      key={`${item.sourceId}-${item.manga.id}`}
+                      key={item.canonicalKey ?? JSON.stringify([item.sourceId, item.manga.id])}
                       sourceId={item.sourceId}
                       manga={item.manga}
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
@@ -324,9 +319,9 @@ export function SearchResults({
         ) : (
           <motion.div
             key="search-empty"
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
             className="pt-8"
           >
             <EmptyState
@@ -348,7 +343,7 @@ export function SearchResults({
             />
           </motion.div>
         )}
-      </AnimatePresence>
+
     </>
   );
 }

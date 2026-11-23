@@ -98,7 +98,7 @@ export function useSearchCatalog() {
     return () => window.removeEventListener("sources_updated", handleUpdate);
   }, [loadLocalSources]);
 
-  const { data: sourcesData } = useQuery(sourceQueryOptions);
+  const { data: sourcesData, isLoading: isSourcesLoading } = useQuery(sourceQueryOptions);
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const savedLibraryMap = useLibraryStore((state) => state.items);
@@ -346,8 +346,8 @@ export function useSearchCatalog() {
           !isExhausted &&
           !isUnreachable &&
           isTagCompatible,
-        placeholderData: (previous: { sourceId: string; query: string; page: number; results: import("@/shared/sources/source-types").MangaItem[]; hasNextPage?: boolean } | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined) =>
-          previousQuery?.queryKey[1] === sourceId && previousQuery.queryKey[4] === hideNsfw ? previous : undefined,
+        // Exact-key cached data is retained by React Query. Never show results
+        // from a different query, filter or page as if they were current.
       };
     }),
   });
@@ -552,8 +552,8 @@ export function useSearchCatalog() {
   }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex, hideNsfw]);
 
   const combinedResults = React.useMemo(
-    () => reconcileCatalogRows(rawSearchMangas, catalogMatches),
-    [rawSearchMangas, catalogMatches]
+    () => reconcileCatalogRows(rawSearchMangas, catalogMatches, verifiedSourceIndex),
+    [rawSearchMangas, catalogMatches, verifiedSourceIndex]
   );
 
   const searchMangas = React.useMemo(() => {
@@ -641,11 +641,11 @@ export function useSearchCatalog() {
     .filter(Boolean) as { sourceId: string; error: string }[];
 
   const isInitialLoading =
-    hasSearchIntent &&
-    searchQueries.some(
+    !isMounted || isSourcesLoading ||
+    (hasSearchIntent && searchQueries.some(
       (sourceQuery) =>
         sourceQuery.fetchStatus === "fetching" && !sourceQuery.data
-    );
+    ));
   const allSourcesFailed =
     eligibleSourceIds.length > 0 &&
     errorsToDisplay.length === eligibleSourceIds.length;

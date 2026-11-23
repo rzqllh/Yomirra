@@ -4,12 +4,13 @@ import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
-export function SearchResultSkeleton({ viewMode }: { viewMode?: "grid" | "compact" }) {
+export function SearchResultSkeleton({ viewMode, showControls = true }: { viewMode?: "grid" | "compact"; showControls?: boolean }) {
   const storeMode = useSettingsStore((state) => state.listingViewMode);
   const activeMode = viewMode ?? storeMode;
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-4 w-full" role="status" aria-label="Memuat hasil pencarian" aria-busy="true">
+      {showControls && <>
       {/* Search Toolbar Placeholder */}
       <div className="flex items-center gap-2 w-full">
         <Skeleton className="flex-1 h-11 rounded-xl" />
@@ -24,6 +25,8 @@ export function SearchResultSkeleton({ viewMode }: { viewMode?: "grid" | "compac
         <Skeleton className="h-8 w-20 rounded-full shrink-0" />
         <Skeleton className="h-8 w-28 rounded-full shrink-0" />
       </div>
+
+      </>}
 
       {/* Status / Count */}
       <div className="pt-2">
