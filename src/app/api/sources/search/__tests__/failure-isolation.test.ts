@@ -84,6 +84,23 @@ describe("Global Search Failure Isolation", () => {
     expect(results.komikindo.errorCode).toBe("UPSTREAM_TIMEOUT");
   });
 
+  it("keeps independent provider records distinct even when IDs and titles match", async () => {
+    vi.spyOn(sourceManager, "getSource").mockImplementation(async (id: string) => ({
+      id, isEnabled: true, isInstalled: true, isNsfw: false,
+      capabilities: { search: true },
+      search: vi.fn().mockResolvedValue({
+        mangas: [{ id: "same", title: "Same title", coverUrl: "/cover.jpg" }],
+        hasNextPage: true,
+      }),
+    }) as any);
+    const res = await GET(new NextRequest("http://localhost:3000/api/sources/search?q=same&sources=shinigami,mangadex&page=1"));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.canonicalResults).toHaveLength(2);
+    expect(json.data.canonicalResults.map((row: any) => row.primaryResult.sourceId).sort()).toEqual(["mangadex", "shinigami"]);
+    expect(json.data.canonicalResults.every((row: any) => row.sourceBindings.length === 1)).toBe(true);
+  });
+
   it("handles non-existent source gracefully with SOURCE_DOWN error code", async () => {
     vi.spyOn(sourceManager, "getSource").mockImplementation(async (id: string) => {
       throw new Error(`Source ${id} not found`);

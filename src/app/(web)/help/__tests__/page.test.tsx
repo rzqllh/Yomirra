@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import HelpPage, { metadata } from "../page";
 
 vi.mock("@/components/chrome/header", () => ({
-  PageHeader: ({ title }: { title: string }) => <header>{title}</header>,
+  DestinationHeader: ({ destination }: { destination: string }) => <header>{destination === "help" ? "Pusat Bantuan" : destination}</header>,
 }));
 
 describe("standalone Pusat Bantuan", () => {

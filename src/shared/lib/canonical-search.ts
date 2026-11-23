@@ -283,7 +283,8 @@ export function clusterCanonicalResults(
  * Convenience helper to cluster from a resultsBySource map (used by search API).
  */
 export function deduplicateResultsBySource(
-  resultsBySource: Record<string, { results: MangaItem[]; error?: string }>
+  resultsBySource: Record<string, { results: MangaItem[]; error?: string }>,
+  options: CanonicalSearchOptions = {},
 ): CanonicalSearchResult[] {
   // Flatten in source-interleaved order for balanced multi-source representation
   const flattened: Array<{ manga: MangaItem; sourceId: string }> = [];
@@ -302,7 +303,7 @@ export function deduplicateResultsBySource(
     }
   }
 
-  return clusterCanonicalResults(flattened);
+  return clusterCanonicalResults(flattened, options);
 }
 
 /**

@@ -31,6 +31,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { getCatalogErrorMessage } from "@/shared/sources/catalog-error-message";
+import { transitions } from "@/shared/lib/motion/tokens";
 
 export interface LibraryResultsProps {
   isDisabled: boolean;
@@ -135,7 +136,7 @@ export function LibraryResults({
     );
   }
 
-  if (isError) {
+  if (isError && mangas.length === 0) {
     return (
       <EmptyState
         icon={<SmileySad size={40} className="text-text-muted" weight="duotone" />}
@@ -191,27 +192,29 @@ export function LibraryResults({
 
   return (
     <>
+      {isFetching && <p role="status" className="mb-2 text-xs text-text-secondary">Memperbarui katalog</p>}
       <LayoutGroup id="library-listing-cards">
         <motion.div
           layout={reducedMotion ? false : true}
-          transition={reducedMotion ? { duration: 0 } : { layout: { type: "spring", stiffness: 320, damping: 30 } }}
+          transition={reducedMotion ? { duration: 0 } : transitions.layout}
           className={cn(
             viewMode === "compact" || viewMode === "list" ? MANGA_COMPACT_GRID_CLASS : MANGA_GRID_CLASS,
-            "transition-opacity duration-200 motion-reduce:transition-none",
-            isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+            "motion-reduce:transition-none"
           )}
         >
           {mangas.map((manga, index) => {
-            const itemKey = `${activeSourceId}::${manga.id}`;
+            const sourceId = activeSourceId === "all" ? manga.sourceId : activeSourceId;
+            if (!sourceId) return null;
+            const itemKey = `${sourceId}::${manga.id}`;
             const isSelected = selectedItems?.has(itemKey);
 
             return (
-              <div key={manga.id} className="relative group w-full h-full flex flex-col">
+              <div key={JSON.stringify([sourceId, manga.id])} className="relative group w-full h-full flex flex-col">
                 <div inert={isSelectionMode ? true : undefined} className="h-full flex flex-col">
                   {viewMode === "grid" ? (
                     <ShelfCard
                       manga={manga}
-                      sourceId={activeSourceId}
+                      sourceId={sourceId}
                       showSourceBadge={true}
                       index={index}
                       animateReveal={true}
@@ -219,7 +222,7 @@ export function LibraryResults({
                   ) : (
                     <CompactCard
                       manga={manga}
-                      sourceId={activeSourceId}
+                      sourceId={sourceId}
                       showSourceBadge={true}
                       index={index}
                       animateReveal={true}

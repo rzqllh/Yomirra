@@ -16,6 +16,11 @@ import { useDiscoveryScopeStore } from "@/shared/store/discovery-scope-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
+import type { MangaItem } from "@/shared/sources/source-types";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
+import { clusterCanonicalResults, type SourceBinding } from "@/shared/lib/canonical-search";
+
+type CatalogManga = MangaItem & { sourceId?: string; sourceBindings?: SourceBinding[] };
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
 
 export function useLibraryCatalog() {
@@ -64,6 +69,7 @@ export function useLibraryCatalog() {
   } = filterStore;
 
   const libraryItems = useLibraryStore(state => state.items);
+  const verifiedIndex = React.useMemo(() => indexVerifiedGroups(groupVerifiedCatalogEntries(Object.values(libraryItems).filter(item => item.isBookmarked !== false))), [libraryItems]);
   const {
     collections,
     membershipsByManga,
@@ -273,31 +279,39 @@ export function useLibraryCatalog() {
     }
   }, [isMounted, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
-  const fetchCatalog = async (currentPage: number) => {
+  const fetchCatalog = async (currentPage: number): Promise<{ mangas: CatalogManga[]; hasNextPage: boolean }> => {
     if (activeSourceId === "all") {
       const targetSourceIds = eligibleSources.map((s) => s.id);
       if (targetSourceIds.length === 0) return { mangas: [], hasNextPage: false };
 
       if (query.trim()) {
         const res = await apiClient.searchGlobal(query.trim(), targetSourceIds, currentPage, isNsfwFiltered);
-        const results = res.canonicalResults?.length
-          ? res.canonicalResults.map((item) => ({ ...item.primaryResult, sourceBindings: item.sourceBindings }))
-          : Object.values(res.resultsBySource).flatMap((g) => g.results);
-        return { mangas: results, hasNextPage: false };
+        // Read exact provider rows; old cached canonical clusters may contain
+        // title-based guesses. Preserve pagination and provider provenance.
+        const entries = Object.entries(res.resultsBySource);
+        if (entries.length > 0 && entries.every(([, group]) => group.error)) {
+          throw new Error("Katalog dari sumber yang dipilih gagal dimuat.");
+        }
+        const results = entries.flatMap(([sourceId, group]) =>
+          group.error ? [] : group.results.map(manga => ({ ...manga, sourceId }))
+        );
+        return { mangas: results, hasNextPage: entries.some(([, group]) => !group.error && group.hasNextPage === true) };
       }
 
       const latestSort = ["latest", "latestUploadedChapter"].includes(sort);
       const promises = targetSourceIds.slice(0, 6).map(async (sid) => {
         try {
           const res = latestSort ? await apiClient.getLatest(sid, currentPage) : await apiClient.getPopular(sid, currentPage);
-          return res.mangas.map((m) => ({ ...m, sourceId: sid }));
+          return { mangas: res.mangas.map((m) => ({ ...m, sourceId: sid })), hasNextPage: Boolean(res.hasNextPage), failed: false };
         } catch {
-          return [];
+          return { mangas: [], hasNextPage: false, failed: true };
         }
       });
       const settled = await Promise.all(promises);
-      const combined = settled.flat();
-      return { mangas: combined, hasNextPage: combined.length >= 20 };
+      if (settled.length > 0 && settled.every(result => result.failed)) {
+        throw new Error("Katalog dari sumber yang dipilih gagal dimuat.");
+      }
+      return { mangas: settled.flatMap(result => result.mangas), hasNextPage: settled.some(result => result.hasNextPage) };
     }
 
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
@@ -354,8 +368,8 @@ export function useLibraryCatalog() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     enabled: Boolean(activeSourceId) && !isDisabled,
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[1] === activeSourceId && previousQuery.queryKey.at(-1) === isNsfwFiltered ? previous : undefined,
+    // Exact query-key data remains cached; unrelated query/filter/page results
+    // must not masquerade as the requested catalog.
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -416,15 +430,24 @@ export function useLibraryCatalog() {
     (!["popular", "all", "popularity", "followedCount"].includes(sort) ? 1 : 0);
   const rawMangas = data?.mangas || [];
   const uniqueMangas = React.useMemo(() => {
-    return Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
-  }, [rawMangas]);
+    const rows = rawMangas.flatMap(manga => {
+      const sourceId = activeSourceId === "all" ? manga.sourceId : activeSourceId;
+      return sourceId ? [{ manga, sourceId }] : [];
+    });
+    if (activeSourceId === "all") {
+      return clusterCanonicalResults(rows, { mergePolicy: "verified-only", verifiedIndex }).map(group => ({
+        ...group.primaryResult, sourceBindings: group.sourceBindings,
+      }));
+    }
+    return Array.from(new Map(rows.map(({ manga, sourceId }) => [canonicalSourceKey(sourceId, manga.id), { ...manga, sourceId }])).values());
+  }, [rawMangas, activeSourceId, verifiedIndex]);
 
   const mangas = React.useMemo(() => {
     let result = uniqueMangas.filter((item) => isContentVisible(item, isNsfwFiltered));
 
     if (selectedCollections.length > 0) {
       result = result.filter((manga) => {
-        const key = `${activeSourceId}::${manga.id}` as MangaKey;
+        const key = `${manga.sourceId ?? activeSourceId}::${manga.id}` as MangaKey;
         const memberships = getMemberships(key);
         return selectedCollections.some((collectionId) => memberships.includes(collectionId));
       });
@@ -432,7 +455,7 @@ export function useLibraryCatalog() {
 
     if (selectedReadingStatuses.length > 0) {
       result = result.filter((manga) => {
-        const key = `${activeSourceId}::${manga.id}` as MangaKey;
+        const key = `${manga.sourceId ?? activeSourceId}::${manga.id}` as MangaKey;
         const readingStatus = getResolvedReadingStatus(key);
         return Boolean(readingStatus && selectedReadingStatuses.includes(readingStatus));
       });

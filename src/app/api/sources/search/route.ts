@@ -11,7 +11,7 @@ import { isContentVisible } from "@/shared/sources/content-policy";
 import { SourceError } from "@/server/lib/sources/error";
 import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { deduplicateResultsBySource } from "@/shared/lib/canonical-search";
-import { upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
+import { buildTrustedCatalogCandidate, upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
 import type { MangaSource } from "@/shared/sources/source-types";
 import type { GlobalSearchResponse } from "@/shared/types/search";
 
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
   }
 
   const sourcesFingerprint = createHash("md5").update(sourceKeys.sort().join(",")).digest("hex").slice(0, 8);
-  const cacheKey = `global:search:v2:content-v1:${queryStr}:requested:${sourceIds.slice().sort().join(",")}:sources:${sourcesFingerprint}:page:${page}${filterKey}`;
+  const cacheKey = `global:search:v3:content-v1:${queryStr}:requested:${sourceIds.slice().sort().join(",")}:sources:${sourcesFingerprint}:page:${page}${filterKey}`;
 
   try {
     const cachedData = await withCache(
@@ -129,26 +129,14 @@ export async function GET(req: NextRequest) {
         });
 
         await Promise.allSettled(promises);
-        const canonicalResults = deduplicateResultsBySource(results);
+        // The global endpoint has no server-verified cross-provider work map.
+        // Never persist title-based guesses as trusted catalog records.
+        const canonicalResults = deduplicateResultsBySource(results, { mergePolicy: "verified-only" });
         if (!hasSourceErrors(results)) {
           await upsertSearchCatalogRecords(
-            canonicalResults.slice(0, 24).map((cluster) => ({
-              canonicalKey: cluster.canonicalKey,
-              sourceId: cluster.primaryResult.sourceId,
-              mangaId: cluster.primaryResult.id,
-              title: cluster.primaryResult.title,
-              coverUrl: cluster.primaryResult.coverUrl,
-              originalTitle: cluster.primaryResult.originalTitle,
-              alternativeTitles: cluster.primaryResult.alternativeTitles,
-              author: cluster.primaryResult.author,
-              description: cluster.primaryResult.description,
-              format: cluster.primaryResult.format,
-              status: cluster.primaryResult.status,
-              score: cluster.primaryResult.score,
-              contentRating: cluster.primaryResult.contentRating,
-              isNsfw: cluster.primaryResult.isNsfw,
-              sourceBindings: cluster.sourceBindings,
-            }))
+            canonicalResults.slice(0, 24).map(({ primaryResult }) =>
+              buildTrustedCatalogCandidate(primaryResult.sourceId, primaryResult)
+            )
           );
         }
         return { resultsBySource: results, canonicalResults };

@@ -32,10 +32,9 @@ vi.mock("@/shared/hooks/use-sync", () => ({
 }));
 
 vi.mock("@/components/chrome/header", () => ({
-  PageHeader: ({ title, description }: any) => (
+  DestinationHeader: ({ destination }: { destination: string }) => (
     <header data-testid="page-header">
-      <h1>{title}</h1>
-      <p>{description}</p>
+      <h1>{destination === "account" ? "Akun & Sinkronisasi" : destination}</h1>
     </header>
   ),
 }));
