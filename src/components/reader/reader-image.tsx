@@ -51,7 +51,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   pageHeight,
   imageFit = 'width',
   onReport,
-  onSwitchSource,
+  onSwitchSource: _onSwitchSource,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
@@ -138,6 +138,17 @@ export const ReaderImage = React.memo(function ReaderImage({
   const handleImageError = async (generation = loadGenerationRef.current) => {
     if (!mountedRef.current || generation !== loadGenerationRef.current) return
 
+    // Offline is a device-level failure, not evidence that this page or its source is dead.
+    // Stop the automatic retry loop immediately; only this image shows recovery UI.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      clearRetryTimer()
+      moveQueueState("fail")
+      setHasError(true)
+      onError(pageIndex)
+      onPermanentFailure?.(pageIndex)
+      return
+    }
+
     if (offlineUrl && !useFallback) {
       setUseFallback(true)
       return
@@ -223,7 +234,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       }}
     >
       {hasError && isAllowedToReveal ? (
-        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
+        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} />
       ) : shouldLoad && !hasError ? (
         <>
           <div
