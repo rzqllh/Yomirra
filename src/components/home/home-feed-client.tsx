@@ -143,7 +143,9 @@ export function HomeFeedClient({
         ? resolveCanonicalResume({
             bindings,
             preferredSourceId,
-            lastRead: result.filter(history =>
+            // The shelf is pre-grouped by savedTitleId. Read from the full
+            // source-specific history store so preferred-source cursors survive.
+            lastRead: Object.values(historyItemsMap).filter(history =>
               bindings.some(ref =>
                 ref.sourceId === history.sourceId && ref.mangaId === history.mangaId
               )
