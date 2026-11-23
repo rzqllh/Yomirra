@@ -31,7 +31,7 @@ export class ShinigamiSource implements MangaSource {
   public readonly name = "Shinigami";
   public readonly description = "Indonesian translation source for manga and manhwa.";
   public readonly language = "id";
-  public readonly baseUrl = "https://shinigami.asia";
+  public readonly baseUrl = "https://s1.shinigami.mx";
   public readonly healthCheckUrl = "https://api.shinigami.io/v1/manga/list?offset=0&limit=1&sort=popularity";
   public readonly upstreamDomain = "api.shinigami.io";
   public readonly supportedLanguages = ["id"];
@@ -263,7 +263,7 @@ export class ShinigamiSource implements MangaSource {
       pages: filenames.map((filename, index) => ({
         index,
         url: `${data.base_url}${data.chapter.path}${filename}`,
-        referer: "https://c.shinigami.asia",
+        referer: "https://s1.shinigami.mx",
       })),
     };
   }

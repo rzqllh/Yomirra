@@ -76,6 +76,21 @@ describe("KomikuSource", () => {
     expect(result.mangas[0]?.id).toBe("example");
   });
 
+  it("normalizes absolute API links to safe manga slugs", async () => {
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><a href="https://api.komiku.org/manga/valid-slug/"><h3>Valid</h3></a><img src="https://cdn.komiku.org/cover.webp"></div>'
+    );
+    const result = await source.getPopular(1);
+    expect(result.mangas[0]?.id).toBe("valid-slug");
+  });
+
+  it("rejects untrusted absolute links", async () => {
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><a href="https://untrusted.example/manga/invalid/"><h3>Invalid</h3></a></div>'
+    );
+    expect((await source.getPopular(1)).mangas).toEqual([]);
+  });
+
   it("should parse manga detail HTML correctly", async () => {
     const mockHtml = `
       <h1>Komik Solo Leveling</h1>

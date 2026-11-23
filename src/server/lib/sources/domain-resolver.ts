@@ -38,11 +38,11 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
   shinigami: {
     sourceId: "shinigami",
     frontend: {
-      defaultDomain: "https://shinigami.asia",
-      mirrors: ["https://11.shinigami.asia", "https://c.shinigami.asia"],
+      defaultDomain: "https://s1.shinigami.mx",
+      mirrors: [],
     },
     api: {
-      defaultDomain: "https://api.shngm.io",
+      defaultDomain: "https://api.shinigami.io",
       mirrors: [],
     },
   },

@@ -82,11 +82,15 @@ export class KomikuSource implements MangaSource {
       const score = parseFloat(scoreRaw) || undefined;
 
       if (href && title && (href.includes("/manga/") || href.includes("/komik/"))) {
-        const id = href
-          .replace(/https?:\/\/komiku\.org/g, "")
-          .replace(/^\/manga\//, "")
-          .replace(/^\/komik\//, "")
-          .replace(/\//g, "");
+        let id = "";
+        try {
+          const link = new URL(href, this.baseUrl);
+          if (["komiku.org", "api.komiku.org"].includes(link.hostname)) {
+            id = link.pathname.match(/^\/(?:manga|komik)\/([^/]+)\/?$/i)?.[1] ?? "";
+          }
+        } catch {
+          // Ignore invalid links in upstream HTML.
+        }
 
         if (id && !seenIds.has(id)) {
           seenIds.add(id);
