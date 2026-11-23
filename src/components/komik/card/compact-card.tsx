@@ -8,6 +8,7 @@ import type { SourceBinding } from "@/shared/lib/canonical-search";
 export interface CompactCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
   sourceBindings?: SourceBinding[];
+  canonicalDetailHref?: string;
   index?: number;
   animateReveal?: boolean;
   className?: string;

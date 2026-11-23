@@ -40,6 +40,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+// Reuse each test's mutable legacy getter for the new per-source selector.
+function readMockHistoryBySource(): any[] {
+  return mockHistoryState.getContinueReading();
+}
+
 let mockHistoryState = {
   items: {} as Record<string, any>,
   getContinueReading: () => [
@@ -53,6 +58,7 @@ let mockHistoryState = {
       progressPercent: 50,
     },
   ],
+  getContinueReadingBySource: readMockHistoryBySource,
   removeMangaHistory: vi.fn(),
 };
 
@@ -826,7 +832,7 @@ describe("Yomirra Editorial Home Components", () => {
       expect(document.getElementById("popular-section")).toBeNull();
     });
 
-    it("deduplicates identical manga titles from different sources in Baru diperbarui", () => {
+    it("keeps identical manga titles from different sources without verified provenance in Baru diperbarui", () => {
       const duplicateLatest: HomeFeedManga[] = [
         {
           id: "monarch-1",
@@ -853,7 +859,8 @@ describe("Yomirra Editorial Home Components", () => {
       const recentSection = document.getElementById("recently-updated-section");
       expect(recentSection).not.toBeNull();
       const items = within(recentSection!).getAllByText("Underworld Monarch: I Am ...");
-      expect(items.length).toBe(1);
+      // A title match alone does not prove the entries represent one work.
+      expect(items.length).toBe(2);
     });
   });
 });

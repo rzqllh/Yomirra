@@ -74,7 +74,8 @@ const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mang
 const itemReferencesSource = (item: LibraryItem, sourceId: string, mangaId: string) =>
   (item.sourceId === sourceId && item.mangaId === mangaId) ||
   (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
-  item.linkedSources?.some((ref) => ref.sourceId === sourceId && ref.mangaId === mangaId) === true;
+  item.linkedSources?.some((ref) => ref.matchConfidence === "CONFIRMED" &&
+    ref.sourceId === sourceId && ref.mangaId === mangaId) === true;
 
 // A user's Library is not an evictable cache. Never delete saved records
 // or issue remote tombstones merely because the library grew beyond 1,000 items.

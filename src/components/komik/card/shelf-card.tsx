@@ -8,6 +8,8 @@ import type { SourceBinding } from "@/shared/lib/canonical-search";
 export interface ShelfCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
   sourceBindings?: SourceBinding[];
+  canonicalDetailHref?: string;
+  showBookmarkAction?: boolean;
   index?: number;
   animateReveal?: boolean;
   className?: string;

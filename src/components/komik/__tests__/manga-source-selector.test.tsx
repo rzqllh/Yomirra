@@ -69,6 +69,27 @@ describe("MangaSourceSelector (Phase 6 UI)", () => {
     expect(screen.getByText(/Sementara/i)).toBeDefined();
   });
 
+  it("does not list or select heuristic-only alternate bindings as a canonical source", () => {
+    const original = useLibraryStore.getState().items["komiku::frieren-indo"];
+    useLibraryStore.setState({
+      items: {
+        "komiku::frieren-indo": {
+          ...original,
+          linkedSources: [
+            { sourceId: "mangadex", mangaId: "frieren-md", addedAt: Date.now(),
+              matchConfidence: "HIGH_CONFIDENCE" },
+          ],
+        },
+      },
+    });
+    render(<MangaSourceSelector sourceId="komiku" mangaId="frieren-indo" title="Sousou no Frieren" />);
+    fireEvent.click(screen.getByText("Komiku"));
+    expect(screen.queryByText("MangaDex")).toBeNull();
+    expect(screen.queryByText("Cocok")).toBeNull();
+    expect(screen.getByText("Belum ada sumber lain yang terhubung untuk judul ini.")).toBeDefined();
+    expect(useSettingsStore.getState().perTitleSourcePreferences["saved-frieren-123"]).toBeUndefined();
+  });
+
   it("opens modal and allows setting per-title preferred source", () => {
     render(
       <MangaSourceSelector

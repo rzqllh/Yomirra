@@ -10,6 +10,8 @@ import {
   PartialBatchCommitError,
 } from "@/shared/lib/guest-merge-engine";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { planVerifiedAliasPreferenceMerge } from "@/shared/lib/canonical-preference-alias";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
@@ -46,6 +48,7 @@ export function GuestMergeDialog() {
   const [isExecuting, setIsExecuting] = React.useState(false);
   const [isRetryingSnapshot, setIsRetryingSnapshot] = React.useState(false);
   const [requiresCloudRefresh, setRequiresCloudRefresh] = React.useState(false);
+  const [preferenceDecisions, setPreferenceDecisions] = React.useState<Record<string, string>>({});
 
   if (!isMergePending) {
     return null;
@@ -150,6 +153,11 @@ export function GuestMergeDialog() {
   const guestHistCount = Object.keys(guestSnapshot.history || {}).length;
   const cloudLibCount = Object.keys(cloudSnapshot.library || {}).length;
   const cloudHistCount = Object.keys(cloudSnapshot.history || {}).length;
+  const preferencePlan = planVerifiedAliasPreferenceMerge(
+    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {},
+    Object.values(guestSnapshot.library ?? {}), Object.values(cloudSnapshot.library ?? {}),
+    preferenceDecisions,
+  );
 
   const handleCancel = async () => {
     try {
@@ -176,6 +184,7 @@ export function GuestMergeDialog() {
         diff: latestDiff,
       });
       setConfirmedDestructive(false);
+      setPreferenceDecisions({});
       setRequiresCloudRefresh(false);
     } catch (error) {
       toast.error("Data Cloud Belum Bisa Diperiksa", {
@@ -188,6 +197,10 @@ export function GuestMergeDialog() {
 
   const handleApply = async () => {
     if (requiresCloudRefresh) return;
+    if (!preferencePlan.canCommit) {
+      toast.error("Pilih sumber untuk setiap konflik sebelum melanjutkan.");
+      return;
+    }
     if (strategy === "cloud-replace" && !confirmedDestructive) {
       toast.error("Konfirmasi Diperlukan", {
         description: "Beri tanda centang pada kotak konfirmasi sebelum melanjutkan.",
@@ -202,6 +215,7 @@ export function GuestMergeDialog() {
         strategy,
         guestSnapshot,
         cloudSnapshot,
+        preferenceDecisions,
       });
 
       if (strategy === "merge") {
@@ -256,6 +270,14 @@ export function GuestMergeDialog() {
         toast.error("Sinkronisasi Cloud Belum Tuntas", {
           description: `${err.completedBatches} dari ${err.totalBatches} batch tersimpan. Data lokal tidak diganti; cloud perlu diperiksa ulang.`,
         });
+      } else if (err instanceof Error && (
+        err.message.includes("CANONICAL_PREFERENCE_STALE_SNAPSHOT") ||
+        err.message.includes("CANONICAL_PREFERENCE_RECONCILE_REQUIRED")
+      )) {
+        setRequiresCloudRefresh(true);
+        toast.error("Pilihan Sumber Berubah di Cloud", {
+          description: "Penyimpanan Library atau History mungkin sudah berhasil. Periksa ulang cloud sebelum mencoba lagi agar tidak menimpa data baru.",
+        });
       } else {
         toast.error("Penyelarasan Gagal", {
           description: err?.message || "Data lokal tetap dipertahankan. Periksa koneksi dan coba lagi.",
@@ -306,6 +328,7 @@ export function GuestMergeDialog() {
             <div className="text-2xs text-text-muted space-y-0.5">
               <p><strong className="text-text-primary">{guestLibCount}</strong> komik tersimpan</p>
               <p><strong className="text-text-primary">{guestHistCount}</strong> riwayat baca</p>
+              <p><strong className="text-text-primary">{Object.keys(guestSnapshot.preferredSources ?? {}).length}</strong> sumber utama</p>
             </div>
           </div>
 
@@ -317,6 +340,7 @@ export function GuestMergeDialog() {
             <div className="text-2xs text-text-muted space-y-0.5">
               <p><strong className="text-text-primary">{cloudLibCount}</strong> komik di cloud</p>
               <p><strong className="text-text-primary">{cloudHistCount}</strong> riwayat di cloud</p>
+              <p><strong className="text-text-primary">{Object.keys(cloudSnapshot.preferredSources ?? {}).length}</strong> sumber utama</p>
             </div>
           </div>
         </div>
@@ -340,6 +364,42 @@ export function GuestMergeDialog() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* All preferred-source conflicts are presented in one review, never
+            resolved by last-write-wins or another title's chapter progress. */}
+        {(diff.conflictingPreferredSources?.length ?? 0) > 0 && (
+          <section className="space-y-3 rounded-xl border border-border-default bg-surface-base p-3"
+            aria-label="Konflik sumber utama">
+            <h3 className="text-sm font-bold text-text-primary">
+              Pilih sumber utama ({diff.conflictingPreferredSources?.length ?? 0} judul)
+            </h3>
+            <p className="text-xs text-text-secondary">
+              Ada lebih dari satu pilihan untuk karya yang sama, termasuk jika ID simpanan perangkat dan akun berbeda.
+              Tentukan satu sumber untuk tiap karya sebelum sinkronisasi.
+            </p>
+            <div className="max-h-48 overflow-y-auto space-y-2">
+              {(diff.conflictingPreferredSources ?? []).map(conflict => (
+                <label key={conflict.canonicalId} className="block space-y-1">
+                  <span className="block text-xs font-semibold text-text-primary break-all">{conflict.canonicalId}</span>
+                  <select
+                    className="w-full min-h-11 rounded-lg border border-border-default bg-surface-raised px-3 text-sm text-text-primary"
+                    value={preferenceDecisions[conflict.canonicalId] ?? ""}
+                    onChange={event => setPreferenceDecisions(prev => ({
+                      ...prev, [conflict.canonicalId]: event.target.value,
+                    }))}
+                  >
+                    <option value="">Pilih sumber utama…</option>
+                    {conflict.choices.map(sourceId => (
+                      <option key={sourceId} value={sourceId}>
+                        {getSourceMetadata(sourceId)?.name ?? sourceId}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Strategy Selector */}
@@ -477,7 +537,7 @@ export function GuestMergeDialog() {
             variant="primary"
             onClick={handleApply}
             loading={isExecuting}
-            disabled={requiresCloudRefresh || (strategy === "cloud-replace" && !confirmedDestructive)}
+            disabled={requiresCloudRefresh || !preferencePlan.canCommit || (strategy === "cloud-replace" && !confirmedDestructive)}
             className="w-full sm:w-auto flex-1 rounded-xl min-h-11 text-xs font-bold"
           >
             <ArrowsClockwise size={16} weight="regular" className={cn(isExecuting && "animate-spin")} />

@@ -12,7 +12,7 @@ import { CollectionToolbar } from "./collection-toolbar";
 import { CollectionSelectionToolbar } from "./collection-selection-toolbar";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { CreateCollectionModal, RenameCollectionModal } from "@/components/collection/collection-modals";
-import { getLibraryHref, getSearchHref } from "@/shared/lib/routes";
+import { getLibraryHref, getSearchHref, getCanonicalSavedDetailHref } from "@/shared/lib/routes";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -155,7 +155,8 @@ export function CollectionTab({
 
   const uniqueTitlesCount = React.useMemo(() => {
     const list = scopedItems ?? [];
-    return new Set(list.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+    // Already deduplicated by verified identity, not by possibly colliding titles.
+    return list.length;
   }, [scopedItems]);
 
   const getMangaCount = (collectionId: string) => {
@@ -166,7 +167,7 @@ export function CollectionTab({
         const memberships = membershipsByManga[key] || membershipsByManga[legacyKey] || [];
         return memberships.includes(collectionId);
       });
-      return new Set(matching.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+      return matching.length;
     }
     return Object.values(membershipsByManga).filter((ids) => ids.includes(collectionId)).length;
   };
@@ -451,6 +452,9 @@ export function CollectionTab({
                         status: manga.status,
                       }}
                       sourceId={manga.sourceId}
+                      sourceBindings={manga.sourceBindings}
+                      canonicalDetailHref={getCanonicalSavedDetailHref(manga.id ?? `${manga.sourceId}::${manga.mangaId}`)}
+                      showBookmarkAction={false}
                       showSourceBadge={true}
                     />
                   </div>

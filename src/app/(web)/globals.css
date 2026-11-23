@@ -995,12 +995,47 @@ body.reader-active section[aria-label*="Notifications" i] {
   }
 }
 
-/* Reader-only dark chrome: visible boundaries without changing app-wide colors. */
+/* Reader canvas theme is independent from the app theme. Force a coherent
+   palette for chrome, chapter-end actions and scrubbers in either app theme. */
 .reader-contrast-scope.dark {
+  color-scheme: dark;
+  --surface-base: #090a0f;
+  --surface-raised: #12141f;
+  --surface-overlay: #181b28;
+  --surface-muted: #222638;
+  --surface-hover: #2c3147;
+  --surface-glass: rgba(18, 20, 31, 0.90);
+  --text-primary: #f4f4f6;
+  --text-secondary: #c7cad7;
+  --text-muted: #b6bacb;
+  --text-on-accent: #101118;
+  --color-accent: #e0634e;
+  --color-accent-hover: #e87562;
+  --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 32px rgba(0, 0, 0, 0.45);
   --border-subtle: rgb(255 255 255 / 22%);
   --border-default: rgb(255 255 255 / 30%);
   --border-strong: rgb(255 255 255 / 47%);
   --border-glass: rgb(255 255 255 / 24%);
+}
+.reader-contrast-scope.light {
+  color-scheme: light;
+  --surface-base: #eef0f5;
+  --surface-raised: #fafbfe;
+  --surface-overlay: #ffffff;
+  --surface-muted: #e6e9f0;
+  --surface-hover: #dce2eb;
+  --surface-glass: rgba(255, 255, 255, 0.94);
+  --text-primary: #121316;
+  --text-secondary: #3d4454;
+  --text-muted: #50586a;
+  --text-on-accent: #ffffff;
+  --color-accent: #a82e2e;
+  --color-accent-hover: #8e2323;
+  --border-subtle: rgb(34 44 64 / 11%);
+  --border-default: rgb(34 44 64 / 19%);
+  --border-strong: rgb(34 44 64 / 30%);
+  --border-glass: rgb(34 44 64 / 15%);
+  --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 5px 20px rgb(34 44 64 / 13%);
 }
 /* Page scrubber keeps a 44px gesture target with an 8px track and a visible thumb. */
 .reader-page-range { appearance: none; -webkit-appearance: none; touch-action: pan-x; }

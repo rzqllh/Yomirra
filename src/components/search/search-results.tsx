@@ -11,6 +11,9 @@ import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { canonicalSourceKey, groupVerifiedCatalogEntries } from "@/shared/lib/canonical-identity";
+import { getCanonicalSavedDetailHref } from "@/shared/lib/routes";
 import {
   Pagination,
   PaginationContent,
@@ -60,6 +63,29 @@ export function SearchResults({
 }: SearchResultsProps) {
   const sort = useSearchFilterStore((state) => state.sort);
   const listingViewMode = useSettingsStore((state) => state.listingViewMode);
+  const savedLibraryMap = useLibraryStore((state) => state.items);
+  const verifiedCatalogLookup = React.useMemo(() => {
+    const index = new Map<string, string>();
+    const groups = groupVerifiedCatalogEntries(Object.values(savedLibraryMap)
+      .filter(item => item.isBookmarked !== false));
+    for (const group of groups) {
+      const representative = group.members.find(member => member.id) ?? group.members[0];
+      const href = getCanonicalSavedDetailHref(
+        representative.id ?? `${representative.sourceId}::${representative.mangaId}`
+      );
+      for (const ref of group.sourceBindings) {
+        index.set(canonicalSourceKey(ref.sourceId, ref.mangaId), href);
+      }
+    }
+    return index;
+  }, [savedLibraryMap]);
+  const canonicalHrefFor = (item: SearchResultsProps["searchMangas"][number]): string | undefined => {
+    const refs = item.sourceBindings ?? item.manga?.sourceBindings ??
+      [{ sourceId: item.sourceId, mangaId: item.manga.id }];
+    return refs.map((ref: { sourceId: string; mangaId: string }) =>
+      verifiedCatalogLookup.get(canonicalSourceKey(ref.sourceId, ref.mangaId))
+    ).find(Boolean);
+  };
 
   const headingTitle = React.useMemo(() => {
     if (query.trim().length > 0) {
@@ -202,6 +228,7 @@ export function SearchResults({
                       sourceId={item.sourceId}
                       manga={item.manga}
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
+                      canonicalDetailHref={canonicalHrefFor(item)}
                       showSourceBadge={true}
                       priority={false}
                       index={index}
@@ -213,6 +240,7 @@ export function SearchResults({
                       sourceId={item.sourceId}
                       manga={item.manga}
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
+                      canonicalDetailHref={canonicalHrefFor(item)}
                       showSourceBadge={true}
                       priority={false}
                       index={index}

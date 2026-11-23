@@ -60,6 +60,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       ? pageWidth / pageHeight
       : null
   const [hasError, setHasError] = React.useState(false)
+  const [offlineFailure, setOfflineFailure] = React.useState(false)
   const [retryCount, setRetryCount] = React.useState(0)
   const [aspectRatio, setAspectRatio] = React.useState<number | null>(knownAspectRatio)
   const [hasLoaded, setHasLoaded] = React.useState(false)
@@ -138,6 +139,19 @@ export const ReaderImage = React.memo(function ReaderImage({
   const handleImageError = async (generation = loadGenerationRef.current) => {
     if (!mountedRef.current || generation !== loadGenerationRef.current) return
 
+    // Offline is a device-level failure, not evidence that this page or its source is dead.
+    // Stop the automatic retry loop immediately; only this image shows recovery UI.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      clearRetryTimer()
+      moveQueueState("fail")
+      setOfflineFailure(true)
+      setHasError(true)
+      onError(pageIndex)
+      onPermanentFailure?.(pageIndex)
+      return
+    }
+
+    setOfflineFailure(false)
     if (offlineUrl && !useFallback) {
       setUseFallback(true)
       return
@@ -196,6 +210,7 @@ export const ReaderImage = React.memo(function ReaderImage({
     queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "start")
     setQueueState(queueStateRef.current)
     setHasError(false)
+    setOfflineFailure(false)
     setHasLoaded(false)
     setBypassOptimizer(false)
     setRetryCount(0)
@@ -223,7 +238,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       }}
     >
       {hasError && isAllowedToReveal ? (
-        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
+        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} offline={offlineFailure} onSwitchSource={offlineFailure ? undefined : onSwitchSource} />
       ) : shouldLoad && !hasError ? (
         <>
           <div

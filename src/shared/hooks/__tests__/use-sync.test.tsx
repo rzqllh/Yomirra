@@ -51,6 +51,15 @@ vi.mock("@/shared/lib/sync-utils", () => ({
   deleteMangaHistory: vi.fn(async () => undefined),
 }));
 
+// The canonical preference cloud domain is independently unit-tested. These
+// sync tests fake its read/write boundary so a real Firestore doc() never
+// receives the in-memory fake db from this suite.
+vi.mock("@/shared/lib/canonical-preference-cloud", () => ({
+  readCanonicalPreferredSources: vi.fn(async () => ({})),
+  writeCanonicalPreferredSource: vi.fn(async () => undefined),
+  decodeCanonicalPreferenceMap: vi.fn(() => ({})),
+}));
+
 vi.mock("@/shared/lib/firestore-runtime", () => ({
   loadFirestore: vi.fn(async () => mocks.firestore),
 }));
