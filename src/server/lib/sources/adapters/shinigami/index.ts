@@ -225,7 +225,7 @@ export class ShinigamiSource implements MangaSource {
     if (!res?.data) {
       throw new Error(`Shinigami detail returned empty response for ${mangaId}`);
     }
-    return normalizeMangaDetail(res.data);
+    return normalizeMangaDetail({ ...res.data, manga_id: res.data.manga_id || mangaId });
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {

@@ -10,10 +10,27 @@ describe("WestMangaSource", () => {
 
   beforeEach(() => {
     mockHttpClient = new HttpClient({
-      baseUrl: "https://data.mantweh.online",
+      baseUrl: "https://v1.westmanga.my",
       timeoutMs: 5000,
     });
     source = new WestMangaSource(mockHttpClient);
+    (source as unknown as { visitToken: unknown }).visitToken = {
+      value: "fixture-token", validUntil: Date.now() + 60_000, uses: 0,
+    };
+  });
+
+  describe("Visitor token", () => {
+    it("fetches an upstream visitor token before calling the catalog and does not log it", async () => {
+      (source as unknown as { visitToken: unknown }).visitToken = null;
+      const get = vi.spyOn(mockHttpClient, "get");
+      get.mockResolvedValueOnce({ token: "public-visit-token", expires_at: Math.floor(Date.now() / 1000) + 600 })
+        .mockResolvedValueOnce({ data: [] });
+      await source.getPopular(1);
+      expect(get).toHaveBeenNthCalledWith(1, "/api/visit-token");
+      expect(get).toHaveBeenNthCalledWith(2, "/api/contents",
+        expect.objectContaining({ page: 1, type: "Comic", per_page: 20 }),
+        { headers: { "X-WM-Visit": "public-visit-token" } });
+    });
   });
 
   describe("Metadata & Capabilities", () => {
@@ -23,7 +40,7 @@ describe("WestMangaSource", () => {
       expect(source.isNsfw).toBe(false);
       expect(source.isEnabled).toBe(true);
       expect(source.status).toBe("online");
-      expect(source.upstreamDomain).toBe("data.mantweh.online");
+      expect(source.upstreamDomain).toBe("v1.westmanga.my");
       expect(source.language).toBe("id");
     });
 

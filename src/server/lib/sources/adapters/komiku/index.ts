@@ -315,9 +315,9 @@ export class KomikuSource implements MangaSource {
     $("#Baca_Komik img, #baca_komik img, .baca-komik img, #pembaca img").each((_, el) => {
       if ($(el).parent().is("a")) return;
       let src =
-        $(el).attr("src") ||
         $(el).attr("data-src") ||
         $(el).attr("lazy-src") ||
+        $(el).attr("src") ||
         "";
       if (!src || src.includes(".gif")) return;
       src = src.trim().startsWith("//") ? `https:${src.trim()}` : src.trim();

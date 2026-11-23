@@ -189,6 +189,13 @@ describe("ShinigamiSource — reliability hardening", () => {
       );
     });
 
+    it("keeps requested ID when the new detail response omits manga_id", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({ data: { title: "New Detail", description: "Story", status: 1 } });
+      const detail = await source.getDetail("slug-id");
+      expect(detail.id).toBe("slug-id");
+    });
+
     it("maps valid detail correctly", async () => {
       const { source, get } = makeAdapter();
       get.mockResolvedValue({

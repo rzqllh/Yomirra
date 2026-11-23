@@ -119,7 +119,7 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
       mirrors: ["https://v1.westmanga.top"],
     },
     api: {
-      defaultDomain: "https://data.mantweh.online",
+      defaultDomain: "https://v1.westmanga.my",
       mirrors: [],
     },
   },
