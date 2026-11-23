@@ -1,16 +1,16 @@
 # Yomirra
 
-Yomirra adalah web reader manga, manhwa, dan manhua dari beberapa sumber. Cari judul, simpan ke Rak Buku, dan lanjutkan bacaan di satu aplikasi.
+Yomirra adalah aplikasi web pembaca komik lintas sumber untuk manga, manhwa, dan manhua. Cari judul, simpan ke Library pribadi, dan lanjutkan bacaan dalam satu aplikasi.
 
 **[Buka Yomirra](https://www.yomirra.web.id/)** · [Panduan pembaca](docs/USER_GUIDE.md) · [Bantuan](docs/TROUBLESHOOTING.md) · [Dokumentasi](docs/README.md)
 
-Yomirra masih aktif dikembangkan. Katalog, bahasa, kelengkapan chapter, dan ketersediaan gambar mengikuti layanan sumber pihak ketiga.
+Yomirra dikembangkan secara aktif. Katalog, bahasa, kelengkapan chapter, dan ketersediaan gambar mengikuti layanan sumber pihak ketiga.
 
 ## Mulai membaca
 
-1. Cari judul dari Beranda atau Search. Coba judul alternatif atau `#tag` untuk mempersempit hasil.
+1. Cari judul melalui Beranda atau Cari. Coba judul alternatif atau `#tag` untuk mempersempit hasil.
 2. Pilih sumber yang tersedia, buka detail komik, lalu pilih chapter.
-3. Gunakan tombol bookmark agar judul muncul di **Rak Buku**. Kunjungi **Lanjut Baca** di Beranda untuk meneruskan progres yang tersimpan.
+3. Simpan judul agar muncul di **Library** (bacaan pribadi). Kunjungi **Lanjut Baca** di Beranda untuk meneruskan progres yang tersimpan.
 4. Buka **Pengaturan** untuk tema, prioritas bahasa, serta ekspor cadangan. Akun bersifat opsional untuk sinkronisasi yang didukung.
 
 ## Kemampuan dan batasnya
@@ -18,17 +18,17 @@ Yomirra masih aktif dikembangkan. Katalog, bahasa, kelengkapan chapter, dan kete
 | Kebutuhan | Yang tersedia | Batas yang perlu diketahui |
 | --- | --- | --- |
 | Menemukan bacaan | Pencarian lintas sumber, judul alternatif, tag/filter, discovery, dan rekomendasi tanpa AI | Hasil dan filter mengikuti kemampuan sumber; kecocokan judul dapat ambigu |
-| Mengatur koleksi | Bookmark, riwayat, koleksi buatan sendiri, dan Smart Collections dari data lokal | **Library** adalah penjelajahan katalog; **Rak Buku** adalah bacaan pribadi |
+| Mengatur koleksi | Bookmark, riwayat, koleksi buatan sendiri, dan Smart Collections dari data lokal | **Jelajah** (`/library`) adalah katalog; **Library** (`/bookmark`) adalah bacaan pribadi |
 | Melanjutkan bacaan | Progres halaman, navigator chapter, arah vertikal/LTR/RTL, preferensi per judul atau semua komik | Perbedaan penomoran chapter antar sumber dapat memerlukan pilihan manual |
 | Memulihkan sumber | Status layanan, kelompok **Under Maintenance**, dan pencarian sumber alternatif | Tidak menjamin judul tersedia atau progres dapat dipetakan otomatis |
 | Membaca offline | Antrean unduhan pada PWA standalone dan pembacaan unduhan yang memenuhi klasifikasi aman | Browser biasa mengunduh ZIP; cache dapat dibuang perangkat |
-| Menjaga data | Penyimpanan lokal, ekspor/pulihkan JSON, dan sinkronisasi Firebase opsional | Gambar unduhan tidak masuk cadangan/cloud sync; status baca masih lokal |
+| Menjaga data | Penyimpanan lokal, ekspor/pulihkan JSON, dan sinkronisasi akun opsional | Gambar unduhan tidak masuk cadangan/cloud sync; status baca masih lokal |
 
-Pilihan penjelajahan di **Sumber** berlaku untuk Beranda, Library, dan Populer. Pencarian global tetap memakai sumber yang tersedia terlepas dari toggle penjelajahan. Status layanan berbeda dari preferensi tersebut.
+Pilihan penjelajahan di **Sumber** berlaku untuk Beranda, Jelajah, dan Populer. Pencarian global tetap memakai sumber yang tersedia terlepas dari toggle penjelajahan. Status layanan berbeda dari preferensi tersebut.
 
 Progres lokal tetap tersedia saat sinkronisasi gagal. Menghapus data situs atau kehilangan perangkat dapat menghilangkan data yang belum dicadangkan. Baca [data bacaan dan cadangan](docs/READING_DATA.md) sebelum memindahkan perangkat atau membersihkan penyimpanan.
 
-PWA, offline, gestur, dan penyimpanan bergantung pada browser serta perangkat. Implementasi dan tes otomatis tidak menjamin semua alur telah lulus di iPhone/iPad fisik atau dua perangkat dengan Firebase. [Panduan pengujian](docs/TESTING.md) membedakan pemeriksaan otomatis dan manual.
+PWA, offline, gestur, dan penyimpanan bergantung pada browser serta perangkat. Tes otomatis tidak menggantikan uji perangkat fisik atau verifikasi sinkronisasi lintas perangkat. [Panduan pengujian](docs/TESTING.md) membedakan pemeriksaan otomatis dan manual.
 
 ## Bantuan dan laporan
 
