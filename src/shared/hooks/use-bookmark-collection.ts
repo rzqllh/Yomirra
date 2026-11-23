@@ -52,7 +52,7 @@ export function useBookmarkCollection() {
 
     // ponytail: one canonical visible item per saved source reference.
     const seen = new Set<string>();
-    let result: typeof libraryItems = [];
+    const result: typeof libraryItems = [];
     for (const item of libraryItems) {
       if (item.isBookmarked === false) continue;
       const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
@@ -79,7 +79,6 @@ export function useBookmarkCollection() {
     hideNsfw,
     isFromNsfwSource,
     isMounted,
-    isSourceDisabled,
     libraryItems,
     nsfwStatus,
   ]);
