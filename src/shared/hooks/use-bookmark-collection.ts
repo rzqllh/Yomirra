@@ -23,6 +23,10 @@ export function useBookmarkCollection() {
   const isMounted = useMounted();
   const libraryItemsMap = useLibraryStore((state) => state.items);
   const libraryItems = Object.values(libraryItemsMap);
+  const explicitNsfwRefs = new Set(
+    libraryItems.filter(item => item.isNsfw === true)
+      .map(item => canonicalSourceKey(item.sourceId, item.mangaId))
+  );
   const historyItemsMap = useHistoryStore((state) => state.items);
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
@@ -92,17 +96,18 @@ export function useBookmarkCollection() {
     visibleCatalogGroups.find(group => group.representative === item),
   [visibleCatalogGroups]);
 
-  const mayExposeSource = React.useCallback((sourceId: string) => {
+  const mayExposeSource = React.useCallback((sourceId: string, mangaId?: string) => {
     if (isSourceDisabled(sourceId)) return false;
+    if (hideNsfw && mangaId && explicitNsfwRefs.has(canonicalSourceKey(sourceId, mangaId))) return false;
     const source = dynamicSourceRegistry.get(sourceId) ?? getSourceMetadata(sourceId);
     if (source?.status === "unavailable" || source?.status === "in-fix") return false;
     if (hideNsfw && (nsfwStatus !== "KNOWN" || nsfwSourceIds.has(sourceId) || source?.isNsfw)) return false;
     return true;
-  }, [isSourceDisabled, hideNsfw, nsfwStatus, nsfwSourceIds]);
+  }, [isSourceDisabled, hideNsfw, nsfwStatus, nsfwSourceIds, explicitNsfwRefs]);
 
   const itemMatchesSource = React.useCallback((item: LibraryItem, sourceId: string) => {
     const group = groupForItem(item);
-    return group?.sourceBindings.some(ref => ref.sourceId === sourceId && mayExposeSource(ref.sourceId))
+    return group?.sourceBindings.some(ref => ref.sourceId === sourceId && mayExposeSource(ref.sourceId, ref.mangaId))
       ?? item.sourceId === sourceId;
   }, [groupForItem, mayExposeSource]);
 
@@ -147,7 +152,7 @@ export function useBookmarkCollection() {
     const map = new Map<string, string>();
     for (const group of visibleCatalogGroups) {
       for (const ref of group.sourceBindings) {
-        if (!mayExposeSource(ref.sourceId) || map.has(ref.sourceId)) continue;
+        if (!mayExposeSource(ref.sourceId, ref.mangaId) || map.has(ref.sourceId)) continue;
         const meta = getSourceMetadata(ref.sourceId);
         map.set(ref.sourceId, meta?.name || group.representative.sourceName || getSourceDisplayName(ref.sourceId));
       }
@@ -229,7 +234,7 @@ export function useBookmarkCollection() {
       return {
         ...item,
         sourceBindings: (group?.sourceBindings ?? [])
-          .filter(ref => mayExposeSource(ref.sourceId))
+          .filter(ref => mayExposeSource(ref.sourceId, ref.mangaId))
           .map(ref => ({ ...ref, title: item.title })),
       };
     });

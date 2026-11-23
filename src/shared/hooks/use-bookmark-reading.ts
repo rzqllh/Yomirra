@@ -18,6 +18,10 @@ export function useBookmarkReading() {
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
   useHistoryStore((state) => state.items);
   const savedLibraryItems = useLibraryStore((state) => state.items);
+  const explicitNsfwRefs = new Set(
+    Object.values(savedLibraryItems).filter(item => item.isNsfw === true)
+      .map(item => canonicalSourceKey(item.sourceId, item.mangaId))
+  );
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
@@ -46,7 +50,8 @@ export function useBookmarkReading() {
       historyItems = [];
     } else {
       historyItems = historyItems.filter(
-        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw) &&
+          !explicitNsfwRefs.has(canonicalSourceKey(item.sourceId, item.mangaId))
       );
     }
   }

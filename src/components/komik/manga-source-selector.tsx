@@ -52,6 +52,10 @@ export function MangaSourceSelector({
     ? canonicalGroupPreferenceAliases(verifiedGroup)
     : [titleKey];
   const prefs = useSettingsStore((state) => state.perTitleSourcePreferences);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const explicitNsfwRefs = new Set(Object.values(savedItems)
+    .filter(item => item.isNsfw === true)
+    .map(item => canonicalSourceKey(item.sourceId, item.mangaId)));
   const perTitlePref = prefs[titleKey] ??
     preferenceAliases.map(key => prefs[key]).find(Boolean);
   const setPerTitleSourcePreference = useSettingsStore((state) => state.setPerTitleSourcePreference);
@@ -65,6 +69,10 @@ export function MangaSourceSelector({
     if (linked.sourceId === sourceId && linked.mangaId === mangaId) return false;
     const source = getSourceMetadata(linked.sourceId);
     if (!source || disabledSources.includes(linked.sourceId)) return false;
+    if (hideNsfw && (
+      source.isNsfw === true ||
+      explicitNsfwRefs.has(canonicalSourceKey(linked.sourceId, linked.mangaId))
+    )) return false;
     return (
       source.isEnabled !== false &&
       source.isInstalled !== false &&

@@ -92,7 +92,18 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   }
 
   const selected = visibleMembers.find(member => !disabledSources.includes(member.sourceId)) ?? visibleMembers[0];
-  const safeBindings = group.sourceBindings.filter(ref => mayShow(ref.sourceId));
+  const explicitNsfwRefs = new Set([
+    ...Object.values(libraryItems),
+    ...Object.values(historyItems),
+  ].filter(item => item.isNsfw === true).map(item =>
+    canonicalSourceKey(item.sourceId, item.mangaId)
+  ));
+  // A safe primary must not expose a known-adult alternate from the same
+  // general-purpose provider through a confirmed linkedSources entry.
+  const safeBindings = group.sourceBindings.filter(ref =>
+    mayShow(ref.sourceId) &&
+    (!hideNsfw || !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId, ref.mangaId)))
+  );
   const available = safeBindings.filter(ref => {
     const source = dynamicSourceRegistry.get(ref.sourceId) ?? getSourceMetadata(ref.sourceId);
     return !disabledSources.includes(ref.sourceId) &&
