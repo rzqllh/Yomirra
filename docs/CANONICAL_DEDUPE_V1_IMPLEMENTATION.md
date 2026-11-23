@@ -18,19 +18,23 @@
 - `src/shared/lib/guest-merge-engine.ts`: cloud commit and guest merge cover library/history only.
 - `src/components/komik/canonical-source-dialog.tsx`: source selection dialog; current discovery cards may show it before detail.
 
-## Evidence status
+## Evidence status (PR #161, not yet released)
 
-| Capability | Status |
-|---|---|
-| Verified-only reversible presentation grouping | Implemented as pure library helper; not yet wired to UI |
-| Smart-resume decision policy | Implemented as pure helper; not yet wired to navigation |
-| Guest/cloud preferred-source conflict plan | Implemented as pure helper; not yet wired to guest merge dialog |
-| Global stable canonical registry | NOT_IMPLEMENTED; requires authoritative verified mapping with split and audit provenance |
-| Canonical detail route | NOT_IMPLEMENTED |
-| Library/History and Search global dedupe UI | NOT_IMPLEMENTED |
-| Sync preferred source and guest resolution to cloud | NOT_IMPLEMENTED; Firestore security/rules not verified |
-| Non-destructive persistence migration | NOT_IMPLEMENTED; legacy storage must not be deleted |
-| Cross-device, offline PWA, NSFW and migration E2E | NOT_RUN |
+This matrix describes implementation visible on `feat/canonical-dedupe-contract-20261123`, **not deployed production behavior**. Passing Typecheck/Build or Preview READY is not equivalent to verified acceptance.
+
+| Capability | Code state | Verification boundary |
+|---|---|---|
+| Verified-only reversible presentation grouping | WIRED into saved Library, History, Home continue/Spotlight/Hero and eligible Search cards | Confirmed provenance or exact source identity only; no cross-source merge based on title similarity |
+| Smart resume and preferred-source fallback | WIRED into History/Home and canonical saved detail | Source-specific chapter cursor only; unavailable preference must remain unchanged and surface source choice |
+| Guest/cloud preferred-source conflict flow | WIRED into guest merge dialog and owner-scoped Firestore preference functions | Unit tests cover merge planning and stale snapshot; live multi-device account integration remains unverified |
+| Stable global canonical identity registry | NOT IMPLEMENTED | Saved-user provenance is not a globally authoritative independent registry |
+| Canonical saved/history detail route | WIRED at `/catalog/saved/[savedTitleId]` | Verified user-owned saved ID or history-only source fallback; not all globally unsaved works |
+| Library/History and Search dedupe presentation | WIRED for verified saved works | Source-specific history rows remain intact; unverified and unsaved works may remain separate |
+| Owner-scoped preferred source persistence | WIRED locally and via Firestore integration | Live owner-rule permissions and cross-device convergence must be verified with authorized test accounts |
+| Incremental legacy compatibility | WIRED through legacy source routes/aliases and non-destructive source records | No destructive data cutover, legacy cleanup, or authoritative global migration was performed |
+| Browser/mobile/PWA/NSFW acceptance | Automated unit/integration and Playwright regression cases added | Confirm latest GitHub run; real iPhone PWA, offline/weak-signal, and multi-device acceptance still require direct evidence |
+
+Never mark an item VERIFIED merely because code exists. For every release gate, record the tested commit, CI run, environment, result, and remaining untested paths.
 
 ## Release blockers
 
