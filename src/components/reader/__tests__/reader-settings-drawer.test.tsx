@@ -43,7 +43,7 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     render(<ReaderSettingsDrawer isOpen={true} onClose={onClose} />);
 
     // The accessible name matches the visible theme option.
-    const systemBgBtn = screen.getByRole("button", { name: "Ikuti Sistem" });
+    const systemBgBtn = screen.getByRole("button", { name: "Ikuti tema aplikasi" });
     expect(systemBgBtn).toBeDefined();
 
     // Trigger setting update: must NOT throw RangeError: Maximum call stack size exceeded
@@ -70,7 +70,7 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     );
 
     // Verify Scope Selector is visible
-    expect(screen.getByText("Cakupan Pengaturan")).toBeDefined();
+    expect(screen.getByText("Cakupan pengaturan")).toBeDefined();
     const titleScopeBtn = screen.getByRole("button", { name: /Khusus judul ini/i });
     const globalScopeBtn = screen.getByRole("button", { name: /Semua komik/i });
     expect(titleScopeBtn).toBeDefined();
@@ -80,7 +80,7 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     fireEvent.click(titleScopeBtn);
 
     // Click on 'Penuhi Lebar' image fit
-    const widthBtn = screen.getByRole("button", { name: /Penuhi Lebar/i });
+    const widthBtn = screen.getByRole("button", { name: /Penuhi lebar/i });
     fireEvent.click(widthBtn);
 
     const storeState = useReaderStore.getState();
@@ -110,7 +110,7 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     fireEvent.click(globalScopeBtn);
 
     // Click 'Jauh' for page gap
-    const comfortableGapBtn = screen.getByRole("button", { name: /Jauh/i });
+    const comfortableGapBtn = screen.getByRole("button", { name: /Renggang/i });
     fireEvent.click(comfortableGapBtn);
 
     const storeState = useReaderStore.getState();
@@ -175,4 +175,27 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     expect(useReaderStore.getState().preferences).toEqual(initialGlobal);
     expect(useReaderStore.getState().perTitlePreferences["mangadex::frieren"]).toBeUndefined();
   });
+  it("shows the values of the selected scope instead of another title override", () => {
+    useReaderStore.setState({
+      preferences: { ...defaultPrefs, background: "black" },
+      perTitlePreferences: {
+        "shinigami::solo-leveling": { background: "mist" },
+      },
+    });
+
+    render(<ReaderSettingsDrawer isOpen onClose={vi.fn()} sourceId="shinigami" mangaId="solo-leveling" />);
+
+    const dark = screen.getByRole("button", { name: "Gelap" });
+    const light = screen.getByRole("button", { name: "Terang" });
+    expect(light.getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: /Semua komik/i }));
+    expect(dark.getAttribute("aria-pressed")).toBe("true");
+    expect(light.getAttribute("aria-pressed")).toBe("false");
+
+    fireEvent.click(screen.getByRole("button", { name: /Khusus judul ini/i }));
+    expect(light.getAttribute("aria-pressed")).toBe("true");
+    expect(useReaderStore.getState().preferences.background).toBe("black");
+  });
+
 });

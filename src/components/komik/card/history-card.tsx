@@ -38,6 +38,7 @@ export function HistoryCard({ item, className, onDeleteOverride }: HistoryCardPr
       }}
       historyItem={item}
       progressPercent={calculatedSeriesProgress ?? item.progressPercent ?? 0}
+      progressKind={calculatedSeriesProgress !== undefined ? "series" : "chapter"}
       chapterTitle={item.chapterTitle || `Ch. ${item.chapterId}`}
       chapterId={item.chapterId}
       className={className}

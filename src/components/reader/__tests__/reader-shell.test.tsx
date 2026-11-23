@@ -110,11 +110,30 @@ describe("ReaderShell Header & Progress Bar", () => {
     render(<ReaderShell sourceId="srcA" mangaId="m1" mangaTitle="Saved work"><div>Content</div></ReaderShell>);
     const options = prompt.mock.calls.find(([title]) => title === "Simpan bacaan ini ke Library?")?.[1];
     expect(options?.action).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: "Simpan ke bookmark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Simpan ke Library" }));
     const action = options!.action as { onClick: (event: React.MouseEvent<HTMLButtonElement>) => void };
     action.onClick({} as React.MouseEvent<HTMLButtonElement>);
     expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);
     prompt.mockRestore();
+  });
+
+  it("uses Library terminology for both save and remove feedback", () => {
+    const savedToast = vi.spyOn(toast, "success");
+    const removedToast = vi.spyOn(toast, "info");
+
+    render(
+      <ReaderShell sourceId="srcA" mangaId="m1" mangaTitle="Judul uji">
+        <div>Konten</div>
+      </ReaderShell>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Simpan ke Library" }));
+    expect(savedToast).toHaveBeenCalledWith("Disimpan ke Library", expect.any(Object));
+    fireEvent.click(screen.getByRole("button", { name: "Hapus dari Library" }));
+    expect(removedToast).toHaveBeenCalledWith("Dihapus dari Library", expect.any(Object));
+
+    savedToast.mockRestore();
+    removedToast.mockRestore();
   });
 
   it("opens Home independently of the detail destination", () => {
@@ -203,7 +222,7 @@ describe("ReaderShell Header & Progress Bar", () => {
     );
 
     expect(screen.queryByTestId("reader-page-dots")).toBeNull();
-    const scrubber = screen.getByRole("slider", { name: "Progress membaca" });
+    const scrubber = screen.getByRole("slider", { name: "Posisi baca" });
     expect(scrubber).toBeDefined();
     expect(scrubber.getAttribute("value")).toBe("42");
     expect(scrubber.getAttribute("aria-valuetext")).toBe("42%");
@@ -225,7 +244,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       </ReaderShell>
     );
 
-    const bookmarkBtn = screen.getByLabelText("Simpan ke bookmark");
+    const bookmarkBtn = screen.getByLabelText("Simpan ke Library");
     fireEvent.click(bookmarkBtn);
 
     const saved = useLibraryStore.getState().isInLibrary("srcA", "m1");
@@ -366,7 +385,7 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(screen.getByRole("button", { name: "Kembali ke Beranda" })).toBeDefined();
 
     // Right cluster button
-    expect(screen.getByRole("button", { name: "Simpan ke bookmark" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Simpan ke Library" })).toBeDefined();
 
     // Center title and chapter tooltips
     const mangaTitleEl = screen.getByText("Frieren: Beyond Journey's End");

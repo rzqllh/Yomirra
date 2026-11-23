@@ -85,12 +85,12 @@ export function ReadingTab({
       </div>
 
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
+        <span className="text-xs font-bold text-text-muted tracking-wide">
           {searchQuery.trim()
             ? `${filteredHistory.length} dari ${visibleHistory.length} bacaan`
             : `${visibleHistory.length} bacaan aktif`}
         </span>
-        <span className="text-2xs text-text-muted/60">Terakhir dibaca</span>
+        <span className="text-xs text-text-muted">Terakhir dibaca</span>
       </div>
 
       {filteredHistory.length === 0 ? (

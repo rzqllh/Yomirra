@@ -223,6 +223,7 @@ export interface MangaCardProps extends BaseCardProps {
   latestChapterTime?: string;
   historyItem?: HistoryItem;
   progressPercent?: number;
+  progressKind?: "series" | "chapter";
   chapterTitle?: string;
   chapterId?: string;
   onDeleteOverride?: (sourceId: string, mangaId: string, title: string) => void;
@@ -244,6 +245,7 @@ export function MangaCard({
   latestChapterTime,
   historyItem,
   progressPercent,
+  progressKind = "series",
   chapterTitle,
   chapterId,
   onDeleteOverride,
@@ -481,8 +483,9 @@ export function MangaCard({
                         ? "text-status-success-fg status-success"
                         : "text-accent"
                     )}
+                    title={progressKind === "series" ? "Perkiraan progres seluruh judul" : "Posisi baca chapter"}
                   >
-                    {progress > 0 ? `${progress}%` : "Baru mulai"}
+                    {progress > 0 ? `${progress}% ${progressKind === "series" ? "judul" : "chapter"}` : "Baru mulai"}
                   </span>
                 </div>
 
@@ -508,6 +511,7 @@ export function MangaCard({
                   )}
                   style={{ width: `${progress}%` }}
                   role="progressbar"
+                  aria-label={progressKind === "series" ? "Perkiraan progres judul" : "Posisi baca chapter"}
                   aria-valuenow={progress}
                   aria-valuemin={0}
                   aria-valuemax={100}

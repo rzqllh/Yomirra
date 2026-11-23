@@ -64,7 +64,7 @@ export function BookmarkPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Library"
-          subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
+          subtitle="Bacaan dan komik yang kamu simpan."
           icon={<Books size={24} weight="regular" />}
           hideDesktop={true}
         />
@@ -73,7 +73,7 @@ export function BookmarkPageView() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
           <SegmentedControl
             options={[
-              { value: "reading", label: "Sedang Dibaca" },
+              { value: "reading", label: "Sedang dibaca" },
               {
                 value: "collection",
                 label: `Tersimpan${libraryItemCount > 0 ? ` (${libraryItemCount})` : ""}`,
@@ -92,7 +92,7 @@ export function BookmarkPageView() {
           >
             <span className="flex items-center gap-2">
               <CalendarBlank size={16} weight="regular" className="text-text-muted" />
-              <span>Jadwal Rilis Mingguan</span>
+              <span>Jadwal rilis mingguan</span>
             </span>
             {unreadCount > 0 && (
               <span className="text-2xs px-1.5 py-0.5 rounded-md bg-status-error-bg text-status-error-fg font-bold">
