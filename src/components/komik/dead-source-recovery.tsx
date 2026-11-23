@@ -11,19 +11,19 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { getSourceMetadata, getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { apiClient } from "@/shared/api-client";
 import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher";
-import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-parser";
+import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
+import { eligibleCanonicalBindings } from "./canonical-source-dialog";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/chrome/header";
-import { getReaderHref } from "@/shared/lib/routes";
+import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import {
   AlternateSourceModal,
   type AlternateSourceCandidate,
 } from "./alternate-source-modal";
 import { toast } from "sonner";
-import {
-  resolveSourceFallback,
-  executeSourceMigration,
-} from "@/shared/lib/source-fallback";
+
 import type { SourceErrorCode } from "@/shared/sources/source-types";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
@@ -40,11 +40,11 @@ interface DeadSourceRecoveryProps {
 export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROKEN", errorCode: "SOURCE_DOWN" } }: DeadSourceRecoveryProps) {
   const router = useRouter();
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const hideNsfw = useSettingsStore(state => state.hideNsfw);
 
   const libraryItem = useLibraryStore((state) =>
     state.resolveBySourceRef(sourceId, mangaId) ?? state.getLibraryItem(sourceId, mangaId)
   );
-  const relinkTitle = useLibraryStore((state) => state.relinkTitle);
 
   const highestMilestone = useHistoryStore((state) =>
     state.getHighestMilestoneForManga(sourceId, mangaId)
@@ -66,18 +66,16 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
   const knownTitle = libraryItem?.title ?? historyItem?.mangaTitle ?? "Komik ini";
   const knownCover = libraryItem?.coverUrl ?? historyItem?.coverUrl;
   const knownAuthor = libraryItem?.author;
-  const lastReadChapter = highestMilestone?.chapterTitle ?? libraryItem?.highestMilestoneChapterTitle ?? latestRead?.chapterTitle ?? libraryItem?.lastReadChapterTitle;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [candidates, setCandidates] = useState<AlternateSourceCandidate[]>([]);
-  const [chapterMapResult, setChapterMapResult] = useState<ChapterMapResult | undefined>();
+  const chapterMapResult: ChapterMapResult | undefined = undefined;
 
   const handleFindAlternate = async () => {
     setIsModalOpen(true);
     setIsSearching(true);
     setCandidates([]);
-    setChapterMapResult(undefined);
 
     try {
       // Find all available sources except the broken one (including built-ins and dynamic)
@@ -89,14 +87,15 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
           s.isInstalled &&
           !disabledSources.includes(s.id) &&
           s.status !== "unavailable" &&
-          s.status !== "in-fix"
+          s.status !== "in-fix" && s.status !== "in-dev" && !s.maintenance &&
+          isSourceContentVisible(s, hideNsfw)
       );
 
       // Search across enabled sources in parallel
       const searchPromises = enabledSources.map(async (src) => {
         try {
           const res = await apiClient.search(src.id, knownTitle, 1);
-          return (res.results || []).map((m) => ({
+          return (res.results || []).filter(m => isContentVisible(m, hideNsfw)).map((m) => ({
             sourceId: src.id,
             mangaId: m.id,
             title: m.title,
@@ -104,6 +103,8 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
             author: m.author,
             alternativeTitles: [m.originalTitle, ...(m.alternativeTitles ?? [])].filter(Boolean) as string[],
             sourceDisplayName: src.name,
+            isNsfw: m.isNsfw,
+            contentRating: m.contentRating,
           }));
         } catch {
           return [];
@@ -126,28 +127,12 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
         title: r.candidate.title,
         coverUrl: r.candidate.coverUrl,
         confidence: r.result.confidence,
+        isNsfw: (r.candidate as AlternateSourceCandidate).isNsfw,
+        contentRating: (r.candidate as AlternateSourceCandidate).contentRating,
       }));
 
       setCandidates(formatted);
 
-      // If user had previous reading progress, calculate initial mapping for top candidate
-      if (formatted.length > 0 && lastReadChapter) {
-        try {
-          const top = formatted[0];
-          const chapters = await apiClient.getChapters(top.sourceId, top.mangaId);
-          const mapped = mapChapterProgress(
-            lastReadChapter,
-            chapters.map((c) => ({
-              chapterId: c.id,
-              chapterTitle: c.title,
-              title: c.title,
-            }))
-          );
-          setChapterMapResult(mapped);
-        } catch {
-          // non-blocking
-        }
-      }
     } catch (err) {
       console.error("Failed searching alternate sources:", err);
       toast.error("Belum ada sumber lain yang cocok", {
@@ -158,81 +143,26 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
     }
   };
 
-  const fallbackEvaluation = useMemo(() => {
-    if (!libraryItem) return null;
-    return resolveSourceFallback({
-      savedTitle: {
-        id: libraryItem.id ?? `${sourceId}::${mangaId}`,
-        title: knownTitle,
-        author: knownAuthor,
-        primarySourceId: sourceId,
-        primaryMangaId: mangaId,
-        linkedSources: libraryItem.linkedSources,
-        lastReadChapterTitle: lastReadChapter,
-      },
-      failedSourceId: sourceId,
-      health,
-      availableSources: getAllSourceMetadata().map((source) => ({
-        ...source,
-        isEnabled: source.isEnabled && !disabledSources.includes(source.id),
-      })),
-    });
-  }, [libraryItem, sourceId, mangaId, knownTitle, knownAuthor, lastReadChapter, health, disabledSources]);
+  const confirmedAlternates = eligibleCanonicalBindings(
+    (libraryItem?.linkedSources ?? [])
+      .filter(ref => ref.matchConfidence === "CONFIRMED" && ref.sourceId !== sourceId)
+      .map(ref => ({ ...ref, title: knownTitle })),
+    disabledSources, hideNsfw
+  );
+  const quickAlternative = confirmedAlternates.length === 1 ? confirmedAlternates[0] : undefined;
 
   const handleQuickSwitch = () => {
-    if (!libraryItem || !fallbackEvaluation?.candidate) return;
-    executeSourceMigration({
-      libraryItem,
-      fallbackResult: fallbackEvaluation,
-      historyItem,
-      milestoneItem: highestMilestone,
-      relinkTitleFn: relinkTitle,
-      saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
-    });
-    toast.success(fallbackEvaluation.notification?.title ?? "Sumber berhasil dialihkan");
-    router.push(`/manga/${fallbackEvaluation.candidate.sourceId}/${fallbackEvaluation.candidate.mangaId}`);
+    if (!quickAlternative) return;
+    router.push(getMangaDetailHref(quickAlternative.sourceId, quickAlternative.mangaId));
   };
 
   const handleConfirmRelink = (candidate: AlternateSourceCandidate) => {
-    // Relink in library if present
-    if (libraryItem) {
-      const fallbackResult = resolveSourceFallback({
-        savedTitle: {
-          id: libraryItem.id ?? `${sourceId}::${mangaId}`,
-          title: knownTitle,
-          author: knownAuthor,
-          primarySourceId: sourceId,
-          primaryMangaId: mangaId,
-          linkedSources: libraryItem.linkedSources,
-          lastReadChapterTitle: lastReadChapter,
-        },
-        failedSourceId: sourceId,
-        health: { status: "BROKEN", errorCode: "SOURCE_DOWN" },
-        alternateCandidates: [
-          {
-            sourceId: candidate.sourceId,
-            mangaId: candidate.mangaId,
-            title: candidate.title,
-            coverUrl: candidate.coverUrl,
-            author: knownAuthor,
-          },
-        ],
-      });
-
-      executeSourceMigration({
-        libraryItem,
-        fallbackResult,
-        historyItem,
-        milestoneItem: highestMilestone,
-        relinkTitleFn: relinkTitle,
-        saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
-      });
-
-      toast.success("Sumber bacaan berhasil diganti");
+    if (eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
+      toast.error("Sumber tidak dapat dibuka");
+      return;
     }
-
     setIsModalOpen(false);
-    router.push(`/manga/${candidate.sourceId}/${candidate.mangaId}`);
+    router.push(getMangaDetailHref(candidate.sourceId, candidate.mangaId));
   };
 
   return (
@@ -284,23 +214,23 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
-            {fallbackEvaluation?.status === "AUTO_SAFE" && fallbackEvaluation.candidate && (
+            {quickAlternative && (
               <Button
                 variant="primary"
                 onClick={handleQuickSwitch}
                 className="gap-2 w-full sm:w-auto font-bold min-h-11 rounded-sm"
               >
                 <ArrowClockwise size={18} weight="regular" />
-                Alihkan ke {getSourceMetadata(fallbackEvaluation.candidate.sourceId)?.name ?? fallbackEvaluation.candidate.sourceId}
+                Buka di {getSourceMetadata(quickAlternative.sourceId)?.name ?? quickAlternative.sourceId}
               </Button>
             )}
             <Button
-              variant={fallbackEvaluation?.status === "AUTO_SAFE" ? "outline" : "primary"}
+              variant={quickAlternative ? "outline" : "primary"}
               onClick={handleFindAlternate}
               className="gap-2 w-full sm:w-auto font-bold min-h-11 rounded-sm"
             >
               <MagnifyingGlass size={18} weight="regular" />
-              Cari Sumber Alternatif
+              Cari sumber alternatif
             </Button>
             <Button
               variant="outline"
