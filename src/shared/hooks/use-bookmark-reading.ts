@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
@@ -15,6 +17,7 @@ export function useBookmarkReading() {
   const isMounted = useMounted();
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
   useHistoryStore((state) => state.items);
+  const savedLibraryItems = useLibraryStore((state) => state.items);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
@@ -48,6 +51,13 @@ export function useBookmarkReading() {
     }
   }
 
+  const verifiedIndex = React.useMemo(() => {
+    // Only exact source references and user-confirmed provenance may group titles.
+    // The original per-source records remain unmodified.
+    const saved = Object.values(savedLibraryItems).filter(item => item.isBookmarked !== false);
+    return indexVerifiedGroups(groupVerifiedCatalogEntries(saved));
+  }, [savedLibraryItems]);
+
   const groupedHistory = React.useMemo(() => {
     const getTimestamp = (val: unknown): number => {
       if (typeof val === "number" && !isNaN(val)) return val;
@@ -75,7 +85,8 @@ export function useBookmarkReading() {
     > = {};
 
     historyItems.forEach((item) => {
-      const key = `${item.sourceId}::${item.mangaId}`;
+      const key = verifiedIndex.get(canonicalSourceKey(item.sourceId, item.mangaId))
+        ?? canonicalSourceKey(item.sourceId, item.mangaId);
       const itemTimestamp = getTimestamp(item.readAt);
       const normalizedItem = { ...item, readAt: itemTimestamp };
 
@@ -100,12 +111,18 @@ export function useBookmarkReading() {
     Object.values(groups).forEach((group) => {
       group.chapters.sort((a, b) => getTimestamp(b.readAt) - getTimestamp(a.readAt));
       if (group.chapters.length > 0) {
-        group.latestReadAt = getTimestamp(group.chapters[0].readAt);
+        const latest = group.chapters[0];
+        group.latestReadAt = getTimestamp(latest.readAt);
+        group.sourceId = latest.sourceId;
+        group.mangaId = latest.mangaId;
+        group.sourceName = latest.sourceName ?? group.sourceName;
+        group.mangaTitle = latest.mangaTitle || group.mangaTitle;
+        group.coverUrl = latest.coverUrl || group.coverUrl;
       }
     });
 
     return Object.values(groups).sort((a, b) => b.latestReadAt - a.latestReadAt);
-  }, [historyItems]);
+  }, [historyItems, verifiedIndex]);
 
   // Undo / delete state
   const [pendingDeletions, setPendingDeletions] = React.useState<Set<string>>(new Set());
@@ -142,8 +159,17 @@ export function useBookmarkReading() {
       duration: 4500,
     });
 
+    // A grouped History card represents all verified source sessions of a work.
+    // Delete those session records only; bookmarks and downloads are untouched.
+    const group = groupedHistory.find(g => g.sourceId === sourceId && g.mangaId === mangaId);
+    const sourceRefs = group
+      ? [...new Map(group.chapters.map(chapter => [
+          canonicalSourceKey(chapter.sourceId, chapter.mangaId),
+          { sourceId: chapter.sourceId, mangaId: chapter.mangaId },
+        ])).values()]
+      : [{ sourceId, mangaId }];
     deleteTimeouts.current[itemKey] = setTimeout(() => {
-      removeMangaHistory(sourceId, mangaId);
+      for (const ref of sourceRefs) removeMangaHistory(ref.sourceId, ref.mangaId);
       setPendingDeletions((prev) => {
         const next = new Set(prev);
         next.delete(itemKey);

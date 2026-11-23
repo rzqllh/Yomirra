@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useBookmarkReading } from "../use-bookmark-reading";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 vi.mock("@/shared/hooks/use-mounted", () => ({
   useMounted: () => true,
@@ -20,6 +21,7 @@ vi.mock("@/shared/store/source-preferences-store", () => ({
 describe("useBookmarkReading - Chapter Progress Alignment", () => {
   beforeEach(() => {
     useHistoryStore.setState({ items: {} });
+    useLibraryStore.setState({ items: {} });
   });
 
   it("sorts chapters descending so that the most recent chapter is chapters[0]", () => {
@@ -136,4 +138,36 @@ describe("useBookmarkReading - Chapter Progress Alignment", () => {
     expect(result.current.groupedHistory.length).toBe(1);
     expect(result.current.groupedHistory[0].mangaId).toBe("active-manga");
   });
+  it("deduplicates verified multi-source history in presentation but preserves both original cursors", () => {
+    const time = new Date().toISOString();
+    useLibraryStore.setState({ items: {
+      a: { id: "a", sourceId: "shinigami", mangaId: "work-a", title: "Work", addedAt: time, updatedAt: time,
+        linkedSources: [{ sourceId: "asurascans", mangaId: "work-b", matchConfidence: "CONFIRMED", addedAt: 1 }] },
+      b: { id: "b", sourceId: "asurascans", mangaId: "work-b", title: "Work", addedAt: time, updatedAt: time },
+    } });
+    useHistoryStore.setState({ items: {
+      first: { sourceId: "shinigami", mangaId: "work-a", mangaTitle: "Work", chapterId: "a-10", chapterTitle: "Chapter 10", readAt: 10 },
+      second: { sourceId: "asurascans", mangaId: "work-b", mangaTitle: "Work", chapterId: "b-12", chapterTitle: "Chapter 12", readAt: 20 },
+    } });
+    const { result } = renderHook(() => useBookmarkReading());
+    expect(result.current.groupedHistory).toHaveLength(1);
+    expect(result.current.groupedHistory[0].chapters).toHaveLength(2);
+    expect(result.current.groupedHistory[0].sourceId).toBe("asurascans");
+    expect(Object.keys(useHistoryStore.getState().items)).toHaveLength(2);
+  });
+
+  it("never groups history from an unconfirmed, high-confidence-only link", () => {
+    const time = new Date().toISOString();
+    useLibraryStore.setState({ items: {
+      a: { id: "a", sourceId: "shinigami", mangaId: "work-a", title: "Work", addedAt: time, updatedAt: time,
+        linkedSources: [{ sourceId: "asurascans", mangaId: "work-b", matchConfidence: "HIGH_CONFIDENCE", addedAt: 1 }] },
+    } });
+    useHistoryStore.setState({ items: {
+      first: { sourceId: "shinigami", mangaId: "work-a", mangaTitle: "Work", chapterId: "a-10", chapterTitle: "Chapter 10", readAt: 10 },
+      second: { sourceId: "asurascans", mangaId: "work-b", mangaTitle: "Work", chapterId: "b-12", chapterTitle: "Chapter 12", readAt: 20 },
+    } });
+    const { result } = renderHook(() => useBookmarkReading());
+    expect(result.current.groupedHistory).toHaveLength(2);
+  });
+
 });
