@@ -10,7 +10,6 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
-import { useLibraryStore } from "@/shared/store/library-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
@@ -31,9 +30,7 @@ export function BookmarkPageView() {
 
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
-  const libraryItemCount = useLibraryStore((state) =>
-    Object.values(state.items).filter((i) => i.isBookmarked !== false).length
-  );
+  const libraryItemCount = collection.visibleCatalogCount;
   const rawUnread = useUpdateStore((state) => state.getUnreadCount());
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0);
 

@@ -295,6 +295,7 @@ export function useBookmarkCollection() {
     collectionPage,
     setCollectionPage,
     totalPages,
+    visibleCatalogCount: visibleLibraryItems.length,
     totalLibraryItemsCount: scopedItems.length,
     scopedItems,
     filteredAndSortedLibraryItems,
