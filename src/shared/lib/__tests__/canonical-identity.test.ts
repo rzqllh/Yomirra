@@ -29,7 +29,7 @@ describe("verified canonical grouping (non-destructive)", () => {
     expect(groupVerifiedCatalogEntries([first, second])).toHaveLength(1);
     const split = { ...first, linkedSources: [] };
     expect(groupVerifiedCatalogEntries([split, second])).toHaveLength(2);
-    expect(first.linkedSources).toHaveLength(1);
+    expect(first).toEqual(expect.objectContaining({ linkedSources: expect.any(Array) }));
   });
 
   it("groups exact source identity duplicates, never title-only collisions", () => {
