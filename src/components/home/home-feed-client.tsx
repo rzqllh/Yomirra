@@ -235,21 +235,28 @@ export function HomeFeedClient({
   const discoveryItems =
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
+  const verifiedDiscoveryIndex = React.useMemo(
+    () => indexVerifiedGroups(groupVerifiedCatalogEntries(
+      Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
+    )),
+    [savedLibraryMap],
+  );
+
   const spotlightItems = React.useMemo(
-    () => selectSpotlightItems(discoveryItems, 10),
-    [discoveryItems]
+    () => selectSpotlightItems(discoveryItems, 10, verifiedDiscoveryIndex),
+    [discoveryItems, verifiedDiscoveryIndex]
   );
 
   const heroCandidates = React.useMemo(
     () =>
-      selectHeroCandidates(discoveryItems, spotlightItems, 15).map((item) => ({
+      selectHeroCandidates(discoveryItems, spotlightItems, 15, verifiedDiscoveryIndex).map((item) => ({
         coverUrl: item.coverUrl,
         title: item.title,
         sourceId: item.sourceId,
         contentRating: item.contentRating,
         isNsfw: item.isNsfw,
       })),
-    [discoveryItems, spotlightItems]
+    [discoveryItems, spotlightItems, verifiedDiscoveryIndex]
   );
 
   const [spotlightIndex, setSpotlightIndex] = React.useState(0);
