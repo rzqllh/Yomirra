@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -247,7 +247,7 @@ export class GenericWpEngine extends BaseEngine {
             title,
             date,
             url: link,
-            isLocked,
+            isLocked: stagedChapterLock(isLocked, $el.attr("data-locked"), $el.find("a").first().attr("data-locked")),
           });
         }
       );

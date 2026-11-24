@@ -341,6 +341,14 @@ describe("cross-source notification boundaries",()=>{
     await scanLibraryUpdates({forceRefresh:true});
     expect(useUpdateStore.getState().items.fixture.latestChapterId).toBe("p10");
   });
+  it("backfills legacy volume only from the exact saved cursor",async()=>{
+    useUpdateStore.getState().upsertUpdate({savedTitleId:"fixture",sourceId:"primary",mangaId:"work",mangaTitle:"Fixture",latestChapterId:"p20",latestChapterNumber:20,latestChapterTitle:"Chapter 20",detectedSourceId:"primary",seenAt:"2026-01-01"});
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="primary"?
+      [{id:"p20",mangaId:"work",title:"Chapter 20",chapterNumber:"20",volume:"1",number:20,date:"",isLocked:false},
+       {id:"p21",mangaId:"work",title:"Chapter 1",chapterNumber:"1",volume:"2",number:1,date:"",isLocked:false}]:[]);
+    expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(1);
+    expect(useUpdateStore.getState().items.fixture).toMatchObject({latestChapterId:"p21",latestChapterVolume:2,latestChapterNumber:1});
+  });
   it("supports explicitly numbered volumes, ignores incomparable global numbers and retains unread state across empty scans",async()=>{
     vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="primary"?
       [{id:"p20",mangaId:"work",title:"Vol. 1 Chapter 20",number:20,date:"",isLocked:false}]:[]);

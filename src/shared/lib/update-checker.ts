@@ -252,8 +252,15 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       // Preserve the cursor's numbering convention. A volume-local and a
       // global chapter number are not directly comparable. For a new cursor,
       // use the primary source's convention (or the only observed convention).
+      // Backfill an old cursor only from the exact same source/chapter/number.
+      // A different chapter with the same number cannot establish its volume.
+      const previousObservation=existingUpdate?.latestChapterId ? discoveredChapters.find(c=>
+        c.sourceId===(existingUpdate.detectedSourceId??item.sourceId) &&
+        c.chapter.id===existingUpdate.latestChapterId &&
+        c.normalizedNumber===existingUpdate.latestChapterNumber):undefined;
       const previousVolume = existingUpdate?.latestChapterVolume ??
-        readChapterNumberEvidence(existingUpdate?.latestChapterTitle)?.volume;
+        readChapterNumberEvidence(existingUpdate?.latestChapterTitle)?.volume ??
+        previousObservation?.volume;
       const anchor = discoveredChapters.find(c=>c.isPrimary) ?? discoveredChapters[0];
       const volumeMode = existingUpdate?.latestChapterId ? previousVolume !== undefined : anchor?.volume !== undefined;
       const comparable = discoveredChapters.filter(c=>(c.volume!==undefined)===volumeMode);

@@ -33,6 +33,17 @@ describe("evidence-based source quality",()=>{
   it("never counts locked or invented chapter indices",()=>{
     expect(chapterQualityEvidence([{id:"x",mangaId:"a",title:"Special",number:10,date:"",isLocked:false},{id:"y",mangaId:"a",title:"Chapter 2",number:2,date:"",isLocked:true}],"a",now)).toBeUndefined();
   });
+  it("does not rank a more thoroughly measured but failing source above a healthy partial observation",()=>{
+    const refs=[{sourceId:"bad",mangaId:"1"},{sourceId:"good",mangaId:"2"},{sourceId:"unknown",mangaId:"3"}];
+    const snapshot={
+      [qualityKey("bad","1")]:{samples:[...samples(false,"api",500),...samples(false,"image",500)]},
+      [qualityKey("good","2")]:{samples:samples(true,"api",500)}
+    };
+    const ranked=rankQualityRefs(refs,snapshot,{now});
+    expect(ranked.map(r=>r.ref.sourceId)).toEqual(["good","bad","unknown"]);
+    expect(ranked[0].quality).toMatchObject({score:100,coverage:50});
+    expect(rankQualityRefs(refs,snapshot,{now,preferred:"bad"})[0].ref.sourceId).toBe("bad");
+  });
   it("keeps explicit preferred source ahead of speed and does not mutate source list",()=>{
     const refs=[{sourceId:"a",mangaId:"1",language:"id"},{sourceId:"b",mangaId:"2",language:"en"}];
     const snapshot={[qualityKey("a","1")]:{samples:samples(false,"api",500)},[qualityKey("b","2")]:{samples:samples(true,"api",500)}};

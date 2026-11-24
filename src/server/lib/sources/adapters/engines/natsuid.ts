@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { NatsuIdConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class NatsuIdEngine extends BaseEngine {
   protected searchAction: string;
@@ -264,7 +264,7 @@ export class NatsuIdEngine extends BaseEngine {
             title,
             date,
             url: link,
-            isLocked,
+            isLocked: stagedChapterLock(isLocked || $el.closest("li").is(".locked,.has-lock,.premium"), $el.attr("data-locked"), $el.closest("li").attr("data-locked")),
           });
         }
       );

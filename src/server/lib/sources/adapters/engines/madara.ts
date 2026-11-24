@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MadaraConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class MadaraEngine extends BaseEngine {
   protected itemSelector: string;
@@ -246,7 +246,7 @@ export class MadaraEngine extends BaseEngine {
           title,
           date,
           url: link,
-          isLocked,
+          isLocked: stagedChapterLock(isLocked, $el.attr("data-locked"), $el.find("a").first().attr("data-locked")),
         });
       });
 

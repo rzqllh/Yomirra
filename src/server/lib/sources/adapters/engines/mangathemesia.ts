@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -262,7 +262,7 @@ export class MangaThemesiaEngine extends BaseEngine {
           title,
           date,
           url: link,
-          isLocked,
+          isLocked: stagedChapterLock(isLocked, $el.attr("data-locked"), $el.find("a").first().attr("data-locked")),
         });
       });
 
@@ -300,7 +300,7 @@ export class MangaThemesiaEngine extends BaseEngine {
                   title,
                   date: "",
                   url: link,
-                  isLocked: false,
+                  isLocked: undefined,
                 });
               });
             }

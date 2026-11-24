@@ -4,7 +4,7 @@ import { MangaThemesiaEngine } from "../mangathemesia";
 import { MadaraEngine } from "../madara";
 import { NatsuIdEngine } from "../natsuid";
 import { HttpClient } from "../../base/http-client";
-import { normalizeStagedChapters } from "../normalize-catalog";
+import { normalizeStagedChapters, stagedChapterLock } from "../normalize-catalog";
 
 describe("staged generic series identity", () => {
   it("preserves route family and refuses arbitrary paths", async () => {
@@ -48,6 +48,20 @@ describe("shared staged chapter identity",()=>{
       ] as const){
         spy.mockResolvedValueOnce(html);
         await expect(engine.getChapters("fixture")).rejects.toMatchObject({code:"SCHEMA_CHANGED"});
+      }
+    }finally{spy.mockRestore();}
+  });
+  it("keeps absent or ambiguous lock evidence unknown and honors explicit lock markers",async()=>{
+    expect(stagedChapterLock(false)).toBeUndefined();
+    expect(stagedChapterLock(false,"unknown","false")).toBeUndefined();
+    expect(stagedChapterLock(false,"false")).toBe(false);
+    expect(stagedChapterLock(true,"false")).toBe(true);
+    expect(stagedChapterLock(false,"false","true")).toBe(true);
+    const spy=vi.spyOn(HttpClient.prototype,"getHtml").mockResolvedValue('<div id="chapterlist"><ul><li><a href="/chapter-1/">Chapter 1</a></li><li data-locked="false"><a href="/chapter-2/">Chapter 2</a></li><li class="locked" data-locked="false"><a href="/chapter-3/">Chapter 3</a></li></ul></div>');
+    try{
+      for(const Engine of [MangaThemesiaEngine,GenericWpEngine]){
+        const chapters=await new Engine(config).getChapters("fixture");
+        expect(chapters.map(c=>c.isLocked)).toEqual([undefined,false,true]);
       }
     }finally{spy.mockRestore();}
   });

@@ -47,6 +47,15 @@ export function normalizeStagedCatalog(result: MangaPageResult, base: string, so
   return { mangas, hasNextPage: result.hasNextPage };
 }
 
+/** A missing lock marker is not affirmative unlocked evidence. Positive
+ * lock evidence always wins; explicit data-locked=false may establish
+ * unlocked status, but never an unknown/contradictory attribute. */
+export function stagedChapterLock(markedLocked:boolean,...values:(string|undefined)[]):boolean|undefined{
+  const present=values.filter((v):v is string=>v!==undefined).map(v=>v.trim().toLowerCase());
+  if(markedLocked||present.includes("true"))return true;
+  return present.length>0&&present.every(v=>v==="false")?false:undefined;
+}
+
 /** Reject conflicting duplicate chapter identities rather than guessing
  * which lock state or title is authoritative. Preserve source-local order. */
 export function normalizeStagedChapters(

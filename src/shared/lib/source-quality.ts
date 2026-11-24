@@ -102,11 +102,16 @@ export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot
     return {ref,index,quality,scope:titleQuality.score!==null?"title" as const:providerQuality.score!==null?"source" as const:"monitor" as const,language:language<0?999:language,chapterMatch};
   });
   const metric=options.sort&&options.sort!=="quality"?options.sort:undefined;
+  // Shrink partial observations toward a neutral midpoint for ordering only.
+  // The displayed measured score and coverage remain unchanged; unmeasured
+  // sources sort last rather than receiving an invented observed score.
+  const orderingScore=(quality:{score:number|null;coverage:number})=>quality.score===null?-1:
+    50+(quality.score-50)*quality.coverage/100;
   return ranked.sort((a,b)=>
     Number(b.ref.sourceId===options.preferred)-Number(a.ref.sourceId===options.preferred) ||
     Number(b.chapterMatch)-Number(a.chapterMatch) || a.language-b.language ||
     (metric?((b.quality.metrics[metric]??-1)-(a.quality.metrics[metric]??-1)):0) ||
-    // Scores with different coverage are not directly interchangeable.
+    orderingScore(b.quality)-orderingScore(a.quality) ||
     (b.quality.coverage-a.quality.coverage) ||
-    (b.quality.score??-1)-(a.quality.score??-1) || a.index-b.index);
+    a.index-b.index);
 }
