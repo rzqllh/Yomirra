@@ -49,7 +49,7 @@ export function matchCanonicalMetadata(item: MangaItem, works: readonly Metadata
 const ratingOrder = {unknown:0,safe:1,suggestive:2,erotica:3,pornographic:4} as const;
 export function inheritCanonicalRating<T extends MangaItem>(item:T,work:MetadataWork|undefined):T {
   if (!work || work.contentRating === "unknown") return item;
-  const original = item.contentRating ?? "unknown";
+  const original = item.contentRating && Object.hasOwn(ratingOrder,item.contentRating) ? item.contentRating : "unknown";
   const rating = ratingOrder[original] >= ratingOrder[work.contentRating] ? original : work.contentRating;
   return {...item,contentRating:rating,isNsfw:item.isNsfw===true || ratingOrder[rating]>ratingOrder.safe};
 }
@@ -64,10 +64,12 @@ export function projectMetadataCatalogRows(
   works: readonly MetadataWork[],
 ): CatalogSearchRow[] {
   if (!works.length) return [...rows];
-  rows = rows.map(row => ({...row,manga:inheritCanonicalRating(row.manga,matchCanonicalMetadata(row.manga,works)),
-    sourceBindings:row.sourceBindings?.map(binding=>binding.sourceId===row.sourceId && binding.mangaId===row.manga.id ?
-      {...binding,contentRating:inheritCanonicalRating(row.manga,matchCanonicalMetadata(row.manga,works)).contentRating,
-      isNsfw:inheritCanonicalRating(row.manga,matchCanonicalMetadata(row.manga,works)).isNsfw} : binding)}));
+  rows = rows.map(row => {
+    const manga=inheritCanonicalRating(row.manga,matchCanonicalMetadata(row.manga,works));
+    return {...row,manga,sourceBindings:row.sourceBindings?.map(binding=>
+      binding.sourceId===row.sourceId && binding.mangaId===row.manga.id ?
+      {...binding,contentRating:classifyContent(binding)==="NSFW"?binding.contentRating:manga.contentRating,isNsfw:binding.isNsfw===true||manga.isNsfw===true} : binding)};
+  });
   const index = new Map<string, string>();
   const byIdentity = new Map<string, MetadataWork>();
   const rowMatches = new Map<string, MetadataWork>();

@@ -1,0 +1,31 @@
+name: MangaBaka public metadata contract
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/check-mangabaka-contract.mjs'
+      - '.github/workflows/mangabaka-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  observe:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'integrate/yomirra-complete-release-20261124')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Observe documented public example schema only
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || git diff --name-only HEAD^ HEAD | grep -Eq '^scripts/check-mangabaka-contract\.mjs$|^\.github/workflows/mangabaka-contract\.yml$'; then
+            node scripts/check-mangabaka-contract.mjs
+          fi

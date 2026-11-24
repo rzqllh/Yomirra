@@ -5,6 +5,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourceHealthStore } from "@/shared/store/source-health-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { chapterNavigationLabel, readChapterNumberEvidence } from "@/shared/lib/alternate-chapter-mapping";
 import type { Chapter } from "@/shared/sources/source-types";
 
 export const DEFAULT_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
@@ -132,7 +133,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       if (item.linkedSources && item.linkedSources.length > 0) {
         for (const ref of item.linkedSources) {
           if (!ref.sourceId || !ref.mangaId) continue;
-          if (ref.matchConfidence === "NO_MATCH") continue;
+          if (ref.matchConfidence !== "CONFIRMED") continue;
 
           let basePriority = 2;
           if (ref.matchConfidence === "CONFIRMED") basePriority = 8;
@@ -193,7 +194,12 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           });
           if (chapters && chapters.length > 0) {
             for (const ch of chapters) {
-              const parsedNum = parseChapterNumber(ch.title);
+              if (!ch || !ch.id || ch.isLocked === true || (ch.mangaId && ch.mangaId !== target.mangaId)) continue;
+              const explicit = readChapterNumberEvidence(chapterNavigationLabel(ch));
+              // Cross-source notifications require explicit comparable numbering.
+              // Legacy source-local updates retain the older title parser.
+              if (!target.isPrimary && (!explicit || explicit.volume!==undefined)) continue;
+              const parsedNum = explicit?.number ?? parseChapterNumber(ch.title);
               const normNum =
                 parsedNum ?? (typeof ch.number === "number" && !isNaN(ch.number) ? ch.number : 0);
               discoveredChapters.push({
@@ -243,6 +249,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         const latest = discoveredChapters.reduce((prev, curr) => {
           if (curr.normalizedNumber > prev.normalizedNumber) return curr;
           if (curr.normalizedNumber === prev.normalizedNumber) {
+            if (explicitPref && curr.sourceId === explicitPref && prev.sourceId !== explicitPref) return curr;
+            if (explicitPref && prev.sourceId === explicitPref) return prev;
             if (curr.sourceId === item.sourceId && prev.sourceId !== item.sourceId) return curr;
           }
           return prev;
@@ -251,20 +259,20 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         const isFirstScan = !existingUpdate;
         const isNewChapter =
           !isFirstScan &&
-          Boolean(
-            existingUpdate.latestChapterId &&
-            latest.chapter.id &&
-            (latest.normalizedNumber > (existingUpdate.latestChapterNumber ?? 0) ||
-              (existingUpdate.latestChapterId !== latest.chapter.id &&
-                latest.normalizedNumber === (existingUpdate.latestChapterNumber ?? 0)))
-          );
+          Boolean(existingUpdate.latestChapterId && latest.chapter.id &&
+            latest.normalizedNumber > (existingUpdate.latestChapterNumber ?? 0));
+        // A new provider/scanlation ID for the same observed chapter is
+        // not another chapter release. Do not regress a previous cursor
+        // when a preferred source temporarily has fewer chapters.
+        const keepPrevious = Boolean(existingUpdate?.latestChapterId &&
+          latest.normalizedNumber <= (existingUpdate.latestChapterNumber ?? 0));
 
         if (isNewChapter) {
           result.updatesDetected++;
         }
 
         const checkTimeIso = new Date().toISOString();
-        const resolvedSeenAt = isNewChapter ? undefined : (existingUpdate?.seenAt || checkTimeIso);
+        const resolvedSeenAt = isNewChapter ? undefined : existingUpdate ? existingUpdate.seenAt : checkTimeIso;
         const resolvedDetectedAt = isNewChapter
           ? checkTimeIso
           : (existingUpdate?.detectedAt || checkTimeIso);
@@ -278,12 +286,12 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           sourceName: item.sourceName,
           lastKnownChapterId: item.lastReadChapterId,
           lastKnownChapterTitle: item.lastReadChapterTitle,
-          latestChapterId: latest.chapter.id,
-          latestChapterNumber: latest.normalizedNumber,
-          latestChapterTitle: latest.chapter.title,
-          detectedSourceId: latest.sourceId,
-          detectedSourceName: latest.sourceName || latest.sourceId,
-          isAlternateSource: latest.sourceId !== item.sourceId,
+          latestChapterId: keepPrevious ? existingUpdate?.latestChapterId : latest.chapter.id,
+          latestChapterNumber: keepPrevious ? existingUpdate?.latestChapterNumber : latest.normalizedNumber,
+          latestChapterTitle: keepPrevious ? existingUpdate?.latestChapterTitle : latest.chapter.title,
+          detectedSourceId: keepPrevious ? existingUpdate?.detectedSourceId : latest.sourceId,
+          detectedSourceName: keepPrevious ? existingUpdate?.detectedSourceName : (latest.sourceName || latest.sourceId),
+          isAlternateSource: keepPrevious ? existingUpdate?.isAlternateSource : latest.sourceId !== item.sourceId,
           lastCheckedAt: checkTimeIso,
           detectedAt: resolvedDetectedAt,
           seenAt: resolvedSeenAt,

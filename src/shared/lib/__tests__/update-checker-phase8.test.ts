@@ -186,6 +186,21 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     expect(titleUpdates[0].detectedSourceId).toBe("src-1");
   });
 
+  it("does not emit a duplicate notification when another source releases the same numbered chapter", async () => {
+    useLibraryStore.setState({items:{"dedupe":{id:"dedupe",sourceId:"src-1",mangaId:"m-1",title:"Fixture",addedAt:"2026-01-01",updatedAt:"2026-01-01",
+      linkedSources:[{sourceId:"src-2",mangaId:"m-2",matchConfidence:"CONFIRMED",addedAt:Date.now()}]}}});
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="src-1"?
+      [{id:"first-80",mangaId:"m-1",title:"Chapter 80",number:80,date:""}]:[]);
+    await scanLibraryUpdates({forceRefresh:true});
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="src-2"?
+      [{id:"alternate-81",mangaId:"m-2",title:"Chapter 81",number:81,date:""}]:[]);
+    expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(1);
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="src-1"?
+      [{id:"first-81",mangaId:"m-1",title:"Chapter 81",number:81,date:""}]:[]);
+    expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(0);
+    expect(useUpdateStore.getState().items.dedupe.latestChapterId).toBe("alternate-81");
+    expect(useUpdateStore.getState().items.dedupe.seenAt).toBeUndefined();
+  });
   it("5. normalizes decimal/part chapters accurately (e.g. 105.5)", async () => {
     useLibraryStore.setState({
       items: {
