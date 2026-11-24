@@ -60,6 +60,6 @@ export function keiyoushiNeedsRestrictedOptIn(source: KeiyoushiCandidate): boole
  */
 const reservedCandidateIds = new Set(KEIYOUSHI_CANDIDATES.map(candidate => candidate.id.replace(/-/g, "")));
 
-export function isReservedKeiyoushiId(id: string): boolean {
-  return reservedCandidateIds.has(id.trim().toLowerCase().replace(/-/g, ""));
+export function isReservedKeiyoushiId(id: unknown): boolean {
+  return typeof id === "string" && reservedCandidateIds.has(id.trim().toLowerCase().replace(/-/g, ""));
 }

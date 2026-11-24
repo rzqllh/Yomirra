@@ -45,6 +45,7 @@ describe("ReadingTab", () => {
     const continueLink = screen.getByRole("link", {
       name: /lanjut (?:baca|membaca) nano machine/i,
     });
+    expect(continueLink.getAttribute("href")).toBe("/manga/komiku/nano-machine/read/chapter-12?returnTo=%2Flibrary");
     expect(continueLink.querySelector("button")).toBeNull();
     expect(container.querySelector("a button, button a, a a")).toBeNull();
   });

@@ -151,7 +151,7 @@ export class DynamicSourceRegistry {
   }
 
   get(id: string): SourceMetadata | undefined {
-    if (isReservedKeiyoushiId(id)) return undefined;
+    if (typeof id !== "string" || !id.trim() || isReservedKeiyoushiId(id)) return undefined;
     if (this.volatileSources[id]) {
       return this.volatileSources[id];
     }

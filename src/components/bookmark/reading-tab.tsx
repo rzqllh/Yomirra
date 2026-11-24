@@ -153,11 +153,24 @@ export function ReadingTab({
             const canonicalHref = getCanonicalSavedDetailHref(
               group.preferenceKey ?? `${item.sourceId}::${item.mangaId}`
             );
-            const bindings = Array.from(new Map(group.chapters.map(ch => [
+            // Older single-provider history records inherit the group identity.
+            // A mixed group without chapter provenance must never guess a cursor.
+            const explicitRefs = new Set(group.chapters.filter(ch => ch.sourceId && ch.mangaId)
+              .map(ch => canonicalSourceKey(ch.sourceId, ch.mangaId)));
+            const groupRef = canonicalSourceKey(group.sourceId, group.mangaId);
+            const singleProvider = !group.preferenceKey &&
+              (group.preferenceAliases?.length ?? 0) <= 1 &&
+              [...explicitRefs].every(ref => ref === groupRef);
+            const positions = group.chapters.flatMap(ch => {
+              const sourceId = ch.sourceId && ch.mangaId ? ch.sourceId : singleProvider && !ch.sourceId && !ch.mangaId ? group.sourceId : undefined;
+              const mangaId = ch.sourceId && ch.mangaId ? ch.mangaId : singleProvider && !ch.sourceId && !ch.mangaId ? group.mangaId : undefined;
+              return sourceId && mangaId ? [{ sourceId: String(sourceId), mangaId: String(mangaId), chapterId: String(ch.chapterId ?? ""), readAt: Number(ch.readAt) || 0 }] : [];
+            });
+            const bindings = Array.from(new Map(positions.map(ch => [
               canonicalSourceKey(ch.sourceId, ch.mangaId),
-              { sourceId: ch.sourceId as string, mangaId: ch.mangaId as string },
+              { sourceId: ch.sourceId, mangaId: ch.mangaId },
             ])).values());
-            const aliases = group.preferenceAliases ?? group.chapters.map(ch => `${ch.sourceId}::${ch.mangaId}`);
+            const aliases = group.preferenceAliases ?? positions.map(ch => `${ch.sourceId}::${ch.mangaId}`);
             const observed = aliases.map(key => perTitlePrefs[key]).filter(Boolean);
             const preferredSourceId = group.preferenceKey ? perTitlePrefs[group.preferenceKey]
               ?? observed[0] : observed[0];
@@ -177,10 +190,7 @@ export function ReadingTab({
               disabledSourceIds: disabledSources,
               unavailableSourceIds: staleSources,
               deviceOffline,
-              lastRead: group.chapters.map(ch => ({
-                sourceId: ch.sourceId as string, mangaId: ch.mangaId as string,
-                chapterId: ch.chapterId as string, readAt: Number(ch.readAt) || 0,
-              })),
+              lastRead: positions.filter(ch => ch.chapterId),
             });
             // Fail closed to canonical detail/picker if source cannot be chosen
             // safely (offline, unavailable, multiple candidates, conflicts).

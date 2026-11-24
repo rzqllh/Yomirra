@@ -52,5 +52,6 @@ describe("Keiyoushi porting staging and source-safety contract", () => {
     expect(getStagedKeiyoushiSource("ainz-scans-id")?.id).toBe("ainzscansid");
     expect(isReservedKeiyoushiId("ainz-scans-id")).toBe(true);
     expect(isReservedKeiyoushiId("komikindo")).toBe(false);
+    for (const invalid of [undefined, null, 42, {}, ""]) expect(isReservedKeiyoushiId(invalid)).toBe(false);
   });
 });

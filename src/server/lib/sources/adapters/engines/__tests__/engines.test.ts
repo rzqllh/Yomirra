@@ -264,6 +264,17 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
   });
 
   describe("Dedicated REST API Adapters", () => {
+    it("rejects Ainz schema drift without pretending an empty catalog is valid", async () => {
+      const adapter = new AinzScansSource();
+      const fetcher = vi.spyOn((adapter as any).client, "get");
+      fetcher.mockResolvedValue({ unexpected: [] });
+      await expect(adapter.search("fixture", 1)).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
+      fetcher.mockResolvedValue({ results: [{ title: "Missing identity" }] });
+      await expect(adapter.search("fixture", 1)).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
+      fetcher.mockResolvedValue({ results: [], hasNextPage: false });
+      await expect(adapter.search("fixture", 1)).resolves.toEqual({ mangas: [], hasNextPage: false });
+    });
+
     it("handles AinzScansSource JSON API contract", async () => {
       const ainz = new AinzScansSource();
       expect(ainz.id).toBe("ainzscansid");
@@ -308,6 +319,7 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       const pop = await ainz.getPopular(1);
       expect(pop.mangas).toHaveLength(1);
       expect(pop.mangas[0].title).toBe("Ainz Comic");
+      expect(pop.mangas[0].contentRating).toBe("unknown");
 
       const detail = await ainz.getDetail("101");
       expect(detail.status).toBe("COMPLETED");
