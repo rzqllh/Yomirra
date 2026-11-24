@@ -2203,3 +2203,6 @@ Do not add AI diagnosis, auto-fix, auto-deploy, or speculative root-cause claims
 
 ## Reader chrome contrast acceptance (2026-11-24)
 Reader header, bottom dock, active controls and hidden-overlay progress badge use opaque reader-scoped surfaces independent of the app theme and artwork. Text >=4.5:1 and essential non-text controls >=3:1 (WCAG 2.2 AA 1.4.3/1.4.11); visible keyboard focus, 44px control targets where space permits, explicit saved state. Preserve current layout hierarchy, safe areas, gestures and reader navigation. Do not change general app dock styling. See https://www.w3.org/TR/WCAG22/.
+
+## Reader overlay intent (owner clarification)
+Auto-hide on meaningful scroll in either direction; no automatic reveal on upward scroll, top/bottom proximity or desktop mouse movement. Center tap toggles exactly once (keyboard M/Escape remains accessible). Existing always-visible setting opts out of scroll hide, not explicit toggle. Actual visible end-of-chapter controls suppress bottom dock, progress badge and back-to-top immediately; header remains independently governed by ordinary overlay intent. Leaving the end card does not automatically restore dock. Retain page seek and left/right reading navigation.

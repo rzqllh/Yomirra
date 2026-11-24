@@ -38,7 +38,7 @@ export function ReaderPageScrubber({
     return (
       <div
         className={cn(
-          "yomirra-chrome reader-chrome-surface reader-chrome-primary pointer-events-auto select-none rounded-lg px-2.5 py-1 text-xs font-mono font-medium tracking-tight",
+          "reader-chrome-surface reader-chrome-primary pointer-events-auto select-none rounded-lg px-2.5 py-1 text-xs font-mono font-medium tracking-tight",
           className
         )}
         data-testid="reader-page-scrubber"
@@ -59,8 +59,6 @@ export function ReaderPageScrubber({
       <div
         className={cn("w-full flex flex-col gap-1 text-text-primary select-none", className)}
         data-testid="reader-page-scrubber"
-        onPointerDown={handleStartScrubbing}
-        onTouchStart={handleStartScrubbing}
       >
         <div className="reader-chrome-muted flex items-center justify-between text-xs font-semibold px-2.5">
           <label htmlFor="reader-webtoon-range">Posisi baca</label>
@@ -88,6 +86,9 @@ export function ReaderPageScrubber({
             onPointerDown={handleStartScrubbing}
             onPointerUp={handleEndScrubbing}
             onPointerCancel={handleEndScrubbing}
+            onBlur={handleEndScrubbing}
+            onKeyUp={handleEndScrubbing}
+            onLostPointerCapture={handleEndScrubbing}
             onTouchStart={handleStartScrubbing}
             onTouchEnd={handleEndScrubbing}
             onTouchCancel={handleEndScrubbing}
@@ -112,8 +113,6 @@ export function ReaderPageScrubber({
     <div
       className={cn("w-full flex flex-col gap-1 text-text-primary select-none", className)}
       data-testid="reader-page-scrubber"
-      onPointerDown={handleStartScrubbing}
-      onTouchStart={handleStartScrubbing}
     >
       <div className="reader-chrome-muted flex items-center justify-between text-xs font-semibold px-2.5">
         <label htmlFor="reader-page-range">Halaman</label>
@@ -157,6 +156,9 @@ export function ReaderPageScrubber({
           onPointerDown={handleStartScrubbing}
           onPointerUp={handleEndScrubbing}
           onPointerCancel={handleEndScrubbing}
+          onBlur={handleEndScrubbing}
+          onKeyUp={handleEndScrubbing}
+          onLostPointerCapture={handleEndScrubbing}
           onTouchStart={handleStartScrubbing}
           onTouchEnd={handleEndScrubbing}
           onTouchCancel={handleEndScrubbing}

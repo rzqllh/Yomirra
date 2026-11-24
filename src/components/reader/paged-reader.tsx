@@ -56,6 +56,7 @@ export function PagedReader({
   const router = useRouter();
   const preferences = useEffectiveReaderPreferences(sourceId, mangaId);
   const toggleOverlay = useReaderStore(state => state.toggleOverlay);
+  const overlayVisible=useReaderStore(state=>state.isOverlayVisible);
   const setPagedProgress = useReaderStore(state => state.setPagedProgress);
   const { dataSaver } = useSettingsStore();
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
@@ -337,7 +338,7 @@ export function PagedReader({
   const rightLabel = isRtl ? "Area ketuk halaman sebelumnya" : "Area ketuk halaman berikutnya";
 
   return (
-    <div className="relative min-h-screen w-full bg-transparent select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+80px)]">
+    <div data-reader-tap-owner="paged" className="relative min-h-screen w-full bg-transparent select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+80px)]">
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
         <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
@@ -463,7 +464,7 @@ export function PagedReader({
       )}
 
       {/* Standalone/manual fallback; the composed Reader uses its shared bottom scrubber. */}
-      {(!managedChrome || !preferences.showPageProgress) && <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
+      {(!managedChrome || (!preferences.showPageProgress&&overlayVisible)) && <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
         <Button
           variant="ghost"
           size="icon"

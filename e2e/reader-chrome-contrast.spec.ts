@@ -5,8 +5,8 @@ import {randomUUID} from "node:crypto";
 test.use({serviceWorkers:"block",reducedMotion:"reduce"});
 // Exercise the actual ReaderView/ReaderShell with disposable CI Redis
 // fixtures. No upstream requests, public user data or production cache writes.
-for(const [background,appTheme,width] of [["mist","dark",320],["black","light",393],["deepLagoon","light",1440]] as const){
-  test("reader chrome contrast: "+background+" / "+width,async({page,baseURL})=>{
+for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["black","light",393,"paged"],["deepLagoon","light",1440,"paged"],["black","dark",393,"vertical"]] as const){
+  test("reader chrome contrast: "+background+" / "+width+" / "+mode,async({page,baseURL})=>{
     const redisUrl=process.env.REDIS_URL;
     const host=redisUrl?new URL(redisUrl).hostname:"";
     test.skip(process.env.CI!=="true"||process.env.E2E_PRODUCTION_BUILD!=="1"||
@@ -18,7 +18,7 @@ for(const [background,appTheme,width] of [["mist","dark",320],["black","light",3
     const title="Reader contrast fixture";
     const entries=[{id:after,mangaId:id,title:"Chapter 3",number:3,date:"2026-01-01",isLocked:false},{id:chapter,mangaId:id,title:"Chapter 2",number:2,date:"2026-01-01",isLocked:false},{id:before,mangaId:id,title:"Chapter 1",number:1,date:"2026-01-01",isLocked:false}];
     const detail={id,title,format:"manga",contentRating:"safe",isNsfw:false,coverUrl:"",description:"Fixture",genres:[],status:"ONGOING"};
-    const pages={chapterId:chapter,pages:[{index:1,url:"https://example.test/fixture-white.png",width:800,height:1200},{index:2,url:"https://example.test/fixture-black.png",width:800,height:1200}]};
+    const pages={chapterId:chapter,pages:Array.from({length:mode==="vertical"?8:2},(_,index)=>({index:index+1,url:"https://example.test/fixture-"+index+".png",width:800,height:1200}))};
     const scope=JSON.stringify({safety:"safe-v2",languages:["id","en"],dataSaver:false});
     const key=(op:string,params:string)=>"source:mangadex:"+op+":content-v2:"+scope+":"+params;
     try{
@@ -27,11 +27,11 @@ for(const [background,appTheme,width] of [["mist","dark",320],["black","light",3
     }finally{await redis.quit();}
     await page.setViewportSize({width,height:width>=768?900:720});
     await page.context().addCookies([{name:"yomirra-source-languages",value:"id,en",url:baseURL!},{name:"yomirra-data-saver",value:"false",url:baseURL!}]);
-    await page.addInitScript(({bg,theme})=>{
+    await page.addInitScript(({bg,theme,readingMode})=>{
       localStorage.setItem("theme",theme);
       localStorage.setItem("yomirra-onboarding",JSON.stringify({state:{hasCompletedOnboarding:true,_hasHydrated:true},version:0}));
-      localStorage.setItem("manga-reader-settings",JSON.stringify({state:{preferences:{background:bg,readingMode:"paged",keepScreenAwake:false,showPageProgress:true},isDesktopPanelOpen:false},version:0}));
-    },{bg:background,theme:appTheme});
+      localStorage.setItem("manga-reader-settings",JSON.stringify({state:{preferences:{background:bg,readingMode,keepScreenAwake:false,showPageProgress:true},isDesktopPanelOpen:false},version:0}));
+    },{bg:background,theme:appTheme,readingMode:mode});
     await page.route("**/api/proxy/image?**",route=>route.fulfill({contentType:"image/png",body:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC","base64")}));
     await page.route("**/api/sources/mangadex/manga/"+id+"/chapters/"+chapter+"/pages?**",route=>route.fulfill({contentType:"application/json",body:JSON.stringify({data:pages})}));
     await page.route("https://example.test/**",route=>route.fulfill({contentType:"image/png",body:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC","base64")}));
@@ -76,6 +76,24 @@ for(const [background,appTheme,width] of [["mist","dark",320],["black","light",3
     await expect(header.getByRole("button",{name:"Hapus dari Library"})).toHaveAttribute("aria-pressed","true");
     for(const v of await measurements())for(const c of v.controls)expect(c.ratio).toBeGreaterThanOrEqual(4.5);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
-    await page.screenshot({path:test.info().outputPath("reader-"+background+".png")});
+    await page.screenshot({path:test.info().outputPath("reader-"+background+"-"+mode+".png")});
+    if(mode==="paged"){
+      const tap=page.getByRole("button",{name:"Buka kontrol menu"});
+      await tap.click();await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
+      await tap.click();await expect(header).toBeVisible();await expect(dock).toBeVisible();
+    }else{
+      const end=page.locator("[data-reader-end-controls]");
+      await end.scrollIntoViewIfNeeded();await expect(end).toBeInViewport();await expect(dock).toHaveCount(0);
+      await expect(page.getByTestId("reader-page-scrubber")).toHaveCount(0);
+      // Explicit keyboard toggle must still expose header at chapter end.
+      if(!await header.isVisible())await page.keyboard.press("m");
+      await expect(header).toBeVisible();await expect(dock).toHaveCount(0);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+      await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
+      await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));
+      await expect(header).toBeVisible();await expect(dock).toBeVisible();
+      await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));
+      await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
+    }
   });
 }

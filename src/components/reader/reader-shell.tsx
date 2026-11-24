@@ -27,6 +27,7 @@ const ReaderChapterDrawer = dynamic(() => import("./reader-chapter-drawer").then
 import { StatusBarBlur } from "@/components/ui/status-bar-blur"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
+import { useReaderDockGate } from "@/shared/hooks/use-reader-dock-gate"
 import { useMounted } from "@/shared/hooks/use-mounted"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
@@ -69,6 +70,10 @@ export function ReaderShell({
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
+  const readerRoot=React.useRef<HTMLDivElement>(null);
+  const {endVisible,dockAwaitingTap}=useReaderDockGate(readerRoot,`${sourceId}::${mangaId}::${currentChapterId??""}`,preferences.readingMode);
+  const dockAllowed=!endVisible&&!dockAwaitingTap;
+  const showDock=isOverlayVisible&&dockAllowed;
 
   const isScrubbingRef = React.useRef(false);
   const scrubbingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,14 +86,13 @@ export function ReaderShell({
 
     if (isScrubbing) {
       isScrubbingRef.current = true;
-      setOverlayVisible(true);
     } else {
       // Grace period to allow smooth-scroll inertia and frame settlement
       scrubbingTimerRef.current = setTimeout(() => {
         isScrubbingRef.current = false;
       }, 600);
     }
-  }, [setOverlayVisible]);
+  }, []);
 
   React.useEffect(() => {
     return () => {
@@ -97,6 +101,13 @@ export function ReaderShell({
       }
     };
   }, []);
+  React.useEffect(()=>{
+    const release=()=>{if(isScrubbingRef.current)handleScrubbingChange(false);};
+    window.addEventListener("pointerup",release);
+    window.addEventListener("pointercancel",release);
+    window.addEventListener("blur",release);
+    return()=>{window.removeEventListener("pointerup",release);window.removeEventListener("pointercancel",release);window.removeEventListener("blur",release);};
+  },[handleScrubbingChange]);
 
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
@@ -197,7 +208,7 @@ export function ReaderShell({
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.defaultPrevented || e.target instanceof Element && e.target.closest("input,textarea,select,[contenteditable=true],[role=dialog]") || document.querySelector("[role=dialog][aria-modal=true]")) return;
 
       if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
         toggleOverlay();
@@ -247,91 +258,36 @@ export function ReaderShell({
     };
   }, [preferences.keepScreenAwake]);
 
-  // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
-  useReaderGesture();
+  // Actual readers own their horizontal tap zones; shell handles only
+  // fallback content. A single physical tap must never toggle twice.
+  useReaderGesture(readerRoot);
 
-  // Immediate overlay auto-dismiss on scroll down, show on scroll up with delta accumulation
   React.useEffect(() => {
-    let ticking = false;
-    let lastScrollY = window.scrollY;
-    let accumulatedDiff = 0;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const diff = currentScrollY - lastScrollY;
-          const activeId = document.activeElement?.id;
-          const isRangeActive = activeId === "reader-page-range" || activeId === "reader-webtoon-range";
-
-          if (isScrubbingRef.current || isRangeActive) {
-            lastScrollY = currentScrollY;
-            accumulatedDiff = 0;
-            ticking = false;
-            return;
-          }
-
-          setShowBackToTop(currentScrollY > 1200);
-
-          // Reset accumulator if scrolling changes direction
-          if (Math.sign(diff) !== Math.sign(accumulatedDiff)) {
-            accumulatedDiff = 0;
-          }
-          accumulatedDiff += diff;
-
-          const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
-
-          if (isAtBottom) {
-            setOverlayVisible(true);
-          } else if (accumulatedDiff > 60) {
-            setOverlayVisible(false);
-            accumulatedDiff = 0; // Reset after triggering
-          } else if (accumulatedDiff < -30) {
-            setOverlayVisible(true);
-            accumulatedDiff = 0; // Reset after triggering
-          }
-
-          lastScrollY = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
+    let frame:number|null=null;
+    let lastScrollY=Math.max(0,window.scrollY);
+    let distance=0;
+    const handleScroll=()=>{
+      if(frame!==null)return;
+      frame=window.requestAnimationFrame(()=>{
+        frame=null;
+        const y=Math.max(0,window.scrollY),delta=y-lastScrollY;
+        lastScrollY=y;
+        setShowBackToTop(y>1200);
+        // Slider focus alone is not an active scrub; release/blur ends it.
+        if(isScrubbingRef.current||preferences.toolbarBehavior==="always-visible"){
+          distance=0;return;
+        }
+        distance+=Math.abs(delta);
+        if(distance>=60){setOverlayVisible(false);distance=0;}
+      });
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [setOverlayVisible]);
-
-  // Desktop mouse proximity & arrow key awareness for showing chrome without forcing click
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (window.innerWidth < 768) return;
-      const isNearTop = e.clientY <= 70;
-      const isNearBottom = e.clientY >= window.innerHeight - 90;
-
-      if (isNearTop || isNearBottom) {
-        setOverlayVisible(true);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowUp" || e.key === "PageUp") {
-        setOverlayVisible(true);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("keydown", handleKeyDown, { passive: true });
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [setOverlayVisible]);
+    window.addEventListener("scroll",handleScroll,{passive:true});
+    return()=>{window.removeEventListener("scroll",handleScroll);if(frame!==null)window.cancelAnimationFrame(frame);};
+  },[setOverlayVisible,preferences.toolbarBehavior,currentChapterId]);
 
   return (
     <div
+      ref={readerRoot}
       className={cn(
         "reader-contrast-scope relative min-h-screen w-full transition-[padding,background-color] duration-150",
         isDesktopPanelOpen && "md:pr-80",
@@ -450,9 +406,9 @@ export function ReaderShell({
         )}
       </AnimatePresence>
 
-      {/* Bottom Overlay (Option A: Compact High-Contrast Squircle Dock with Spring Animation) */}
-      <AnimatePresence>
-        {isOverlayVisible && (
+      {/* End card owns bottom navigation; unmount immediately while visible. */}
+      {dockAllowed && <AnimatePresence>
+        {showDock && (
           <motion.div
             key="reader-bottom-overlay"
             initial={reducedMotion ? false : { y: 80, opacity: 0 }}
@@ -484,7 +440,7 @@ export function ReaderShell({
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
-                  className="yomirra-chrome reader-chrome-surface reader-chrome-control reader-back-to-top pointer-events-auto self-end flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  className="reader-chrome-surface reader-chrome-control reader-back-to-top pointer-events-auto self-end flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   aria-label="Kembali ke bagian atas pembaca"
                 >
                   <CaretUp size={18} weight="regular" />
@@ -492,7 +448,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome reader-chrome-surface yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
+              <div role="group" aria-label="Kontrol pembaca" className="reader-chrome-surface yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -579,10 +535,10 @@ export function ReaderShell({
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>}
 
       {/* Unobtrusive Minimal Page Badge while reading (overlay hidden) */}
-      {!isOverlayVisible && preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
+      {dockAllowed && !isOverlayVisible && preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
         <div
           className={cn(
             "fixed right-3 z-30 pointer-events-none transition-all duration-200",

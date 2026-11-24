@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { ReaderShell } from "../reader-shell";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -40,6 +40,7 @@ describe("ReaderShell Header & Progress Bar", () => {
     sessionStorage.clear();
     endNavigationIntent();
     window.history.replaceState({}, "", "/");
+    Object.defineProperty(window,"scrollY",{value:0,writable:true,configurable:true});
     useReaderStore.setState({
       preferences: {
         imageFit: "width",
@@ -407,4 +408,40 @@ describe("ReaderShell Header & Progress Bar", () => {
   fireEvent.click(saved);
   expect(screen.getByRole("button",{name:"Hapus dari Library"}).getAttribute("aria-pressed")).toBe("true");
 });
+
+  it("scroll in either direction hides without re-showing; explicit keyboard intent restores",async()=>{
+    render(<ReaderShell sourceId="srcA" mangaId="m1" currentChapterId="ch1"><div>Page</div></ReaderShell>);
+    Object.defineProperty(window,"scrollY",{value:300,writable:true,configurable:true});fireEvent.scroll(window);
+    await waitFor(()=>expect(useReaderStore.getState().isOverlayVisible).toBe(false));
+    Object.defineProperty(window,"scrollY",{value:0,writable:true,configurable:true});fireEvent.scroll(window);
+    await act(async()=>{await new Promise(resolve=>setTimeout(resolve,60));});
+    expect(useReaderStore.getState().isOverlayVisible).toBe(false);
+    fireEvent.keyDown(window,{key:"m"});
+    expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+  });
+  it("end card suppresses only dock and badge, never forces header state",async()=>{
+    let atEnd=true;
+    const box={x:0,y:0,width:200,height:200,top:0,right:200,bottom:200,left:0,toJSON:()=>({})};
+    const original=HTMLElement.prototype.getBoundingClientRect;
+    const spy=vi.spyOn(HTMLElement.prototype,"getBoundingClientRect").mockImplementation(function(this:HTMLElement){
+      if(this.hasAttribute("data-reader-end-controls"))return {...box,top:atEnd?0:window.innerHeight+100,bottom:atEnd?200:window.innerHeight+300};
+      return original.call(this);
+    });
+    try{
+      render(<ReaderShell sourceId="srcA" mangaId="m1" currentChapterId="ch1"><div data-reader-end-controls>End chapter</div></ReaderShell>);
+      expect(screen.getByRole("button",{name:"Kembali ke detail komik"})).toBeDefined();
+      expect(screen.queryByRole("group",{name:"Kontrol pembaca"})).toBeNull();
+      expect(screen.queryByTestId("reader-page-scrubber")).toBeNull();
+      fireEvent.keyDown(window,{key:"m"});
+      expect(useReaderStore.getState().isOverlayVisible).toBe(false);
+      fireEvent.keyDown(window,{key:"m"});
+      expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+      expect(screen.queryByRole("group",{name:"Kontrol pembaca"})).toBeNull();
+      atEnd=false;fireEvent.resize(window);
+      await act(async()=>{await new Promise(resolve=>setTimeout(resolve,60));});
+      expect(screen.queryByRole("group",{name:"Kontrol pembaca"})).toBeNull();
+      fireEvent.keyDown(window,{key:"m"});fireEvent.keyDown(window,{key:"m"});
+      await waitFor(()=>expect(screen.getByRole("group",{name:"Kontrol pembaca"})).toBeDefined());
+    }finally{spy.mockRestore();}
+  });
 });
