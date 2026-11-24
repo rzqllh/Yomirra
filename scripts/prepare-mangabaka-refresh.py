@@ -1,6 +1,7 @@
 """Operator-side candidate preparation; never deploy, upload, or mutate prior data.
 Requires Python 3, zstd, Node 22. Run from repository root.
 """
+from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import argparse
@@ -9,6 +10,8 @@ import importlib.util
 import json
 import os
 import re
+import shutil
+import sqlite3
 import subprocess
 
 SPEC = importlib.util.spec_from_file_location("dump", Path(__file__).with_name("validate-mangabaka-dump.py"))
@@ -37,6 +40,51 @@ def previous_snapshot(folder):
             or data.get("indexSha256") != sha256(index)):
         raise ValueError("Previous snapshot integrity mismatch")
     return index, data
+
+def verify_sqlite_snapshot(index, report):
+    # Never open an unverified snapshot in read/write mode.
+    with closing(sqlite3.connect(index.as_uri() + "?mode=ro&immutable=1", uri=True)) as db:
+        if db.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
+            raise ValueError("SQLite integrity check failed")
+        if db.execute("PRAGMA foreign_key_check").fetchone() is not None:
+            raise ValueError("SQLite foreign key check failed")
+        manifest = db.execute(
+            "SELECT schema_version,provider,license,source_sha256,accepted FROM manifest LIMIT 2"
+        ).fetchall()
+        expected = (2, "mangabaka", "CC-BY-NC-SA-4.0",
+                    report.get("normalizedInputSha256"), report.get("accepted"))
+        if manifest != [expected] or not isinstance(expected[3], str) or not re.fullmatch(
+                "[a-f0-9]{64}", expected[3]) or not isinstance(expected[4], int) or expected[4] <= 0:
+            raise ValueError("SQLite manifest mismatch")
+        if db.execute("SELECT COUNT(*) FROM works").fetchone()[0] != expected[4]:
+            raise ValueError("SQLite record count mismatch")
+    return expected[4]
+
+def restore_candidate(previous, output):
+    """Offline recovery drill. Copy only verified files to a new path.
+    No network, remote token, production pointer, or existing folder changes."""
+    if os.environ.get("YOMIRRA_MANGABAKA_METADATA") != "permitted":
+        raise ValueError("Confirm noncommercial permitted use and attribution first")
+    output = Path(output).resolve()
+    if output.exists():
+        raise ValueError("Use a new candidate path; no overwrites")
+    index, report = previous_snapshot(previous)
+    count = verify_sqlite_snapshot(index, report)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix="yomirra-restore-", dir=output.parent) as temp:
+        root = Path(temp)
+        candidate = root / "catalog.sqlite"
+        shutil.copyfile(index, candidate)
+        if candidate.stat().st_size != report["indexBytes"] or sha256(candidate) != report["indexSha256"]:
+            raise ValueError("Restore hash mismatch")
+        verify_sqlite_snapshot(candidate, report)
+        output.mkdir(exist_ok=False)
+        os.link(candidate, output / "catalog.sqlite")
+        with (output / "manifest.json").open("x", encoding="utf8") as file:
+            json.dump(report, file, indent=2)
+            file.write("\n")
+    return {"status":"RESTORE_CANDIDATE_VERIFIED", "accepted":count,
+            "indexSha256":report["indexSha256"], "productionActivated":False}
 
 def prepare(output, previous=None):
     if os.environ.get("YOMIRRA_MANGABAKA_METADATA") != "permitted":
@@ -89,6 +137,9 @@ def prepare(output, previous=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
-    parser.add_argument("--previous")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--previous")
+    source.add_argument("--restore-from")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.output, args.previous), indent=2))
+    result = restore_candidate(args.restore_from, args.output) if args.restore_from else prepare(args.output, args.previous)
+    print(json.dumps(result, indent=2))

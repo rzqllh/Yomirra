@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 import os
+import sqlite3
 from pathlib import Path
 import tempfile
 import unittest
@@ -57,6 +58,34 @@ class RefreshTests(unittest.TestCase):
                     refresh.prepare(output)
                 fetch.assert_not_called()
             self.assertEqual((output/"catalog.sqlite").read_bytes(),original)
+
+    def test_restore_verified_sqlite_into_new_candidate(self):
+        with tempfile.TemporaryDirectory() as root:
+            previous, output = Path(root)/"previous", Path(root)/"restore"
+            previous.mkdir()
+            index = previous/"catalog.sqlite"
+            with sqlite3.connect(index) as db:
+                db.execute("CREATE TABLE works(id INTEGER PRIMARY KEY)")
+                db.execute("INSERT INTO works VALUES(1)")
+                db.execute("CREATE TABLE manifest(schema_version INTEGER,provider TEXT,license TEXT,source_sha256 TEXT,accepted INTEGER)")
+                db.execute("INSERT INTO manifest VALUES(2,'mangabaka','CC-BY-NC-SA-4.0',?,1)", ("b"*64,))
+            original=index.read_bytes()
+            report={"schemaVersion":2,"provider":"mangabaka","license":"CC-BY-NC-SA-4.0",
+                    "officialSha1":"a"*40,"indexBytes":len(original),"indexSha256":hashlib.sha256(original).hexdigest(),
+                    "normalizedInputSha256":"b"*64,"accepted":1}
+            (previous/"manifest.json").write_text(json.dumps(report))
+            with patch.dict(os.environ, {"YOMIRRA_MANGABAKA_METADATA":"permitted"}), \
+                 patch.object(refresh.dump, "fetch") as fetch:
+                self.assertEqual(refresh.restore_candidate(previous, output)["status"],"RESTORE_CANDIDATE_VERIFIED")
+                self.assertEqual((output/"catalog.sqlite").read_bytes(),original)
+                self.assertEqual(index.read_bytes(),original)
+                with self.assertRaisesRegex(ValueError,"no overwrites"):
+                    refresh.restore_candidate(previous,output)
+                report["accepted"]=2
+                (previous/"manifest.json").write_text(json.dumps(report))
+                with self.assertRaisesRegex(ValueError,"manifest mismatch"):
+                    refresh.restore_candidate(previous,Path(root)/"invalid")
+                fetch.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()
