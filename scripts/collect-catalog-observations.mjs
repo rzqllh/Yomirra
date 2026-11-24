@@ -46,7 +46,9 @@ export function readObservation(row) {
     const value = a.links?.[from];
     if (typeof value === "string" && (from==="mu" ? /^(?=[a-z0-9]{1,32}$)(?=.*[a-z])[a-z0-9]+$/i : /^[1-9]\d{0,14}$/).test(value)) links[to]=value.toLowerCase();
   }
-  return {sourceId:"mangadex",id:row.id,title,formatHint:format[a.originalLanguage],
+  const authors=[...new Set((Array.isArray(row.relationships)?row.relationships:[]).filter(r=>r?.type==="author").map(r=>r.attributes?.name).filter(v=>typeof v==="string"&&v.trim()&&v.length<=300).map(v=>v.trim()))].slice(0,20);
+  const aliases=[...new Set([title,...Object.values(a.title),...(Array.isArray(a.altTitles)?a.altTitles.flatMap(v=>v&&typeof v==="object"?Object.values(v):[]):[])].filter(v=>typeof v==="string"&&v.trim()&&v.length<=300).map(v=>v.trim()))].slice(0,100);
+  return {sourceId:"mangadex",id:row.id,title,aliases,authors,formatHint:format[a.originalLanguage],
     originalLanguage:a.originalLanguage,contentRating:"safe",externalWorkIds:links,
     evidence:"https://mangadex.org/title/"+row.id};
 }
@@ -62,7 +64,7 @@ export async function collectObservations({fetchImpl=fetch,sleep=ms=>new Promise
     for (let i=0;i<MAX_REQUESTS && rows.size<TARGET;i++) {
       if (i) await sleep(1200);
       const url = new URL("https://api.mangadex.org/manga");
-      url.search = new URLSearchParams({limit:String(LIMIT),offset:String(offset),"contentRating[]":"safe","order[followedCount]":"desc"}).toString();
+      url.search = new URLSearchParams({limit:String(LIMIT),offset:String(offset),"contentRating[]":"safe","includes[]":"author","order[followedCount]":"desc"}).toString();
       const attempt = {offset,status:null};
       attempts.push(attempt);
       const response = await fetchImpl(url,{redirect:"error",cache:"no-store",signal:AbortSignal.timeout(8000),

@@ -27,6 +27,7 @@ test("builds a compact v1/v2-compatible index and increments only a new snapshot
     await writeFile(input,[work(1,"First"),work(3,"Third")].map(JSON.stringify).join("\n"));
     const refreshed=await buildCatalogIndex(input,second,{previous:first,permitted:true});
     assert.equal(refreshed.unchanged,1);assert.equal(refreshed.changed,1);
+    assert.equal(refreshed.added,1);assert.equal(refreshed.updated,0);assert.equal(refreshed.removed,1);
     assert.deepEqual(await readFile(first),original);
     const next=new DatabaseSync(second,{readOnly:true});
     assert.deepEqual(next.prepare("SELECT id FROM works ORDER BY id").all().map(row=>row.id),[1,3]);
@@ -39,4 +40,18 @@ test("rejects corrupt compressed rows and preserves legacy payload compatibility
   assert.throws(()=>decodeCatalogPayload(new Uint8Array([1,2,3])));
   const legacy={provider:"mangabaka",externalId:7,title:"Example",aliases:["Example"],format:"manga",contentRating:"safe"};
   assert.deepEqual(decodeCatalogPayload(JSON.stringify(legacy)),legacy);
+});
+
+test("rejects a truncated refresh and retains the exact previous snapshot",async()=>{
+  const dir=await mkdtemp(join(tmpdir(),"yomirra-index-shrink-"));
+  try{
+    const input=join(dir,"input.jsonl"),first=join(dir,"first.sqlite"),second=join(dir,"second.sqlite");
+    await writeFile(input,Array.from({length:100},(_,i)=>work(i+1,"Title "+i)).map(JSON.stringify).join("\n"));
+    await buildCatalogIndex(input,first,{permitted:true});
+    const before=await readFile(first);
+    await writeFile(input,Array.from({length:80},(_,i)=>work(i+1,"Title "+i)).map(JSON.stringify).join("\n"));
+    await assert.rejects(buildCatalogIndex(input,second,{previous:first,permitted:true}),/Unexpected catalog shrink/);
+    await assert.rejects(readFile(second),{code:"ENOENT"});
+    assert.deepEqual(await readFile(first),before);
+  }finally{await rm(dir,{recursive:true,force:true});}
 });

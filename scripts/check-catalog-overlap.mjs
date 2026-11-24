@@ -14,11 +14,36 @@ export async function measureCatalogOverlap(index,observationPath){
      new Set(artifact.rows.map(row=>row.id)).size!==300)throw Error("Expected 300 distinct recorded MangaDex observations");
   const db=new DatabaseSync(index,{readOnly:true});
   const query=db.prepare("SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key=? LIMIT 17");
-  const report={observations:300,uniqueTrackerReference:0,trackerUnmapped:0,trackerAmbiguous:0,titleAgrees:0,titleDisagrees:0,titleAmbiguous:0,titleUnmapped:0,formatConflict:0,ratingConflict:0,independentlyReviewedCrossProviderWorks:0,benchmarkPass:false};
+  const report={observations:300,authorEvidence:0,uniqueAliasFormatAuthor:0,aliasAuthorConflict:0,aliasAmbiguous:0,aliasUnmapped:0,aliasUnconfirmed:0,uniqueTrackerReference:0,trackerUnmapped:0,trackerAmbiguous:0,titleAgrees:0,titleDisagrees:0,titleAmbiguous:0,titleUnmapped:0,formatConflict:0,ratingConflict:0,independentlyReviewedCrossProviderWorks:0,benchmarkPass:false};
   try{
     for(const row of artifact.rows){
       if(row.sourceId!=="mangadex"||row.contentRating!=="safe"||typeof row.title!=="string"||
          !["manga","manhwa","manhua"].includes(row.formatHint))throw Error("Observation boundary mismatch");
+      // Title/author comparison is separate from the tracker-based reference.
+      // Candidates are never registered or counted as independently reviewed.
+      const authors=new Set((Array.isArray(row.authors)?row.authors:[]).slice(0,20).map(normalizeTitle).filter(Boolean));
+      if(authors.size)report.authorEvidence++;
+      const aliases=[...new Set([row.title,...(Array.isArray(row.aliases)?row.aliases:[])].slice(0,100).map(normalizeTitle).filter(Boolean))];
+      const titleCandidates=new Map();
+      let titleOverflow=false;
+      for(const alias of aliases){
+        const rows=query.all("title:"+alias);
+        if(rows.length===17){titleOverflow=true;break;}
+        for(const entry of rows){
+          const work=decodeCatalogPayload(entry.payload);
+          if(work.format===row.formatHint)titleCandidates.set(work.externalId,work);
+        }
+        if(titleCandidates.size>16){titleOverflow=true;break;}
+      }
+      if(titleOverflow||titleCandidates.size>1)report.aliasAmbiguous++;
+      else if(!titleCandidates.size)report.aliasUnmapped++;
+      else{
+        const candidate=[...titleCandidates.values()][0],names=new Set((candidate.authors??[]).map(normalizeTitle).filter(Boolean));
+        const conflict=namespaces.some(key=>idValue(key,row.externalWorkIds?.[key])&&idValue(key,candidate.externalWorkIds?.[key])&&row.externalWorkIds[key]!==candidate.externalWorkIds[key]);
+        if(conflict||candidate.contentRating!=="safe"||(authors.size&&names.size&&![...authors].some(a=>names.has(a))))report.aliasAuthorConflict++;
+        else if(authors.size&&names.size&&[...authors].some(a=>names.has(a)))report.uniqueAliasFormatAuthor++;
+        else report.aliasUnconfirmed++;
+      }
       const keys=namespaces.filter(key=>idValue(key,row.externalWorkIds?.[key]));
       const found=new Map();
       let ambiguous=false;

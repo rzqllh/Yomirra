@@ -6,6 +6,7 @@ test("bounded collection records observations without claiming independent match
   const report=await collectObservations({sleep:async()=>{},fetchImpl:async url=>{
     assert.equal(url.hostname,"api.mangadex.org");
     assert.equal(url.searchParams.get("contentRating[]"),"safe");
+    assert.equal(url.searchParams.get("includes[]"),"author");
     const offset=Number(url.searchParams.get("offset"));
     return Response.json({result:"ok",offset,total:500,data:Array.from({length:100},(_,i)=>row(offset+i))});
   }});
@@ -28,4 +29,13 @@ test("keeps only explicitly safe valid identities and never fabricates a title",
   assert.equal(readObservation(row(1,"unknown")),null);
   assert.equal(readObservation({...row(1),id:"invalid"}),null);
   assert.equal(readObservation({...row(1),attributes:{...row(1).attributes,title:{}}}),null);
+});
+
+test("records real returned author and aliases without treating artists as authors",()=>{
+  const item=row(1);
+  item.attributes.altTitles=[{ja:"別名"}];
+  item.relationships=[{type:"author",attributes:{name:"Author A"}},{type:"artist",attributes:{name:"Artist B"}}];
+  const result=readObservation(item);
+  assert.deepEqual(result.authors,["Author A"]);
+  assert.deepEqual(result.aliases,["Fixture 1","別名"]);
 });

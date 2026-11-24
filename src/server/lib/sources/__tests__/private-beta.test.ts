@@ -82,6 +82,15 @@ describe("private reader boundaries", () => {
     vi.mocked(matchMangaBakaWorks).mockResolvedValueOnce([{...canonical,contentRating:"erotica"}]);
     await expect(readPrivateBetaDetail("manhwa-list","manga")).rejects.toThrow("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   });
+  it("does not let an explicit safe source label override restrictive verified canonical evidence",async()=>{
+    vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
+    const adapter=fixture();
+    adapter.getDetail.mockResolvedValue({id:"manga",title:"Fixture",contentRating:"safe",format:"manhwa",externalWorkIds:{anilist:"100"}} as any);
+    vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);
+    vi.mocked(matchMangaBakaWorks).mockResolvedValueOnce([{provider:"mangabaka",externalId:1,title:"Fixture",aliases:["Fixture"],format:"manhwa",contentRating:"suggestive",externalWorkIds:{anilist:"100"}}]);
+    await expect(readPrivateBetaDetail("manhwa-list","manga")).rejects.toThrow("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+    expect(adapter.getChapters).not.toHaveBeenCalled();
+  });
   it("rejects conflicting duplicate access evidence before requesting pages", async () => {
     vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
     const adapter=fixture();

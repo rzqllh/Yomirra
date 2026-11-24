@@ -31,6 +31,7 @@ import {
   parseSearchExpression,
   rankHybridScore,
   type SearchCatalogCandidate,
+  boundIntelligenceCandidates,
 } from "@/shared/lib/search-intelligence";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
@@ -449,7 +450,7 @@ export function useSearchCatalog() {
 
   const intelligenceCandidates = React.useMemo<SearchCatalogCandidate[]>(
     () =>
-      rawSearchMangas.map((item) => ({
+      boundIntelligenceCandidates(rawSearchMangas.map((item) => ({
         canonicalKey: item.canonicalKey,
         sourceId: item.sourceId,
         mangaId: item.manga.id,
@@ -465,7 +466,7 @@ export function useSearchCatalog() {
         sourceBindings: item.sourceBindings,
         isNsfw: item.manga.isNsfw,
         contentRating: item.manga.contentRating,
-      })),
+      }))),
     [rawSearchMangas]
   );
 

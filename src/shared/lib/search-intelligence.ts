@@ -57,6 +57,23 @@ export interface SearchCatalogCandidate {
   sourceBindings?: SearchCatalogBinding[];
 }
 
+/** Bound only the optional ranking request; never truncate displayed provider results. */
+export function boundIntelligenceCandidates(candidates:readonly SearchCatalogCandidate[]):SearchCatalogCandidate[]{
+  const short=(v:string|undefined,max:number)=>typeof v==="string"?v.slice(0,max):undefined;
+  return candidates.filter(c=>c.canonicalKey.length>0&&c.canonicalKey.length<=500&&c.sourceId.length>0&&c.sourceId.length<=80&&c.mangaId.length>0&&c.mangaId.length<=500&&c.title.trim()).slice(0,40).map(c=>({
+    ...c,title:c.title.slice(0,300),coverUrl:short(c.coverUrl,2000),originalTitle:short(c.originalTitle,300),
+    alternativeTitles:c.alternativeTitles?.filter(v=>typeof v==="string"&&v.trim()).slice(0,20).map(v=>v.slice(0,300)),
+    author:short(c.author,300),description:short(c.description,4000),format:short(c.format,80),status:short(c.status,80),
+    genres:c.genres?.filter(v=>typeof v==="string").slice(0,40).map(v=>v.slice(0,80)),
+    score:Number.isFinite(c.score)?c.score:undefined,
+    sourceBindings:c.sourceBindings?.filter(b=>b.sourceId.length>0&&b.sourceId.length<=80&&b.mangaId.length>0&&b.mangaId.length<=500&&b.title.trim()).slice(0,20).map(b=>({
+      ...b,title:b.title.slice(0,300),coverUrl:short(b.coverUrl,2000),latestChapter:short(b.latestChapter,200),
+      language:short(b.language,32),format:short(b.format,80),
+      score:typeof b.score==="string"?b.score.slice(0,80):Number.isFinite(b.score)?b.score:undefined,
+    })),
+  }));
+}
+
 const TAGS: SearchTagDefinition[] = [
   { id: "action", label: "Action", category: "genre", aliases: ["action", "aksi"] },
   { id: "adventure", label: "Adventure", category: "genre", aliases: ["adventure", "petualangan"] },

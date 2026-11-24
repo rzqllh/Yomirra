@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/build-mangabaka-index.mjs'
+      - 'scripts/prepare-mangabaka-refresh.py'
+      - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
       - 'scripts/__tests__/build-mangabaka-index.test.mjs'
       - 'src/server/lib/metadata/mangabaka-record.mjs'
       - 'src/server/lib/metadata/local-catalog-index.ts'
@@ -24,3 +26,4 @@ jobs:
         with:
           node-version: 22
       - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs
+      - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
