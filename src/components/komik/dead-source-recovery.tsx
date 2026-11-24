@@ -155,13 +155,13 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
     router.push(getMangaDetailHref(quickAlternative.sourceId, quickAlternative.mangaId));
   };
 
-  const handleConfirmRelink = (candidate: AlternateSourceCandidate) => {
+  const handleConfirmRelink = (candidate: AlternateSourceCandidate, chapterId?: string) => {
     if (eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
       toast.error("Sumber tidak dapat dibuka");
       return;
     }
     setIsModalOpen(false);
-    router.push(getMangaDetailHref(candidate.sourceId, candidate.mangaId));
+    router.push(chapterId ? getReaderHref(candidate.sourceId, candidate.mangaId, chapterId) : getMangaDetailHref(candidate.sourceId, candidate.mangaId));
   };
 
   return (
@@ -277,6 +277,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
         deadMangaTitle={knownTitle}
         candidates={candidates}
         chapterMapResult={chapterMapResult}
+        currentChapterTitle={latestRead?.chapterTitle}
         isLoading={isSearching}
         onConfirm={handleConfirmRelink}
       />

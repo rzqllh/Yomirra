@@ -344,7 +344,7 @@ function ReaderContent({
           deadSourceId={sourceId}
           deadMangaTitle={alternateSource.title}
           candidates={alternateSource.candidates}
-          chapterMapResult={alternateSource.chapterMapResult}
+          currentChapterTitle={alternateSource.mappingChapterTitle}
           onConfirm={alternateSource.handleConfirm}
           isLoading={alternateSource.isSearching}
         />
@@ -418,7 +418,7 @@ function ReaderContent({
         deadSourceId={sourceId}
         deadMangaTitle={alternateSource.title}
         candidates={alternateSource.candidates}
-        chapterMapResult={alternateSource.chapterMapResult}
+        currentChapterTitle={alternateSource.mappingChapterTitle}
         onConfirm={alternateSource.handleConfirm}
         isLoading={alternateSource.isSearching}
       />

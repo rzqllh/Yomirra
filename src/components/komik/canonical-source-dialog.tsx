@@ -23,7 +23,7 @@ type ObservedSourceHealth = Pick<SourceHealth, "status" | "lastSuccessAt" | "las
 
 function getObservedHealthRank(health: ObservedSourceHealth | undefined, now: number): number {
   const checkedAt = Math.max(health?.lastSuccessAt ?? 0, health?.lastErrorAt ?? 0);
-  if (!checkedAt || now - checkedAt > 5 * 60 * 1000) return 3; // No recent evidence
+  if (!Number.isFinite(checkedAt) || checkedAt <= 0 || checkedAt > now || now - checkedAt > 5 * 60 * 1000) return 3; // No recent evidence
   switch (health?.status) {
     case "online": return 0;
     case "slow": return 1;

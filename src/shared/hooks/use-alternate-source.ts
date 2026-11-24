@@ -9,7 +9,7 @@ import { getSourceMetadata, getAllSourceMetadata } from "@/shared/sources/source
 import { apiClient } from "@/shared/api-client";
 import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher";
 import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
-import { getMangaDetailHref } from "@/shared/lib/routes";
+import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { eligibleCanonicalBindings } from "@/components/komik/canonical-source-dialog";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
@@ -30,6 +30,8 @@ export function useAlternateSource({
   mangaId,
   knownTitle: initialTitle,
   knownAuthor: initialAuthor,
+  currentChapterId,
+  currentChapterTitle,
 }: UseAlternateSourceOptions) {
   const router = useRouter();
 
@@ -49,6 +51,7 @@ export function useAlternateSource({
   const [isSearching, setIsSearching] = useState(false);
   const [candidates, setCandidates] = useState<AlternateSourceCandidate[]>([]);
   const chapterMapResult: ChapterMapResult | undefined = undefined;
+  const mappingChapterTitle = currentChapterId ? currentChapterTitle : latestRead?.chapterTitle;
 
   const openAndSearch = useCallback(async () => {
     setIsOpen(true);
@@ -116,7 +119,7 @@ export function useAlternateSource({
     }
   }, [sourceId, title, author, disabledSources, hideNsfw]);
 
-  const handleConfirm = useCallback((candidate: AlternateSourceCandidate) => {
+  const handleConfirm = useCallback((candidate: AlternateSourceCandidate, chapterId?: string) => {
     // Selecting another source is navigation, not proof of work/release
     // equivalence. Preserve the original source, preference and cursors.
     if (eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
@@ -124,7 +127,7 @@ export function useAlternateSource({
       return;
     }
     setIsOpen(false);
-    router.replace(getMangaDetailHref(candidate.sourceId, candidate.mangaId));
+    router.replace(chapterId ? getReaderHref(candidate.sourceId, candidate.mangaId, chapterId) : getMangaDetailHref(candidate.sourceId, candidate.mangaId));
   }, [disabledSources, hideNsfw, router]);
 
   return {
@@ -133,6 +136,7 @@ export function useAlternateSource({
     isSearching,
     candidates,
     chapterMapResult,
+    mappingChapterTitle,
     openAndSearch,
     handleConfirm,
     title,

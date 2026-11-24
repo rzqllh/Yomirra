@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { MatchConfidence } from "@/shared/lib/title-matcher";
 import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
 import { cn } from "@/shared/utils/cn";
+import { AlternateChapterPreview } from "./alternate-chapter-preview";
 
 // Types
 
@@ -34,7 +35,8 @@ export interface AlternateSourceModalProps {
   candidates: AlternateSourceCandidate[];
   /** If provided, shows progress mapping result for the confirmed candidate */
   chapterMapResult?: ChapterMapResult;
-  onConfirm: (candidate: AlternateSourceCandidate) => void;
+  currentChapterTitle?: string;
+  onConfirm: (candidate: AlternateSourceCandidate, chapterId?: string) => void;
   isLoading?: boolean;
 }
 
@@ -108,6 +110,7 @@ export function AlternateSourceModal({
   deadMangaTitle,
   candidates,
   chapterMapResult,
+  currentChapterTitle,
   onConfirm,
   isLoading,
 }: AlternateSourceModalProps) {
@@ -210,6 +213,16 @@ export function AlternateSourceModal({
             </ul>
           )}
         </div>
+
+        {isOpen && !isLoading && selected && currentChapterTitle && (
+          <AlternateChapterPreview
+            key={JSON.stringify([selected.sourceId, selected.mangaId, currentChapterTitle])}
+            sourceId={selected.sourceId}
+            mangaId={selected.mangaId}
+            currentChapterTitle={currentChapterTitle}
+            onOpenChapter={(chapterId) => onConfirm(selected, chapterId)}
+          />
+        )}
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-border-glass/40 bg-surface-base/30 flex flex-col gap-2">
