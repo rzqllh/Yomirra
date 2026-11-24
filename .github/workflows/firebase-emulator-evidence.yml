@@ -1,0 +1,42 @@
+name: Isolated Firebase sync evidence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'firebase.emulator.json'
+      - 'firestore.rules'
+      - 'src/shared/lib/canonical-preference-cloud.ts'
+      - 'src/shared/lib/__tests__/canonical-preference-emulator.test.ts'
+      - '.github/workflows/firebase-emulator-evidence.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'integrate/yomirra-complete-release-20261124')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pnpm install --frozen-lockfile
+      - name: Test real SDK against demo project emulators only
+        env:
+          YOMIRRA_FIREBASE_EMULATOR_TEST: '1'
+          FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080'
+          FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
+          CI: 'true'
+        run: npx --yes firebase-tools@15.36.0 emulators:exec --non-interactive --config firebase.emulator.json --project demo-yomirra-release --only auth,firestore "pnpm exec vitest run src/shared/lib/__tests__/canonical-preference-emulator.test.ts"
