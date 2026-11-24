@@ -6,6 +6,7 @@ import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { CustomSourceSchema, type CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 import type { ParserTestResult } from "@/shared/types/admin";
+import { isReservedKeiyoushiId } from "@/shared/sources/keiyoushi-candidates";
 
 const CUSTOM_SOURCE_PREFIX = "yomirra:sources:custom:";
 const CUSTOM_SOURCE_INDEX = "yomirra:sources:custom:index";
@@ -187,6 +188,7 @@ export async function getCustomSourceById(id: string): Promise<CustomSourceDefin
  * Menyimpan atau memperbarui custom source di Redis dengan fail-closed durability dan eksekusi atomik.
  */
 export async function saveCustomSource(source: CustomSourceDefinition): Promise<CustomSourceDefinition> {
+  if (isReservedKeiyoushiId(source.id)) throw new Error("SECURITY_REJECTED: Source identity reserved for staged adapter.");
   const isProduction = process.env.NODE_ENV === "production";
   if (isProduction && !isRedisConfigured) {
     logger.error("Admin custom source mutation rejected: Redis durable storage is required in production");

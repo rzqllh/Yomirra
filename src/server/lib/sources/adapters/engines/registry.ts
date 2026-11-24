@@ -26,8 +26,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://m1.manhwalist.my.id",
     category: "SFW",
     isNsfw: false,
-    isEnabled: true,
-    status: "unknown",
+    isEnabled: false,
+    status: "in-dev",
   }),
   new MangaThemesiaEngine({
     id: "izanamiscans",
@@ -37,8 +37,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://izanamiscans.my.id",
     category: "SFW",
     isNsfw: false,
-    isEnabled: true,
-    status: "unknown",
+    isEnabled: false,
+    status: "in-dev",
   }),
   new MangaThemesiaEngine({
     id: "astral-scans",
@@ -48,8 +48,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://astralscans.site",
     category: "NSFW",
     isNsfw: true,
-    isEnabled: true,
-    status: "unknown",
+    isEnabled: false,
+    status: "in-dev",
   }),
   new MangaThemesiaEngine({
     id: "dojing-net",
@@ -142,8 +142,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://v7.kiryuu.to",
     category: "MIXED",
     isNsfw: false,
-    isEnabled: true,
-    status: "unknown",
+    isEnabled: false,
+    status: "in-dev",
   }),
   new NatsuIdEngine({
     id: "manhwa-indo",

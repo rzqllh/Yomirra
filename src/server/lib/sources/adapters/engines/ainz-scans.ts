@@ -13,7 +13,7 @@ import { SourceError } from "../../error";
 export class AinzScansSource extends BaseEngine {
   constructor() {
     super({
-      id: "ainz-scans-id",
+      id: "ainzscansid",
       name: "Ainz Scans ID",
       description: "Ainz Scans Indonesian manga reader API",
       language: "id",

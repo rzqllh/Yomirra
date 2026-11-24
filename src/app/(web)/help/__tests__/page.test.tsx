@@ -22,7 +22,9 @@ describe("standalone Pusat Bantuan", () => {
 
   it("provides actual existing destination routes instead of fake anchors", () => {
     render(<HelpPage />);
-    const links = screen.getAllByRole("link");
+    const links = screen.getAllByRole("link").filter(link => link.getAttribute("href")?.startsWith("/"));
+    expect(screen.getByRole("link", { name: "MangaBaka" }).getAttribute("href")).toBe("https://mangabaka.org/");
+    expect(screen.getByRole("link", { name: "ketentuan lisensi data" }).getAttribute("href")).toBe("https://mangabaka.org/about/data-license");
     expect(links).toHaveLength(6);
     for (const link of links) {
       const href = link.getAttribute("href");
