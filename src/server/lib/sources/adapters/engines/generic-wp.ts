@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -281,9 +281,10 @@ export class GenericWpEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // fallback
         }
       }
@@ -311,7 +312,7 @@ export class GenericWpEngine extends BaseEngine {
         }
       );
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

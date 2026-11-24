@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -337,9 +337,10 @@ export class MangaThemesiaEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // Fall through to HTML selector
         }
       }
@@ -366,7 +367,7 @@ export class MangaThemesiaEngine extends BaseEngine {
         }
       });
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

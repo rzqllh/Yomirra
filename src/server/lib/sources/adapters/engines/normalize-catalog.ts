@@ -1,4 +1,4 @@
-import type { Chapter, MangaPageResult } from "@/shared/sources/source-types";
+import type { Chapter, ChapterPages, MangaPageResult, PageItem } from "@/shared/sources/source-types";
 import { SourceError } from "../../error";
 
 /** Validate staged metadata without adding network access or inferring ratings. */
@@ -68,4 +68,34 @@ export function normalizeStagedChapters(
     if (!previous) seen.set(id, chapter);
   }
   return [...seen.values()];
+}
+
+/** Normalize reader references without fetching images, guessing page
+ * content, or discarding malformed entries from an otherwise valid list. */
+export function normalizeStagedPages(
+  chapterId: string, pages: readonly PageItem[], chapterPath: string, base: string, sourceId: string,
+): ChapterPages {
+  const chapterUrl = sameProviderUrl(chapterPath, base);
+  if (!chapterUrl || pages.length === 0 || pages.length > 500) {
+    throw new SourceError("Page references unavailable", { sourceId, code: "PARSER_BROKEN", stage: "pages" });
+  }
+  return {
+    chapterId,
+    pages: pages.map((page, index) => {
+      if (typeof page.url !== "string" || !page.url.trim() || page.url.length > 2048 ||
+          /[\u0000-\u001f\\]/.test(page.url)) {
+        throw new SourceError("Invalid page reference", { sourceId, code: "SCHEMA_CHANGED", stage: "pages" });
+      }
+      let url: URL;
+      try {
+        url = new URL(page.url.trim(), chapterUrl);
+      } catch {
+        throw new SourceError("Invalid page reference", { sourceId, code: "SCHEMA_CHANGED", stage: "pages" });
+      }
+      if (url.protocol !== "https:" || url.username || url.password || url.port || url.hash) {
+        throw new SourceError("Invalid page reference", { sourceId, code: "SCHEMA_CHANGED", stage: "pages" });
+      }
+      return { ...page, index: index + 1, url: url.href };
+    }),
+  };
 }

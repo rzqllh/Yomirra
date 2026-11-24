@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MadaraConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
 
 export class MadaraEngine extends BaseEngine {
   protected itemSelector: string;
@@ -287,7 +287,7 @@ export class MadaraEngine extends BaseEngine {
         }
       });
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

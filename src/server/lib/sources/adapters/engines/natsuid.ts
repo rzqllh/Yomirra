@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { NatsuIdConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
 
 export class NatsuIdEngine extends BaseEngine {
   protected searchAction: string;
@@ -297,9 +297,10 @@ export class NatsuIdEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // fallback
         }
       }
@@ -316,9 +317,10 @@ export class NatsuIdEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // fallback
         }
       }
@@ -352,7 +354,7 @@ export class NatsuIdEngine extends BaseEngine {
         }
       });
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");
