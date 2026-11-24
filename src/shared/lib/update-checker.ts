@@ -179,6 +179,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       type DiscoveredChapter = {
         chapter: Chapter;
         normalizedNumber: number;
+        volume?: number;
+        isPrimary: boolean;
         sourceId: string;
         sourceName?: string;
       };
@@ -198,13 +200,16 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
               const explicit = readChapterNumberEvidence(chapterNavigationLabel(ch));
               // Cross-source notifications require explicit comparable numbering.
               // Legacy source-local updates retain the older title parser.
-              if (!target.isPrimary && (!explicit || explicit.volume!==undefined)) continue;
+              if (!target.isPrimary && (!explicit || ch.mangaId !== target.mangaId || ch.isLocked !== false)) continue;
+              if (!explicit && (ch.chapterNumber !== undefined || ch.volume !== undefined)) continue;
               const parsedNum = explicit?.number ?? parseChapterNumber(ch.title);
-              const normNum =
-                parsedNum ?? (typeof ch.number === "number" && !isNaN(ch.number) ? ch.number : 0);
+              const normNum = parsedNum ?? (typeof ch.number === "number" ? ch.number : NaN);
+              if (!Number.isFinite(normNum) || normNum < 0) continue;
               discoveredChapters.push({
                 chapter: ch,
                 normalizedNumber: normNum,
+                volume: explicit?.volume,
+                isPrimary: target.isPrimary,
                 sourceId: target.sourceId,
                 sourceName: target.sourceName,
               });
@@ -244,35 +249,43 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         }
       }
 
-      if (discoveredChapters.length > 0) {
-        // Dedup: find latest chapter by normalizedNumber, tie-breaking in favor of primary/preferred source
-        const latest = discoveredChapters.reduce((prev, curr) => {
-          if (curr.normalizedNumber > prev.normalizedNumber) return curr;
-          if (curr.normalizedNumber === prev.normalizedNumber) {
+      // Preserve the cursor's numbering convention. A volume-local and a
+      // global chapter number are not directly comparable. For a new cursor,
+      // use the primary source's convention (or the only observed convention).
+      const previousVolume = existingUpdate?.latestChapterVolume ??
+        readChapterNumberEvidence(existingUpdate?.latestChapterTitle)?.volume;
+      const anchor = discoveredChapters.find(c=>c.isPrimary) ?? discoveredChapters[0];
+      const volumeMode = existingUpdate?.latestChapterId ? previousVolume !== undefined : anchor?.volume !== undefined;
+      const comparable = discoveredChapters.filter(c=>(c.volume!==undefined)===volumeMode);
+      if (comparable.length > 0) {
+        // Compare explicitly numbered volumes before the chapter within them.
+        const latest = comparable.reduce((prev, curr) => {
+          const order=(curr.volume??0)-(prev.volume??0)||curr.normalizedNumber-prev.normalizedNumber;
+          if (order>0) return curr;
+          if (order===0) {
             if (explicitPref && curr.sourceId === explicitPref && prev.sourceId !== explicitPref) return curr;
             if (explicitPref && prev.sourceId === explicitPref) return prev;
             if (curr.sourceId === item.sourceId && prev.sourceId !== item.sourceId) return curr;
           }
           return prev;
-        }, discoveredChapters[0]);
+        }, comparable[0]);
 
-        const isFirstScan = !existingUpdate;
-        const isNewChapter =
-          !isFirstScan &&
-          Boolean(existingUpdate.latestChapterId && latest.chapter.id &&
-            latest.normalizedNumber > (existingUpdate.latestChapterNumber ?? 0));
+        const isFirstScan = !existingUpdate?.latestChapterId;
+        const cursorOrder=(latest.volume??0)-(previousVolume??0) ||
+          latest.normalizedNumber-(existingUpdate?.latestChapterNumber??0);
+        const isNewChapter = !isFirstScan && cursorOrder>0;
         // A new provider/scanlation ID for the same observed chapter is
         // not another chapter release. Do not regress a previous cursor
         // when a preferred source temporarily has fewer chapters.
         const keepPrevious = Boolean(existingUpdate?.latestChapterId &&
-          latest.normalizedNumber <= (existingUpdate.latestChapterNumber ?? 0));
+          cursorOrder<=0);
 
         if (isNewChapter) {
           result.updatesDetected++;
         }
 
         const checkTimeIso = new Date().toISOString();
-        const resolvedSeenAt = isNewChapter ? undefined : existingUpdate ? existingUpdate.seenAt : checkTimeIso;
+        const resolvedSeenAt = isNewChapter ? undefined : isFirstScan ? checkTimeIso : existingUpdate?.seenAt;
         const resolvedDetectedAt = isNewChapter
           ? checkTimeIso
           : (existingUpdate?.detectedAt || checkTimeIso);
@@ -288,6 +301,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           lastKnownChapterTitle: item.lastReadChapterTitle,
           latestChapterId: keepPrevious ? existingUpdate?.latestChapterId : latest.chapter.id,
           latestChapterNumber: keepPrevious ? existingUpdate?.latestChapterNumber : latest.normalizedNumber,
+          latestChapterVolume: keepPrevious ? previousVolume : latest.volume,
           latestChapterTitle: keepPrevious ? existingUpdate?.latestChapterTitle : latest.chapter.title,
           detectedSourceId: keepPrevious ? existingUpdate?.detectedSourceId : latest.sourceId,
           detectedSourceName: keepPrevious ? existingUpdate?.detectedSourceName : (latest.sourceName || latest.sourceId),

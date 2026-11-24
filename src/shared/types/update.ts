@@ -12,6 +12,8 @@ export interface MangaUpdateItem {
 
   latestChapterId?: string;
   latestChapterNumber?: number;
+  /** Explicit volume-local numbering; absent on legacy/global cursors. */
+  latestChapterVolume?: number;
   latestChapterTitle?: string;
 
   detectedSourceId?: string;

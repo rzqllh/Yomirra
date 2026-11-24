@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadMangaUpdatesReference, parseMangaUpdatesReference } from "../manga-updates";
 import { mangaUpdatesNumericId, mangaUpdatesReferenceHref } from "@/shared/lib/manga-updates-reference";
 import type { MangaDetail } from "@/shared/types/source";
+import {reserveOptionalService} from "@/server/lib/cache/optional-service-budget";
+vi.mock("@/server/lib/cache/optional-service-budget",()=>({reserveOptionalService:vi.fn().mockResolvedValue(true)}));
 
 vi.mock("@/server/lib/cache/redis-cache", () => ({
   withCache: async (_key: string, load: () => Promise<unknown>) => load(),
@@ -51,4 +53,14 @@ describe("MangaUpdates reference boundary", () => {
     expect(await loadMangaUpdatesReference("mangadex", {...detail, title:"Different work"})).toBeNull();
     expect(get).toHaveBeenCalledTimes(2);
   });
+});
+
+it("does not contact MangaUpdates when shared admission is denied",async()=>{
+  vi.stubEnv("YOMIRRA_MANGAUPDATES_METADATA","permitted");
+  vi.useFakeTimers();vi.setSystemTime(new Date("2026-11-25T00:00:00Z"));
+  const get=vi.fn();vi.stubGlobal("fetch",get);
+  vi.mocked(reserveOptionalService).mockResolvedValueOnce(false);
+  expect(await loadMangaUpdatesReference("mangadex",detail)).toBeNull();
+  expect(reserveOptionalService).toHaveBeenCalledWith("mangaupdates");
+  expect(get).not.toHaveBeenCalled();
 });

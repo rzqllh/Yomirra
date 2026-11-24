@@ -30,3 +30,13 @@ describe("optional service free-only admissions",()=>{
     expect(await optionalServiceSummary("gemini")).toContain("mendekati batas");
   });
 });
+
+it("limits MangaUpdates independently and fails closed before network admission",async()=>{
+  vi.stubEnv("YOMIRRA_MANGAUPDATES_METADATA","");
+  expect(await reserveOptionalService("mangaupdates")).toBe(false);expect(state.eval).not.toHaveBeenCalled();
+  vi.stubEnv("YOMIRRA_MANGAUPDATES_METADATA","permitted");
+  expect(await reserveOptionalService("mangaupdates")).toBe(true);
+  expect(state.eval).toHaveBeenLastCalledWith(expect.any(String),1,expect.stringContaining(":mangaupdates:"),100);
+  state.eval.mockResolvedValueOnce(0);
+  expect(await reserveOptionalService("mangaupdates")).toBe(false);
+});

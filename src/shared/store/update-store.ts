@@ -46,7 +46,11 @@ export const useUpdateStore = create<UpdateState>()(
             update.latestChapterId &&
             existing.latestChapterId === update.latestChapterId;
 
-          if (isSameChapter) {
+          if (!Object.hasOwn(update,"latestChapterId")) {
+            // A failed or empty observation is not a new release.
+            finalDetectedAt=existing.detectedAt;
+            finalSeenAt=existing.seenAt;
+          } else if (isSameChapter && (update.detectedSourceId===undefined || existing.detectedSourceId===update.detectedSourceId)) {
             // Re-scanning same chapter -> retain previous detectedAt & seenAt (or heal if existing was unset)
             finalDetectedAt = existing.detectedAt;
             finalSeenAt = existing.seenAt ?? update.seenAt;

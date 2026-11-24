@@ -1,4 +1,5 @@
 import { withCache } from "@/server/lib/cache/redis-cache";
+import { reserveOptionalService } from "@/server/lib/cache/optional-service-budget";
 import { comicFormat } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
@@ -35,6 +36,7 @@ async function fetchReference(id: string, numeric: number): Promise<MangaUpdates
   // No queue, retries, pagination or per-card harvesting.
   if (now < nextRequestAt) throw new Error("Metadata request pacing");
   nextRequestAt = now + 1000;
+  if(!await reserveOptionalService("mangaupdates"))throw new Error("Optional metadata budget unavailable");
   const response = await fetch("https://api.mangaupdates.com/v1/series/" + numeric, {
     headers: { Accept: "application/json" }, redirect: "error",
     cache: "no-store", signal: AbortSignal.timeout(2000),

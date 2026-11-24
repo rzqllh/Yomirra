@@ -85,7 +85,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
       }
       if (sourceId === "healthy-alt") {
         return Promise.resolve([
-          { id: "alt-ch-55", number: 55, title: "Chapter 55" },
+          { id: "alt-ch-55", mangaId:"alt-manga-2",isLocked:false,number: 55, title: "Chapter 55" },
         ]);
       }
       return Promise.resolve([]);
@@ -169,7 +169,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
       }
       if (sourceId === "src-2") {
         return Promise.resolve([
-          { id: "src2-ch80", number: 80, title: "Ch. 80" },
+          { id: "src2-ch80", mangaId:"m-2",isLocked:false,number: 80, title: "Ch. 80" },
         ]);
       }
       return Promise.resolve([]);
@@ -193,7 +193,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
       [{id:"first-80",mangaId:"m-1",title:"Chapter 80",number:80,date:""}]:[]);
     await scanLibraryUpdates({forceRefresh:true});
     vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="src-2"?
-      [{id:"alternate-81",mangaId:"m-2",title:"Chapter 81",number:81,date:""}]:[]);
+      [{id:"alternate-81",mangaId:"m-2",isLocked:false,title:"Chapter 81",number:81,date:""}]:[]);
     expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(1);
     vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="src-1"?
       [{id:"first-81",mangaId:"m-1",title:"Chapter 81",number:81,date:""}]:[]);
@@ -259,7 +259,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     (apiClient.getChapters as any).mockImplementation((sourceId: string) => {
       if (sourceId === "source-preferred") {
         return Promise.resolve([
-          { id: "pref-ch-200", number: 200, title: "Chapter 200" },
+          { id: "pref-ch-200",mangaId:"manga-preferred",isLocked:false,number: 200, title: "Chapter 200" },
         ]);
       }
       return Promise.resolve([
@@ -311,7 +311,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     (apiClient.getChapters as any).mockImplementation((sourceId: string) => {
       if (sourceId === "healthy-alt") {
         return Promise.resolve([
-          { id: "healthy-ch-1", number: 1, title: "Chapter 1" },
+          { id: "healthy-ch-1",mangaId:"manga-7-alt",isLocked:false,number: 1, title: "Chapter 1" },
         ]);
       }
       return Promise.reject(new Error("Down"));
@@ -324,5 +324,36 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     const update = useUpdateStore.getState().items["title-7"];
     expect(update.detectedSourceId).toBe("healthy-alt");
     expect(update.latestChapterNumber).toBe(1);
+  });
+});
+
+describe("cross-source notification boundaries",()=>{
+  beforeEach(()=>{
+    vi.clearAllMocks();useLibraryStore.setState({items:{fixture:{id:"fixture",sourceId:"primary",mangaId:"work",title:"Fixture",coverUrl:"/cover.jpg",addedAt:"2026-01-01",updatedAt:"2026-01-01",linkedSources:[{sourceId:"alternate",mangaId:"alt-work",matchConfidence:"CONFIRMED",addedAt:1}]}}});
+    useUpdateStore.setState({items:{}});useSettingsStore.setState({perTitleSourcePreferences:{}});useSourceHealthStore.setState({healthBySource:{}});
+  });
+  it("rejects alternate chapters with missing parent or unlock evidence",async()=>{
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="primary"?
+      [{id:"p10",mangaId:"work",title:"Chapter 10",number:10,date:"",isLocked:false}]:
+      [{id:"bad1",mangaId:"alt-work",title:"Chapter 99",number:99,date:""},
+       {id:"bad2",mangaId:"",title:"Chapter 100",number:100,date:"",isLocked:false},
+       {id:"bad3",mangaId:"other",title:"Chapter 101",number:101,date:"",isLocked:false}]);
+    await scanLibraryUpdates({forceRefresh:true});
+    expect(useUpdateStore.getState().items.fixture.latestChapterId).toBe("p10");
+  });
+  it("supports explicitly numbered volumes, ignores incomparable global numbers and retains unread state across empty scans",async()=>{
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="primary"?
+      [{id:"p20",mangaId:"work",title:"Vol. 1 Chapter 20",number:20,date:"",isLocked:false}]:[]);
+    await scanLibraryUpdates({forceRefresh:true});
+    vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="alternate"?
+      [{id:"a1",mangaId:"alt-work",title:"Vol. 2 Chapter 1",number:1,date:"",isLocked:false},
+       {id:"global",mangaId:"alt-work",title:"Chapter 999",number:999,date:"",isLocked:false}]:[]);
+    expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(1);
+    const old=useUpdateStore.getState().items.fixture;
+    expect(old).toMatchObject({latestChapterId:"a1",latestChapterVolume:2,latestChapterNumber:1});
+    vi.mocked(apiClient.getChapters).mockResolvedValue([]);
+    expect((await scanLibraryUpdates({forceRefresh:true})).updatesDetected).toBe(0);
+    expect(useUpdateStore.getState().items.fixture).toMatchObject({latestChapterId:"a1",detectedAt:old.detectedAt});
+    expect(useUpdateStore.getState().items.fixture.seenAt).toBeUndefined();
   });
 });
