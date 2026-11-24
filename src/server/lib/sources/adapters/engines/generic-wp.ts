@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -191,6 +191,7 @@ export class GenericWpEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
+        ...stagedDetailIdentity($),
         coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,

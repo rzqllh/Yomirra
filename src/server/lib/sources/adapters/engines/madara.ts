@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MadaraConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class MadaraEngine extends BaseEngine {
   protected itemSelector: string;
@@ -174,6 +174,7 @@ export class MadaraEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
+        ...stagedDetailIdentity($),
         coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,

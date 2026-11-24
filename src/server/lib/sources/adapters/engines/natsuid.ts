@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { NatsuIdConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class NatsuIdEngine extends BaseEngine {
   protected searchAction: string;
@@ -194,6 +194,7 @@ export class NatsuIdEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
+        ...stagedDetailIdentity($),
         coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,

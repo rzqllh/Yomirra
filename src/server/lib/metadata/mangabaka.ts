@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { comicFormat, type MetadataWork } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
+import type { ExternalWorkIds } from "@/shared/sources/source-types";
 import { compareExternalWorkIds, normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
 import { parseCatalogRecord } from "./mangabaka-record.mjs";
 import { findLocalMetadataWorks,getLocalMetadataWork } from "./local-catalog-index";
@@ -82,16 +83,20 @@ async function request(path: string, followup = false): Promise<unknown> {
  * No per-card harvesting, pagination or retries. Only full v2 title records
  * are used. Ambiguity or partial failures leave the original results intact.
  */
-export async function matchMangaBakaWorks(query: string, allRatings = false): Promise<MetadataWork[]> {
+export async function matchMangaBakaWorks(query: string, allRatings = false, externalWorkIds?:ExternalWorkIds): Promise<MetadataWork[]> {
   if (!isMangaBakaEnabled()) return [];
   const q = query.trim().normalize("NFKC");
   if (q.length < 3 || q.length > 160 || !normalizeTitle(q)) return [];
-  const local=findLocalMetadataWorks({titles:[q]});
-  if(local!==null && local.length) {
+  const ids=normalizeExternalWorkIds(externalWorkIds);
+  const local=findLocalMetadataWorks({titles:[q],externalWorkIds:ids});
+  if(local!==null) {
     if(local.length>MAX_MATCHES || (!allRatings && local.some(work=>work.contentRating!=="safe")))return [];
     return local;
   }
-  const key = "metadata:mangabaka:v5:" + (allRatings ? "classification:" : "match:") + createHash("sha256").update(q).digest("hex");
+  // Documented ID endpoints are preferable to fuzzy title lookups. An
+  // unresolved or contradictory tracker never falls back to title matching.
+  if(ids)return lookupMangaBakaIds(q,ids,allRatings);
+  const key = "metadata:mangabaka:v6:" + (allRatings ? "classification:" : "match:") + createHash("sha256").update(q).digest("hex");
   try {
     return await withCache(key, async () => {
       const data = await request("/v2/series/match?" + new URLSearchParams({ q }).toString());
@@ -140,4 +145,33 @@ export async function getPublicMetadataWork(id:number):Promise<MetadataWork|null
     const work=parseMangaBakaWork(await request(`/v2/series/${id}?schema=full`));
     return work?.externalId===id?work:null;
   },CACHE_TTL_SECONDS,{allowStaleOnError:false});}catch{return null;}
+}
+
+const ID_PATHS={anilist:"anilist",my_anime_list:"my-anime-list",manga_updates:"manga-updates"} as const;
+async function lookupMangaBakaIds(title:string,ids:ExternalWorkIds,allRatings:boolean):Promise<MetadataWork[]>{
+  const keys=(Object.keys(ID_PATHS) as Array<keyof ExternalWorkIds>).filter(key=>ids[key]);
+  const scope=JSON.stringify(keys.map(key=>[key,ids[key]]));
+  const cacheKey="metadata:mangabaka:v6:ids:"+createHash("sha256").update(JSON.stringify([title,scope,allRatings])).digest("hex");
+  try{
+    return await withCache(cacheKey,async()=>{
+      let id:number|undefined;
+      // At most three explicit tracker lookups plus one full series record.
+      // Never use this function for bulk catalogue discovery.
+      for(const key of keys){
+        const data=record(await request("/v1/source/"+ID_PATHS[key]+"/"+encodeURIComponent(ids[key]!),id!==undefined));
+        if(!Array.isArray(data?.series)||data.series.length!==1)return [];
+        const match=record(data.series[0]);
+        if(!match||typeof match.id!=="number"||!Number.isSafeInteger(match.id)||match.id<=0||
+           (match.state!==undefined&&match.state!=="active")||(id!==undefined&&id!==match.id))return [];
+        id=match.id;
+      }
+      if(id===undefined)return [];
+      const work=parseMangaBakaWork(await request("/v2/series/"+id+"?schema=full",true),allRatings);
+      if(!work||work.externalId!==id||compareExternalWorkIds(ids,work.externalWorkIds)==="conflict")return [];
+      // Even an exact mapping does not make an unrelated supplied title
+      // evidence for the provider edition.
+      if(!work.aliases.some(alias=>normalizeTitle(alias)===normalizeTitle(title)))return [];
+      return [{...work,externalWorkIds:{...work.externalWorkIds,...ids}}];
+    },CACHE_TTL_SECONDS,{allowStaleOnError:false});
+  }catch{return [];}
 }

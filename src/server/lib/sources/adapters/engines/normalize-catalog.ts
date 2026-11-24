@@ -1,5 +1,6 @@
 import type { Chapter, ChapterPages, MangaPageResult, PageItem } from "@/shared/sources/source-types";
 import { SourceError } from "../../error";
+import type { CheerioAPI } from "cheerio";
 
 /** Validate staged metadata without adding network access or inferring ratings. */
 export function sameProviderUrl(raw: unknown, base: string): URL | null {
@@ -98,4 +99,44 @@ export function normalizeStagedPages(
       return { ...page, index: index + 1, url: url.href };
     }),
   };
+}
+
+/** Only explicit format values qualify as identity evidence. Never infer
+ * manga/manhwa/manhua from provider country, language or genre. */
+export function stagedComicFormat(value: unknown): "manga"|"manhwa"|"manhua"|undefined {
+  if (typeof value !== "string") return undefined;
+  const v=value.trim().toLowerCase();
+  return v==="manga"||v==="manhwa"||v==="manhua"?v:undefined;
+}
+
+/** Read labeled work metadata, excluding unrelated article/reader content. */
+export function stagedDetailIdentity($:CheerioAPI) {
+  const types:string[]=[];
+  const names:string[]=[];
+  function collect(label:string,value:string){
+    const key=label.trim().replace(/:\s*$/,"").toLowerCase();
+    if(["type","format","tipe","jenis"].includes(key))types.push(value.trim());
+    if(["alternative","alternative title","alternative titles","alt title","judul alternatif","judul lain"].includes(key)){
+      for(const name of value.split(/\s*[;\n]\s*|\s+\|\s+/)){
+        const title=name.trim();
+        if(title&&title.length<=300&&!/^(?:n\/a|none|unknown|-\s*)$/i.test(title))names.push(title);
+      }
+    }
+  }
+  $(".tsinfo .imptdt, .infotable tr, .post-content_item, .seriestucontent").each((_,el)=>{
+    const row=$(el);
+    const label=row.find(".summary-heading, th").first().text().trim();
+    const content=row.find(".summary-content, td").last().text().trim();
+    if(label&&content){collect(label,content);return;}
+    const inline=row.find("i").first();
+    if(inline.length){
+      const clone=row.clone();clone.find("i").remove();
+      collect(clone.text(),inline.text());
+    }
+  });
+  const normalized=types.map(stagedComicFormat);
+  const unique=new Set(normalized);
+  const format=unique.size===1&&normalized[0]?normalized[0]:undefined;
+  const alternativeTitles=[...new Set(names)].slice(0,20);
+  return {...(format?{format}:{}),...(alternativeTitles.length?{alternativeTitles}:{})};
 }

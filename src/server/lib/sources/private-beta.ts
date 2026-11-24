@@ -87,7 +87,7 @@ export async function readPrivateBetaDetail(id: string, mangaId: string) {
   if (!rawDetail || rawDetail.id !== mangaId || typeof rawDetail.title !== "string" ||
       !rawDetail.title.trim() || classifyContent(rawDetail) === "NSFW") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const local=applyLocalCanonicalMetadata(rawDetail);
-  const works = classifyContent(local)==="UNKNOWN" ? await matchMangaBakaWorks(rawDetail.title,true) : [];
+  const works = classifyContent(local)==="UNKNOWN" ? await matchMangaBakaWorks(rawDetail.title,true,rawDetail.externalWorkIds) : [];
   const detail = inheritCanonicalRating(local,matchCanonicalMetadata(local,works));
   if (classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const chapters = await adapter.getChapters(mangaId, options);

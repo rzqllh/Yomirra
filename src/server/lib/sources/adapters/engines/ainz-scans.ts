@@ -4,6 +4,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import { SourceError } from "../../error";
 import { UpstreamHttpError } from "../base/http-client";
+import { stagedComicFormat } from "./normalize-catalog";
 
 type Row = Record<string, unknown>;
 function record(value: unknown): Row | undefined {
@@ -73,6 +74,7 @@ export class AinzScansSource extends BaseEngine {
         coverUrl: httpsUrl(item.thumbnail, this.baseUrl) ?? httpsUrl(item.cover, this.baseUrl) ?? "",
         description: text(item.description),
         author: names(item.author),
+        format: stagedComicFormat(item.type ?? item.format),
         contentRating: "unknown",
       };
     });
@@ -120,6 +122,7 @@ export class AinzScansSource extends BaseEngine {
         genres: Array.isArray(item.genres) ? item.genres.flatMap(g => text(g) ?? []) : [],
         status,
         author: names(item.author), artist: names(item.artist),
+        format: stagedComicFormat(item.type ?? item.format),
         contentRating: "unknown",
       };
     } catch (err) {

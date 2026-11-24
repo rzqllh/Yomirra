@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -198,6 +198,7 @@ export class MangaThemesiaEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
+        ...stagedDetailIdentity($),
         coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,

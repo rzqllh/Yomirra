@@ -13,6 +13,8 @@ interface ReadOnlyIndex{
 type BuiltinSqlite={DatabaseSync:new(path:string,opts:{readOnly:boolean})=>ReadOnlyIndex};
 let current:{path:string;mtime:number;db:ReadOnlyIndex;createdAt:number}|undefined;
 let checkedAt=0;
+let checkedPath:string|undefined;
+let checkedDb:ReadOnlyIndex|null=null;
 const MAX_AGE=7*24*60*60*1000;
 const MAX_MATCHES=16;
 function dbForLookup():ReadOnlyIndex|null{
@@ -21,12 +23,17 @@ function dbForLookup():ReadOnlyIndex|null{
   if(!configured)return null;
   const path=resolve(configured);
   const now=Date.now();
-  if(current?.path===path && now-checkedAt<30_000 && now-current.createdAt<=MAX_AGE)return current.db;
-  checkedAt=now;
+  if(checkedPath===path && now>=checkedAt && now-checkedAt<30_000){
+    return current&&checkedDb===current.db&&now>=current.createdAt&&now-current.createdAt<=MAX_AGE?checkedDb:null;
+  }
+  checkedAt=now;checkedPath=path;checkedDb=null;
   try{
     const stat=statSync(path);
     if(!stat.isFile()||stat.size>200*1024*1024)return null;
-    if(current?.path===path&&current.mtime===stat.mtimeMs)return now-current.createdAt<=MAX_AGE?current.db:null;
+    if(current?.path===path&&current.mtime===stat.mtimeMs){
+      checkedDb=now>=current.createdAt&&now-current.createdAt<=MAX_AGE?current.db:null;
+      return checkedDb;
+    }
     const sqlite=(process as NodeJS.Process & {getBuiltinModule?:(id:string)=>unknown}).getBuiltinModule?.("node:sqlite") as BuiltinSqlite|undefined;
     if(!sqlite?.DatabaseSync)return null;
     const candidate=new sqlite.DatabaseSync(path,{readOnly:true});
@@ -37,6 +44,7 @@ function dbForLookup():ReadOnlyIndex|null{
          !Number.isFinite(created)||created>now||now-created>MAX_AGE){candidate.close();return null;}
       current?.db.close();
       current={path,mtime:stat.mtimeMs,db:candidate,createdAt:created};
+      checkedDb=candidate;
       return candidate;
     }catch{candidate.close();return null;}
   }catch{return null;}

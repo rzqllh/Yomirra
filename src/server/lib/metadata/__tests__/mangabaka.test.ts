@@ -36,6 +36,23 @@ describe("MangaBaka v2 response boundary", () => {
     expect(String(fetcher.mock.calls[0][0])).toBe("https://api.mangabaka.org/v2/series/match?q=Sousou+no+Frieren");
     expect(String(fetcher.mock.calls[1][0])).toBe("https://api.mangabaka.org/v2/series/1995?schema=full");
   });
+  it("looks up explicit tracker IDs before a title query and refuses conflicting mappings", async()=>{
+    vi.stubEnv("YOMIRRA_MANGABAKA_METADATA","permitted");
+    vi.useFakeTimers();vi.setSystemTime(new Date("2026-11-25T00:00:00Z"));
+    const response=(data:unknown)=>new Response(JSON.stringify({status:200,data}));
+    const fetcher=vi.fn().mockResolvedValueOnce(response({series:[{id:1995,state:"active"}]})).mockResolvedValueOnce(response(fixture));
+    vi.stubGlobal("fetch",fetcher);
+    const first=matchMangaBakaWorks("Sousou no Frieren",true,{anilist:"118586"});
+    await vi.advanceTimersByTimeAsync(500);
+    expect(await first).toEqual([{...parseMangaBakaWork(fixture),externalWorkIds:{anilist:"118586"}}]);
+    expect(String(fetcher.mock.calls[0][0])).toBe("https://api.mangabaka.org/v1/source/anilist/118586");
+    await vi.advanceTimersByTimeAsync(500);
+    fetcher.mockResolvedValueOnce(response({series:[{id:1995}]})).mockResolvedValueOnce(response({series:[{id:1996}]}));
+    const conflict=matchMangaBakaWorks("Sousou no Frieren",true,{anilist:"118586",my_anime_list:"126287"});
+    await vi.advanceTimersByTimeAsync(500);
+    expect(await conflict).toEqual([]);
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
   it("selects the primary English title and retains romanized aliases without third-party payloads", () => {
     expect(parseMangaBakaWork(fixture)).toEqual({
       provider: "mangabaka", externalId: 1995, title: "Frieren: Beyond Journey's End",
