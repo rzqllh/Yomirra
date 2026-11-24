@@ -25,6 +25,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { getReviewedWorkHref } from "@/shared/lib/reviewed-catalog";
+import { getObservedCatalogHref } from "@/shared/lib/observed-catalog";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { sourceRegistry, getSourceDisplayName } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -307,7 +308,8 @@ export function MangaCard({
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
   const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
-  const workHref = canonicalDetailHref ?? getReviewedWorkHref(sourceId,manga.id);
+  const workHref = canonicalDetailHref ?? getReviewedWorkHref(sourceId,manga.id) ??
+    getObservedCatalogHref(availableBindings, fullPath);
   const cardDetailHref = workHref ?? getMangaDetailHref(
     cardSourceId,
     cardMangaId,

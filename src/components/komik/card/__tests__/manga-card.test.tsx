@@ -134,6 +134,16 @@ describe("MangaCard", () => {
     }
   );
 
+  it("opens a read-only canonical detail for explicitly safe multi-provider observations", () => {
+    render(<MangaCard sourceId="shinigami" sourceBindings={[
+      {sourceId:"shinigami",mangaId:"a",title:"Work",contentRating:"safe"},
+      {sourceId:"mangadex",mangaId:"b",title:"Work",contentRating:"safe"},
+    ]} manga={{id:"a",title:"Work",coverUrl:"",contentRating:"safe"}} />);
+    const link = screen.getByRole("link",{name:"Lihat katalog Work"});
+    expect(link.getAttribute("href")).toContain("/catalog/observed?");
+    expect(link.getAttribute("aria-haspopup")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
   it("still requires a manual picker for two eligible sources", () => {
     render(
       <MangaCard
