@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { withCache } from "@/server/lib/cache/redis-cache";
+import { reserveOptionalService } from "@/server/lib/cache/optional-service-budget";
 import { comicFormat, type MetadataWork } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { ExternalWorkIds } from "@/shared/sources/source-types";
@@ -44,6 +45,7 @@ async function request(path: string, followup = false): Promise<unknown> {
   // Fail open to provider results rather than queue/retry and amplify traffic.
   if (now < pausedUntil || now - lastRequestAt < 400) throw new Error("Metadata pacing");
   lastRequestAt = now;
+  if(!await reserveOptionalService("mangabaka"))throw new Error("Optional metadata budget unavailable");
   const response = await fetch(new URL(path, ORIGIN), {
     headers: { Accept: "application/json" },
     redirect: "error",

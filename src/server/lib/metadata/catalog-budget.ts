@@ -6,7 +6,7 @@ export const CATALOG_DAILY_CAP=1000;
 const RESERVE_SCRIPT=String.raw`
 local v=tonumber(redis.call('GET',KEYS[1]) or '0')
 local cap=tonumber(ARGV[1])
-if not v or v<0 or v>=cap then return 0 end
+if not v or v<0 or v%1~=0 or v>=cap then return 0 end
 redis.call('SET',KEYS[1],v+1,'EX',172800)
 return 1
 `;

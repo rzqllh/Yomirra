@@ -1,12 +1,14 @@
 import { createHash } from "node:crypto";
 import { env } from "@/env";
 import { redis } from "@/server/lib/cache/redis";
+import { reserveOptionalService } from "@/server/lib/cache/optional-service-budget";
 import { logger } from "@/shared/logger";
 
 const MODEL = "gemini-embedding-2";
 const DIMENSIONS = 768;
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
 const MAX_ACTIVE_EMBEDDINGS = 8;
+let pausedUntil=0;
 const activeEmbeddings = new Map<string, Promise<number[] | null>>();
 
 interface GeminiEmbeddingResponse {
@@ -26,7 +28,7 @@ export function isSemanticEmbeddingConfigured(): boolean {
 export async function embedSearchText(text: string): Promise<number[] | null> {
   const clean = text.trim();
   const apiKey = env.GEMINI_API_KEY;
-  if (!clean || !apiKey) return null;
+  if (!clean || !apiKey || clean.length>12000) return null;
 
   const key = cacheKey(clean);
   const active = activeEmbeddings.get(key);
@@ -43,12 +45,13 @@ async function loadEmbedding(text: string, key: string, apiKey: string): Promise
     const cached = await redis.get(key);
     if (cached) {
       const parsed = JSON.parse(cached) as number[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length===DIMENSIONS&&parsed.every(Number.isFinite)) return parsed;
     }
   } catch {
     // Redis cache is optional.
   }
 
+  if(Date.now()<pausedUntil||!await reserveOptionalService("gemini"))return null;
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:embedContent`,
@@ -69,13 +72,15 @@ async function loadEmbedding(text: string, key: string, apiKey: string): Promise
     );
 
     if (!response.ok) {
+      if([401,403,429].includes(response.status))pausedUntil=Date.now()+60000;
+      await response.body?.cancel();
       logger.warn("Gemini embedding request failed", { status: response.status });
       return null;
     }
 
     const data = (await response.json()) as GeminiEmbeddingResponse;
     const values = data.embedding?.values ?? data.embeddings?.[0]?.values;
-    if (!Array.isArray(values) || values.length === 0) return null;
+    if (!Array.isArray(values) || values.length!==DIMENSIONS||!values.every(Number.isFinite)) return null;
 
     try {
       await redis.set(key, JSON.stringify(values), "EX", CACHE_TTL_SECONDS);

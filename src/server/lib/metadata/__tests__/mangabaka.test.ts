@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { matchMangaBakaWorks, parseMangaBakaWork } from "../mangabaka";
 
+vi.mock("@/server/lib/cache/optional-service-budget",()=>({reserveOptionalService:vi.fn().mockResolvedValue(true)}));
 vi.mock("@/server/lib/cache/redis-cache", () => ({
   withCache: async (_key: string, load: () => Promise<unknown>) => load(),
 }));

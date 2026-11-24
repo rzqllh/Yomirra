@@ -281,8 +281,18 @@ export function ReaderShell({
         if(distance>=60){setOverlayVisible(false);distance=0;}
       });
     };
+    // Explicit show intent wins over scroll events already queued before it.
+    // Snapshot the current position synchronously; later genuine movement can
+    // still hide the chrome normally.
+    const unsubscribe=useReaderStore.subscribe((state,prior)=>{
+      if(state.isOverlayVisible&&!prior.isOverlayVisible){
+        if(frame!==null)window.cancelAnimationFrame(frame);
+        frame=null;distance=0;lastScrollY=Math.max(0,window.scrollY);
+        setShowBackToTop(lastScrollY>1200);
+      }
+    });
     window.addEventListener("scroll",handleScroll,{passive:true});
-    return()=>{window.removeEventListener("scroll",handleScroll);if(frame!==null)window.cancelAnimationFrame(frame);};
+    return()=>{unsubscribe();window.removeEventListener("scroll",handleScroll);if(frame!==null)window.cancelAnimationFrame(frame);};
   },[setOverlayVisible,preferences.toolbarBehavior,currentChapterId]);
 
   return (

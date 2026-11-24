@@ -90,6 +90,14 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       await expect(header).toBeVisible();await expect(dock).toHaveCount(0);
       await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
       await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
+      await expect(end).not.toBeInViewport();
+      // Await actual scroll settlement across two animation frames. WebKit
+      // may apply the programmatic scroll asynchronously.
+      await expect.poll(()=>page.evaluate(async()=>{
+        const before=window.scrollY;
+        await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+        return Math.abs(before-window.scrollY)<=1&&window.scrollY<=1;
+      })).toBe(true);
       await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));
       await expect(header).toBeVisible();await expect(dock).toBeVisible();
       await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));

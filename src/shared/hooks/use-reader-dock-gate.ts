@@ -33,7 +33,12 @@ export function useReaderDockGate(root:RefObject<HTMLDivElement|null>,chapterKey
     window.addEventListener("scroll",schedule,{passive:true});
     window.addEventListener("resize",schedule);
     const unsubscribe=useReaderStore.subscribe((state,prior)=>{
-      if(state.isOverlayVisible&&!prior.isOverlayVisible&&!visible){awaiting=false;publish();}
+      if(state.isOverlayVisible&&!prior.isOverlayVisible){
+        // The observer/scroll callback may still be queued. Measure now,
+        // otherwise an explicit tap after leaving the end card gets lost.
+        measure();
+        if(!visible){awaiting=false;publish();}
+      }
     });
     bind();
     return()=>{mutations.disconnect();intersection?.disconnect();unsubscribe();window.removeEventListener("scroll",schedule);window.removeEventListener("resize",schedule);if(frame!==null)cancelAnimationFrame(frame);};

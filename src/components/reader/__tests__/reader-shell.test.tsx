@@ -419,6 +419,18 @@ describe("ReaderShell Header & Progress Bar", () => {
     fireEvent.keyDown(window,{key:"m"});
     expect(useReaderStore.getState().isOverlayVisible).toBe(true);
   });
+  it("explicit show intent cancels an already queued scroll hide",async()=>{
+    render(<ReaderShell sourceId="srcA" mangaId="m1" currentChapterId="ch1"><div>Page</div></ReaderShell>);
+    act(()=>useReaderStore.getState().setOverlayVisible(false));
+    Object.defineProperty(window,"scrollY",{value:300,writable:true,configurable:true});
+    fireEvent.scroll(window);
+    fireEvent.keyDown(window,{key:"m"});
+    await act(async()=>{await new Promise(resolve=>setTimeout(resolve,60));});
+    expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+    Object.defineProperty(window,"scrollY",{value:450,writable:true,configurable:true});
+    fireEvent.scroll(window);
+    await waitFor(()=>expect(useReaderStore.getState().isOverlayVisible).toBe(false));
+  });
   it("end card suppresses only dock and badge, never forces header state",async()=>{
     let atEnd=true;
     const box={x:0,y:0,width:200,height:200,top:0,right:200,bottom:200,left:0,toJSON:()=>({})};
