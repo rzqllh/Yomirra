@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { HelpTopicLink } from "./help-topic-link";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { ContentLane, PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 
@@ -52,12 +52,7 @@ export default function HelpPage() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="management" hasMobileHeader>
-        <PageHeader
-          title="Pusat Bantuan"
-          subtitle="Panduan singkat saat mencari, membaca dan menyimpan komik."
-          showBack
-          backHref="/"
-        />
+        <DestinationHeader destination="help" />
         <ContentLane variant="focused" className="space-y-6 pb-36 md:pb-14">
           <section className="space-y-2">
             <h1 className="text-xl font-bold tracking-tight text-text-primary md:text-2xl">Ada yang tidak berjalan semestinya?</h1>
@@ -83,6 +78,9 @@ export default function HelpPage() {
               </details>
             ))}
           </section>
+          <p className="text-xs leading-relaxed text-text-muted">
+            Pencocokan metadata, jika diaktifkan, menggunakan <a className="text-accent underline" href="https://mangabaka.org/">MangaBaka</a> berdasarkan <a className="text-accent underline" href="https://mangabaka.org/about/data-license">ketentuan lisensi data</a>. Hasil pencocokan diadaptasi untuk tampilan katalog Yomirra.
+          </p>
           <p className="text-xs leading-relaxed text-text-muted">
             Jika masalah berulang, catat judul, sumber, chapter, waktu kejadian dan perangkat. Jangan bagikan kata sandi, token atau tautan login pribadi.
           </p>

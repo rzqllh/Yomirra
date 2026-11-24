@@ -10,7 +10,7 @@ vi.mock('@/shared/hooks/use-auth', () => ({
 }));
 
 vi.mock('@/shared/store/onboarding-store', () => ({
-  useOnboardingStore: () => mockUseOnboardingStore(),
+  useOnboardingStore: (selector: (state: { _hasHydrated: boolean }) => boolean) => selector(mockUseOnboardingStore()),
 }));
 
 describe('SplashScreen', () => {
@@ -36,19 +36,12 @@ describe('SplashScreen', () => {
     expect(document.body.style.overflow).toBe('visible');
   });
 
-  it('calls onComplete when boot is complete after minimum splash duration', () => {
+  it('calls onComplete immediately when boot is complete', () => {
     mockUseAuth.mockReturnValue({ loading: false });
     mockUseOnboardingStore.mockReturnValue({ _hasHydrated: true });
     const onComplete = vi.fn();
 
     render(<SplashScreen onComplete={onComplete} />);
-    expect(onComplete).not.toHaveBeenCalled();
-
-    // Fast-forward past MINIMUM_SPLASH_DURATION (450ms)
-    act(() => {
-      vi.advanceTimersByTime(500);
-    });
-
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 

@@ -1,6 +1,9 @@
 import type { MangaItem } from "@/shared/sources/source-types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
+import { canonicalSourceKey } from "./canonical-identity";
+import { getReviewedCatalogIndex } from "./reviewed-catalog";
+import { classifyContent } from "@/shared/sources/content-policy";
 
 const RECIPROCAL_RANK_K = 60;
 
@@ -22,8 +25,7 @@ export interface AggregatedPopularItem {
 }
 
 type WorkingCluster = {
-  aliases: Set<string>;
-  author?: string;
+  identity: string;
   representative: MangaItem;
   representativeSourceId: string;
   representativeSourceName: string;
@@ -32,30 +34,6 @@ type WorkingCluster = {
   sourceIds: Set<string>;
   bindings: SourceBinding[];
 };
-
-function aliasesFor(manga: MangaItem): Set<string> {
-  return new Set(
-    [
-      manga.title,
-      manga.originalTitle,
-      ...(manga.alternativeTitles || []),
-    ]
-      .map((title) => normalizeTitle(title))
-      .filter(Boolean)
-  );
-}
-
-function authorsCompatible(a?: string, b?: string): boolean {
-  if (!a || !b) return true;
-  return normalizeTitle(a) === normalizeTitle(b);
-}
-
-function intersects(a: Set<string>, b: Set<string>): boolean {
-  for (const value of a) {
-    if (b.has(value)) return true;
-  }
-  return false;
-}
 
 function toBinding(sourceId: string, manga: MangaItem): SourceBinding {
   return {
@@ -67,36 +45,41 @@ function toBinding(sourceId: string, manga: MangaItem): SourceBinding {
     language: manga.language,
     format: manga.format,
     score: manga.score,
+    contentRating: manga.contentRating,
+    isNsfw: manga.isNsfw,
   };
 }
 
 /**
  * Aggregates source-native rankings without comparing provider-specific raw
- * popularity metrics. Exact normalized title/alias matches may merge, but
- * fuzzy title similarity never does. Each source contributes 1 / (K + rank).
+ * popularity metrics. Only exact source identity or reviewed work evidence
+ * can merge. Each eligible provider contributes at most once.
  */
 export function aggregatePopularFeeds(
-  feeds: PopularSourceFeed[]
+  feeds: PopularSourceFeed[],
+  verifiedIndex: ReadonlyMap<string, string> = getReviewedCatalogIndex(),
 ): AggregatedPopularItem[] {
   const clusters: WorkingCluster[] = [];
 
   for (const feed of feeds) {
+    if (feed.loadFailed) continue;
     feed.mangas.forEach((manga, index) => {
       if (!manga?.id || !manga?.title) return;
       const nativeRank = index + 1;
-      const aliases = aliasesFor(manga);
-      if (aliases.size === 0) return;
+      const ref = canonicalSourceKey(feed.sourceId, manga.id);
+      const identity = verifiedIndex.get(ref) ?? ref;
 
-      let cluster = clusters.find(
-        (candidate) =>
-          intersects(candidate.aliases, aliases) &&
-          authorsCompatible(candidate.author, manga.author)
+      let cluster = clusters.find(candidate =>
+        candidate.identity === identity &&
+        !candidate.bindings.some(binding => binding.sourceId === feed.sourceId && binding.mangaId !== manga.id) &&
+        ((classifyContent(candidate.representative) === "NSFW") === (classifyContent(manga) === "NSFW")) &&
+        (!candidate.representative.format || !manga.format ||
+          normalizeTitle(candidate.representative.format) === normalizeTitle(manga.format))
       );
 
       if (!cluster) {
         cluster = {
-          aliases: new Set(aliases),
-          author: manga.author,
+          identity,
           representative: manga,
           representativeSourceId: feed.sourceId,
           representativeSourceName: feed.sourceName,
@@ -107,10 +90,7 @@ export function aggregatePopularFeeds(
         };
         clusters.push(cluster);
       } else {
-        for (const alias of aliases) cluster.aliases.add(alias);
-        if (!cluster.author && manga.author) cluster.author = manga.author;
-
-        if (
+         if (
           nativeRank < cluster.bestNativeRank ||
           (nativeRank === cluster.bestNativeRank &&
             feed.sourceId.localeCompare(cluster.representativeSourceId) < 0)

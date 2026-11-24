@@ -379,6 +379,8 @@ describe("ReaderShell Header & Progress Bar", () => {
     const header = container.querySelector("header");
     expect(header).toBeDefined();
     expect(header?.className).toContain("grid-cols-[84px_1fr_84px]");
+    expect(header?.classList.contains("shadow-none")).toBe(true);
+    expect(header?.classList.contains("shadow-lg")).toBe(false);
 
     // Left cluster buttons
     expect(screen.getByRole("button", { name: "Kembali ke detail komik" })).toBeDefined();

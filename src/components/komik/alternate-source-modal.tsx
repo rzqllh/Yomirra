@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import type { MangaItem } from "@/shared/sources/source-types";
 import { Warning, MagnifyingGlass, ArrowRight, CheckCircle, ArrowsClockwise } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ export interface AlternateSourceCandidate {
   coverUrl?: string;
   author?: string;
   confidence: MatchConfidence;
+  isNsfw?: boolean;
+  contentRating?: MangaItem["contentRating"];
 }
 
 export interface AlternateSourceModalProps {
@@ -43,8 +46,8 @@ const confidenceConfig: Record<
   { label: string; className: string }
 > = {
   CONFIRMED: { label: "Terkonfirmasi", className: "text-semantic-success bg-semantic-success/10 border-semantic-success/20" },
-  HIGH_CONFIDENCE: { label: "Cocok", className: "text-accent bg-accent/10 border-accent/20" },
-  AMBIGUOUS: { label: "Kemungkinan besar cocok", className: "text-semantic-warning bg-semantic-warning/10 border-semantic-warning/20" },
+  HIGH_CONFIDENCE: { label: "Kemungkinan cocok", className: "text-accent bg-accent/10 border-accent/20" },
+  AMBIGUOUS: { label: "Perlu diperiksa", className: "text-semantic-warning bg-semantic-warning/10 border-semantic-warning/20" },
   NO_MATCH: { label: "Perlu diperiksa", className: "text-text-muted bg-surface-raised border-border-subtle" },
 };
 
@@ -65,7 +68,7 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
     return (
       <div className="flex items-center gap-2.5 p-3 rounded-lg bg-semantic-success/10 border border-semantic-success/20 text-semantic-success text-xs font-medium">
         <CheckCircle size={18} weight="fill" className="shrink-0" />
-        <span>Progres chapter terpetakan secara tepat ke Chapter {result.chapterNumber}.</span>
+        <span>Nomor chapter {result.chapterNumber} cocok. Kesetaraan rilis belum terverifikasi.</span>
       </div>
     );
   }
@@ -108,12 +111,14 @@ export function AlternateSourceModal({
   onConfirm,
   isLoading,
 }: AlternateSourceModalProps) {
-  const [selected, setSelected] = useState<AlternateSourceCandidate | null>(null);
+  const [selection, setSelected] = useState<AlternateSourceCandidate | null>(null);
+  const selected = candidates.find(c => c.sourceId === selection?.sourceId && c.mangaId === selection?.mangaId) ?? null;
+  useEffect(() => { if (!isOpen) setSelected(null); }, [isOpen]);
 
   const handleConfirm = useCallback(() => {
-    if (!selected) return;
+    if (!selected || isLoading) return;
     onConfirm(selected);
-  }, [selected, onConfirm]);
+  }, [selected, onConfirm, isLoading]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -125,11 +130,11 @@ export function AlternateSourceModal({
           </div>
           <div className="min-w-0 flex-1 pr-6">
             <DialogTitle className="text-lg font-black tracking-tight text-text-primary">
-              Cari Sumber Alternatif
+              Cari sumber alternatif
             </DialogTitle>
-            <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1 truncate">
+            <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1">
               <span className="font-semibold text-text-primary">{deadMangaTitle}</span>
-              {" "} (sumber saat ini tidak tersedia)
+              {" "} (sumber saat ini tidak tersedia). Riwayat dan sumber utama tidak diubah.
             </DialogDescription>
           </div>
         </div>
@@ -142,7 +147,12 @@ export function AlternateSourceModal({
           )}
 
           {/* Candidates */}
-          {candidates.length === 0 ? (
+          {isLoading ? (
+            <div role="status" className="flex items-center justify-center gap-2 py-10 text-sm text-text-secondary">
+              <span aria-hidden="true" className="size-5 rounded-full border-2 border-border-default border-t-accent motion-safe:animate-spin" />
+              Mencari sumber lain
+            </div>
+          ) : candidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-text-muted">
               <div className="flex size-12 items-center justify-center rounded-lg bg-surface-raised text-text-muted border border-border-subtle">
                 <MagnifyingGlass size={24} weight="regular" />
@@ -214,7 +224,7 @@ export function AlternateSourceModal({
               <span>Mengganti sumber...</span>
             ) : (
               <>
-                <span>Gunakan Sumber Ini</span>
+                <span>Buka sumber ini</span>
                 <ArrowRight size={16} weight="regular" />
               </>
             )}

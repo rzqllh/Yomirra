@@ -1,5 +1,6 @@
 import { z } from "@/shared/lib/browser-safe-zod";
 import type { SourceMetadata } from "./source-types";
+import { isReservedKeiyoushiId } from "./keiyoushi-candidates";
 
 // Schema for dynamic source manifest
 export const DynamicSourceManifestSchema = z.object({
@@ -69,6 +70,8 @@ export class DynamicSourceRegistry {
   async install(manifestUrl: string): Promise<SourceMetadata> {
     const manifest = await this.validateManifest(manifestUrl);
     
+    if (isReservedKeiyoushiId(manifest.id)) throw new Error("SECURITY_REJECTED: Source identity reserved for staged adapter.");
+
     // Lazy import to avoid circular dependency issues at module load
     const { sourceRegistry } = await import("./source-registry");
     if (sourceRegistry.some(s => s.id === manifest.id)) {
@@ -104,6 +107,9 @@ export class DynamicSourceRegistry {
     if (overrides.manifestUrl && overrides.manifestUrl !== storage[sourceId].manifestUrl) {
       // Re-validate and fetch the new manifest
       const newManifest = await this.validateManifest(overrides.manifestUrl);
+      if (newManifest.id !== sourceId || isReservedKeiyoushiId(newManifest.id)) {
+        throw new Error("SECURITY_REJECTED: Manifest identity mismatch or reserved identity.");
+      }
       
       // Preserve local overrides if they exist
       newManifest.name = overrides.name || storage[sourceId].name || newManifest.name;
@@ -132,12 +138,12 @@ export class DynamicSourceRegistry {
 
   getAll(): SourceMetadata[] {
     const storage = this.getStorage();
-    const storedSources = Object.values(storage).map(s => this.mapToMetadata(s));
+    const storedSources = Object.values(storage).filter(s => !isReservedKeiyoushiId(s.id)).map(s => this.mapToMetadata(s));
     
     // Merge volatile sources
     const all = [...storedSources];
     Object.values(this.volatileSources).forEach(vs => {
-      if (!all.find(s => s.id === vs.id)) {
+      if (!isReservedKeiyoushiId(vs.id) && !all.find(s => s.id === vs.id)) {
         all.push(vs);
       }
     });
@@ -145,6 +151,7 @@ export class DynamicSourceRegistry {
   }
 
   get(id: string): SourceMetadata | undefined {
+    if (typeof id !== "string" || !id.trim() || isReservedKeiyoushiId(id)) return undefined;
     if (this.volatileSources[id]) {
       return this.volatileSources[id];
     }

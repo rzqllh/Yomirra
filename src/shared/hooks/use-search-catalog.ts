@@ -18,9 +18,12 @@ import {
 } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
-import { clusterCanonicalResults, filterVerifiedSourceBindings } from "@/shared/lib/canonical-search";
+import { clusterCanonicalResults, filterVerifiedSourceBindings, reconcileCatalogRows, verifiedCatalogKey } from "@/shared/lib/canonical-search";
+import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
+import { groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
+import { projectMetadataCatalogRows } from "@/shared/lib/metadata-catalog";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -97,11 +100,11 @@ export function useSearchCatalog() {
     return () => window.removeEventListener("sources_updated", handleUpdate);
   }, [loadLocalSources]);
 
-  const { data: sourcesData } = useQuery(sourceQueryOptions);
+  const { data: sourcesData, isLoading: isSourcesLoading } = useQuery(sourceQueryOptions);
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const savedLibraryMap = useLibraryStore((state) => state.items);
-  const verifiedSourceIndex = React.useMemo(() => indexVerifiedGroups(
+  const verifiedSourceIndex = React.useMemo(() => indexDiscoveryCatalog(
     groupVerifiedCatalogEntries(Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false))
   ), [savedLibraryMap]);
 
@@ -345,8 +348,8 @@ export function useSearchCatalog() {
           !isExhausted &&
           !isUnreachable &&
           isTagCompatible,
-        placeholderData: (previous: { sourceId: string; query: string; page: number; results: import("@/shared/sources/source-types").MangaItem[]; hasNextPage?: boolean } | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined) =>
-          previousQuery?.queryKey[1] === sourceId && previousQuery.queryKey[4] === hideNsfw ? previous : undefined,
+        // Exact-key cached data is retained by React Query. Never show results
+        // from a different query, filter or page as if they were current.
       };
     }),
   });
@@ -460,6 +463,8 @@ export function useSearchCatalog() {
         status: item.manga.status,
         score: item.manga.score,
         sourceBindings: item.sourceBindings,
+        isNsfw: item.manga.isNsfw,
+        contentRating: item.manga.contentRating,
       })),
     [rawSearchMangas]
   );
@@ -480,6 +485,7 @@ export function useSearchCatalog() {
       parsedQuery.textQuery,
       tagSignature,
       candidateSignature,
+      hideNsfw,
     ],
     queryFn: () =>
       apiClient.rankSearchIntelligence(
@@ -510,8 +516,12 @@ export function useSearchCatalog() {
             coverUrl: candidate.coverUrl,
           }
         : undefined;
-      const primaryBinding = availableBindings[0] ?? fallbackBinding;
-      if (!primaryBinding) return [];
+      // Cached metadata belongs to the candidate's own provider reference.
+      // Never promote an unrelated cached alternate to primary.
+      if (!fallbackBinding || (hideNsfw && classifyContent(candidate) === "NSFW")) return [];
+      const primaryBinding = availableBindings.find(binding =>
+        binding.sourceId === fallbackBinding.sourceId && binding.mangaId === fallbackBinding.mangaId
+      ) ?? fallbackBinding;
       const safeBindings = filterVerifiedSourceBindings(
         availableBindings,
         primaryBinding,
@@ -520,7 +530,7 @@ export function useSearchCatalog() {
 
       return [
         {
-          canonicalKey: candidate.canonicalKey,
+          canonicalKey: verifiedCatalogKey(primaryBinding.sourceId, primaryBinding.mangaId, verifiedSourceIndex),
           sourceId: primaryBinding.sourceId,
           sourceBindings: safeBindings,
           manga: {
@@ -534,23 +544,23 @@ export function useSearchCatalog() {
             format: candidate.format,
             status: candidate.status,
             score: candidate.score,
+            isNsfw: candidate.isNsfw,
+            contentRating: candidate.contentRating,
             sourceId: primaryBinding.sourceId,
             sourceBindings: safeBindings,
           },
         },
       ];
     });
-  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex]);
+  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex, hideNsfw]);
 
-  const combinedResults = React.useMemo(() => {
-    const merged = new Map(
-      rawSearchMangas.map((item) => [item.canonicalKey, item])
-    );
-    catalogMatches.forEach((item) => {
-      if (!merged.has(item.canonicalKey)) merged.set(item.canonicalKey, item);
-    });
-    return Array.from(merged.values());
-  }, [rawSearchMangas, catalogMatches]);
+  const combinedResults = React.useMemo(
+    () => projectMetadataCatalogRows(
+      reconcileCatalogRows(rawSearchMangas, catalogMatches, verifiedSourceIndex),
+      intelligenceQuery.data?.metadataWorks ?? [],
+    ),
+    [rawSearchMangas, catalogMatches, verifiedSourceIndex, intelligenceQuery.data?.metadataWorks]
+  );
 
   const searchMangas = React.useMemo(() => {
     const results = [...combinedResults];
@@ -637,11 +647,11 @@ export function useSearchCatalog() {
     .filter(Boolean) as { sourceId: string; error: string }[];
 
   const isInitialLoading =
-    hasSearchIntent &&
-    searchQueries.some(
+    !isMounted || isSourcesLoading ||
+    (hasSearchIntent && searchQueries.some(
       (sourceQuery) =>
         sourceQuery.fetchStatus === "fetching" && !sourceQuery.data
-    );
+    ));
   const allSourcesFailed =
     eligibleSourceIds.length > 0 &&
     errorsToDisplay.length === eligibleSourceIds.length;

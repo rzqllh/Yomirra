@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { CalendarBlank, Books } from "@phosphor-icons/react";
+import { CalendarBlank } from "@phosphor-icons/react";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -13,7 +13,7 @@ import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 
 export type BookmarkTab = "reading" | "collection";
 
@@ -59,12 +59,7 @@ export function BookmarkPageView() {
   return (
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Library"
-          subtitle="Bacaan dan komik yang kamu simpan."
-          icon={<Books size={24} weight="regular" />}
-          hideDesktop={true}
-        />
+        <DestinationHeader destination="bookmark" />
 
         {/* Unified Navigation & Utility Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">

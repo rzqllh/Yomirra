@@ -159,6 +159,7 @@ class ApiClient {
       semanticAvailable: boolean;
       scores: Record<string, number>;
       catalogMatches: SearchCatalogCandidate[];
+      metadataWorks?: import("@/shared/lib/metadata-catalog").MetadataWork[];
     }>(this.appendReadPreferences("/api/search/intelligence"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },

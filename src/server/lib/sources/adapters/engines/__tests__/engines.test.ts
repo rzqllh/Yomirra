@@ -33,18 +33,8 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       }
     });
 
-    it("retains internally probed engines without publishing them; remaining engines stay in-dev", () => {
-      const verifiedIds = ["manhwa-list", "izanamiscans", "kiryuu", "astral-scans"];
-      for (const id of verifiedIds) {
-        const s = portedKeiyoushiSources.find((item) => item.id === id)!;
-        expect(s).toBeDefined();
-        expect(s.isEnabled).toBe(true);
-        expect(s.status).toBe("unknown");
-      }
-
-      const remaining = portedKeiyoushiSources.filter((s) => !verifiedIds.includes(s.id));
-      expect(remaining).toHaveLength(23);
-      for (const s of remaining) {
+    it("keeps every staged engine disabled, including historical successful probes", () => {
+      for (const s of portedKeiyoushiSources) {
         expect(s.isEnabled).toBe(false);
         expect(s.status).toBe("in-dev");
         expect(s.isInstalled).toBe(true);
@@ -53,7 +43,7 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
         expect(s.baseUrl).toBeTruthy();
         expect(s.upstreamDomain).toBeTruthy();
         expect(s.name).toBeTruthy();
-        expect(s.id).toMatch(/^[a-z0-9\-]+$/);
+        expect(s.id).toMatch(/^[a-z0-9-]+$/);
       }
     });
 
@@ -274,9 +264,20 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
   });
 
   describe("Dedicated REST API Adapters", () => {
+    it("rejects Ainz schema drift without pretending an empty catalog is valid", async () => {
+      const adapter = new AinzScansSource();
+      const fetcher = vi.spyOn((adapter as any).client, "get");
+      fetcher.mockResolvedValue({ unexpected: [] });
+      await expect(adapter.search("fixture", 1)).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
+      fetcher.mockResolvedValue({ results: [{ title: "Missing identity" }] });
+      await expect(adapter.search("fixture", 1)).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
+      fetcher.mockResolvedValue({ results: [], hasNextPage: false });
+      await expect(adapter.search("fixture", 1)).resolves.toEqual({ mangas: [], hasNextPage: false });
+    });
+
     it("handles AinzScansSource JSON API contract", async () => {
       const ainz = new AinzScansSource();
-      expect(ainz.id).toBe("ainz-scans-id");
+      expect(ainz.id).toBe("ainzscansid");
       expect(ainz.isNsfw).toBe(false);
 
       vi.spyOn((ainz as any).client, "get").mockImplementation(async (path: any) => {
@@ -318,6 +319,7 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       const pop = await ainz.getPopular(1);
       expect(pop.mangas).toHaveLength(1);
       expect(pop.mangas[0].title).toBe("Ainz Comic");
+      expect(pop.mangas[0].contentRating).toBe("unknown");
 
       const detail = await ainz.getDetail("101");
       expect(detail.status).toBe("COMPLETED");

@@ -1,20 +1,14 @@
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Jadwal Mingguan"
-          description="Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan."
-          icon={<CalendarBlank size={24} weight="regular" />}
-          showBack
-        />
+        <DestinationHeader destination="updates" />
 
         <div className="mt-2 flex flex-col gap-4">
           <div className="flex items-center gap-2 overflow-hidden py-1">

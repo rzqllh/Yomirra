@@ -1,4 +1,5 @@
 import { sourceRegistry } from "@/shared/sources/source-registry";
+import { isReservedKeiyoushiId } from "@/shared/sources/keiyoushi-candidates";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 import { getCoreSourceOverrides } from "@/server/lib/sources/admin-source-service";
 import { getCustomSources } from "@/server/lib/sources/custom-source-service";
@@ -49,8 +50,8 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
       if (!normalizedCustomId) continue;
 
       // Custom source tidak boleh menimpa ID built-in
-      if (builtInIds.has(normalizedCustomId)) {
-        logger.warn(`Custom source ID '${normalizedCustomId}' conflict dengan built-in source dan diabaikan`);
+      if (builtInIds.has(normalizedCustomId) || isReservedKeiyoushiId(normalizedCustomId)) {
+        logger.warn(`Custom source ID '${normalizedCustomId}' conflict dengan source identity yang dicadangkan dan diabaikan`);
         continue;
       }
 

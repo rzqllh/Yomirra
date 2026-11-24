@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { aggregatePopularFeeds, type PopularSourceFeed } from "../popular-ranking";
+import { canonicalSourceKey } from "../canonical-identity";
 
 function feed(
   sourceId: string,
@@ -16,18 +17,17 @@ function feed(
 }
 
 describe("popular rank aggregation", () => {
-  it("deduplicates exact normalized canonical titles across sources", () => {
+  it("does not merge exact normalized titles without reviewed identity", () => {
     const result = aggregatePopularFeeds([
       feed("a", [{ id: "a1", title: "Solo Leveling" }]),
       feed("b", [{ id: "b1", title: "Solo Leveling!" }]),
     ]);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].contributingSources).toBe(2);
-    expect(result[0].sourceBindings).toHaveLength(2);
+    expect(result).toHaveLength(2);
+    expect(result.every(item => item.contributingSources === 1 && item.sourceBindings.length === 1)).toBe(true);
   });
 
-  it("can match an exact alternate title without fuzzy merging", () => {
+  it("groups confirmed alternate titles but keeps unrelated works separate", () => {
     const result = aggregatePopularFeeds([
       feed("a", [
         {
@@ -38,7 +38,7 @@ describe("popular rank aggregation", () => {
       ]),
       feed("b", [{ id: "b1", title: "Only I Level Up" }]),
       feed("c", [{ id: "c1", title: "Solo Leveling: Side Story" }]),
-    ]);
+    ], new Map([[canonicalSourceKey("a", "a1"), "work"], [canonicalSourceKey("b", "b1"), "work"]]));
 
     expect(result).toHaveLength(2);
     expect(result[0].contributingSources).toBe(2);
@@ -63,7 +63,7 @@ describe("popular rank aggregation", () => {
         { id: "b1", title: "Other B" },
         { id: "b2", title: "Shared" },
       ]),
-    ]);
+    ], new Map([[canonicalSourceKey("a", "a1"), "work"], [canonicalSourceKey("b", "b2"), "work"]]));
 
     expect(result[0].manga.title).toBe("Shared");
     expect(result[0].contributingSources).toBe(2);

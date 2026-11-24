@@ -1,7 +1,6 @@
 import { getMalPopular } from "@/server/lib/metadata/mal-popular";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Fire } from "@phosphor-icons/react/dist/ssr";
 import { getDiscoveryRuntimeSources } from "@/server/lib/sources/discovery-runtime-sources";
 import { getServerReadOptions, loadSourceCatalog } from "@/server/lib/sources/content-access";
 import { isSourceContentVisible } from "@/shared/sources/content-policy";
@@ -15,7 +14,7 @@ import type { SourceReadOptions, MangaItem } from "@/shared/sources/source-types
 import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { PopularPageView } from "@/components/popular/popular-page-view";
 
 export const metadata: Metadata = {
@@ -70,11 +69,7 @@ export default async function PopularPage() {
   return (
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Populer"
-          subtitle="Peringkat komik teratas dari sumber aktif dan tren global."
-          icon={<Fire size={24} weight="regular" />}
-        />
+        <DestinationHeader destination="popular" />
         <PopularPageView feeds={feeds} mal={mal} />
       </PageContainer>
     </Surface>

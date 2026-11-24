@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { KEIYOUSHI_CANDIDATES } from "../keiyoushi-candidates";
+import { KEIYOUSHI_CANDIDATES, isReservedKeiyoushiId } from "../keiyoushi-candidates";
 import {
   getAllSourceMetadata, getPendingSourceMetadata, pendingSourceRegistry, sourceRegistry,
 } from "../source-registry";
-import { getStagedKeiyoushiSourceIds } from "@/server/lib/sources/adapters/keiyoushi";
+import { getStagedKeiyoushiSource, getStagedKeiyoushiSourceIds } from "@/server/lib/sources/adapters/keiyoushi";
 
 describe("Keiyoushi porting staging and source-safety contract", () => {
   it("preserves exactly 31 unique candidates without replacing existing built-ins", () => {
@@ -40,6 +40,18 @@ describe("Keiyoushi porting staging and source-safety contract", () => {
     const ids = getStagedKeiyoushiSourceIds();
     expect(ids).toHaveLength(31);
     expect(new Set(ids).size).toBe(31);
-    for (const candidate of KEIYOUSHI_CANDIDATES) expect(ids).toContain(candidate.id);
+    for (const candidate of KEIYOUSHI_CANDIDATES) {
+      expect(ids).toContain(candidate.id);
+      const adapter = getStagedKeiyoushiSource(candidate.id);
+      expect(adapter?.id).toBe(candidate.id);
+      expect(adapter?.isEnabled).toBe(false);
+      expect(adapter?.status).toBe("in-dev");
+      expect(adapter?.capabilities.download).not.toBe(true);
+      expect(isReservedKeiyoushiId(candidate.id.toUpperCase())).toBe(true);
+    }
+    expect(getStagedKeiyoushiSource("ainz-scans-id")?.id).toBe("ainzscansid");
+    expect(isReservedKeiyoushiId("ainz-scans-id")).toBe(true);
+    expect(isReservedKeiyoushiId("komikindo")).toBe(false);
+    for (const invalid of [undefined, null, 42, {}, ""]) expect(isReservedKeiyoushiId(invalid)).toBe(false);
   });
 });

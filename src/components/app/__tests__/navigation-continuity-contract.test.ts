@@ -56,7 +56,9 @@ describe("navigation continuity contracts", () => {
     expect(sourcePage).toContain("MangaGridSkeleton");
     expect(sourcePage).not.toContain("SearchResultSkeleton");
 
-    expect(searchPage).toContain("<PageHeader");
+    expect(searchPage).toContain('<DestinationHeader destination="search" />');
+    expect(read("src/app/(web)/search/loading.tsx")).toContain('<DestinationHeader destination="search" />');
+    expect(read("src/components/search/search-page-view.tsx")).toContain('<DestinationHeader destination="search" />');
     expect(searchPage).toContain("hasMobileHeader");
     expect(libraryPage).toContain("<PageContainer hasMobileHeader>");
     expect(librarySkeleton).toContain("useSettingsStore");

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
+import { UserCircle, SignOut, MagnifyingGlass, Question } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
@@ -12,6 +12,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { transitions } from "@/shared/lib/motion/tokens";
 import { Button } from "@/components/ui/button";
 import { Surface } from "@/components/ui/surface";
 
@@ -151,7 +152,7 @@ export function TopNav() {
                 transition={
                   shouldReduceMotion
                     ? { duration: 0 }
-                    : { type: "spring", stiffness: 420, damping: 28 }
+                    : transitions.layout
                 }
                 className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end"
               >
@@ -187,12 +188,12 @@ export function TopNav() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                aria-label="Profil Pengguna"
+                aria-label="Profil pengguna"
                 aria-expanded={isProfileOpen}
-                className="flex items-center justify-center size-9 sm:size-10 rounded-xl bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
+                className="flex items-center justify-center size-9 sm:size-10 rounded-xl bg-surface-raised transition-colors motion-reduce:transition-none outline-none focus-visible:outline-2 focus-visible:outline-accent border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
               >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="User" className="object-cover size-full rounded-xl" referrerPolicy="no-referrer" />
+                  <img src={user.photoURL} alt="" className="object-cover size-full rounded-xl" referrerPolicy="no-referrer" />
                 ) : (
                   <UserCircle size={24} weight="regular" className="text-accent" />
                 )}
@@ -205,11 +206,11 @@ export function TopNav() {
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      transition={shouldReduceMotion ? { duration: 0 } : transitions.gentle}
                       className="absolute right-0 top-12 w-60 border border-border-subtle rounded-xl p-1.5 z-[var(--z-popover)] flex flex-col gap-0.5 select-none"
                     >
                       <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
-                        <p className="text-sm font-bold text-text-primary truncate">{user.displayName || "User"}</p>
+                        <p className="text-sm font-bold text-text-primary truncate">{user.displayName || "Pengguna"}</p>
                         <p className="text-xs text-text-muted truncate mt-0.5">{user.email || ""}</p>
                       </div>
 
@@ -222,18 +223,7 @@ export function TopNav() {
                       </Link>
 
                       <Link
-                        href="/settings#general"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Globe size={18} weight="regular" /> Bahasa
-                        </div>
-                        <span className="text-xs text-text-muted font-medium">Indonesia</span>
-                      </Link>
-
-                      <Link
-                        href="/settings#about"
+                        href="/help"
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
@@ -255,7 +245,7 @@ export function TopNav() {
               </AnimatePresence>
             </div>
           ) : (
-            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
+            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover transition-colors motion-reduce:transition-none rounded-xl px-4 h-9 sm:h-10 gap-2 outline-none focus-visible:outline-2 focus-visible:outline-accent cursor-pointer">
               <UserCircle size={20} weight="regular" className="text-text-secondary" />
               <span className="text-sm font-semibold text-text-primary">Masuk</span>
             </button>

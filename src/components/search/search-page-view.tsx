@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/chrome/header";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { DestinationHeader } from "@/components/chrome/header";
 import { PageContainer, PageToolbar } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { CatalogControls } from "@/components/ui/catalog-controls";
@@ -18,12 +17,7 @@ export function SearchPageView() {
   return (
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Cari"
-          subtitle="Cari judul di sumber yang dipilih. Filter berlaku pada hasil pencarian."
-          icon={<MagnifyingGlass size={24} weight="regular" />}
-          hideDesktop={true}
-        />
+        <DestinationHeader destination="search" />
 
         <CatalogControls label="Pencarian dan filter">
           <PageToolbar>

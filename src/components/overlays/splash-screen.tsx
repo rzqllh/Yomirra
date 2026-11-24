@@ -1,222 +1,60 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 
-const MINIMUM_SPLASH_DURATION = 450;
-const WATCHDOG_TIMEOUT = 10000;
+// Preserve the existing guest recovery path when boot dependencies are slow.
+// This is an upper bound for waiting, not a minimum display duration.
+const BOOT_RECOVERY_TIMEOUT_MS = 2000;
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
-  const isReduced = useReducedMotion();
-  const reducedMotion = isReduced || process.env.NODE_ENV === "test";
-  const { _hasHydrated: hasHydrated } = useOnboardingStore();
+  const hasHydrated = useOnboardingStore((state) => state._hasHydrated);
+  const reducedMotion = useReducedMotion();
+  const completed = React.useRef(false);
 
-  const [isMounted, setIsMounted] = React.useState(false);
-  const mountTimeRef = React.useRef<number | null>(null);
-  const [bootStartTime] = React.useState(() => Date.now());
-  const [isReadyToExit, setIsReadyToExit] = React.useState(false);
-  const [isTakingTooLong, setIsTakingTooLong] = React.useState(false);
-
-  // Preserve previous overflow on mount and restore on unmount
   React.useEffect(() => {
-    setIsMounted(true);
-    mountTimeRef.current = Date.now();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
 
-  // Main Boot Logic - Watchdog never halts boot if dependencies resolve late
   React.useEffect(() => {
-    if (!isMounted) return;
-
-    let timeoutId: NodeJS.Timeout;
-    const isBootComplete = !authLoading && hasHydrated;
-
-    if (isBootComplete) {
-      const elapsed = Date.now() - (mountTimeRef.current ?? bootStartTime);
-      const remainingTime = Math.max(0, MINIMUM_SPLASH_DURATION - elapsed);
-
-      timeoutId = setTimeout(() => {
-        setIsReadyToExit(true);
-      }, remainingTime);
-    } else {
-      // Fail-open: Never trap guest users on splash if network/auth dependencies are slow
-      timeoutId = setTimeout(() => {
-        setIsReadyToExit(true);
-      }, 2000);
-    }
-
-    return () => clearTimeout(timeoutId);
-  }, [isMounted, authLoading, hasHydrated, bootStartTime]);
-
-  // Watchdog Timer (>10s notification only)
-  React.useEffect(() => {
-    if (!isMounted || isReadyToExit) return;
-
-    const watchdogId = setTimeout(() => {
-      setIsTakingTooLong(true);
-    }, WATCHDOG_TIMEOUT);
-
-    return () => clearTimeout(watchdogId);
-  }, [isMounted, isReadyToExit]);
-
-  // Exit trigger
-  React.useEffect(() => {
-    if (isReadyToExit) {
+    const finish = () => {
+      if (completed.current) return;
+      completed.current = true;
       onComplete();
-    }
-  }, [isReadyToExit, onComplete]);
+    };
 
-  // Render solid cover before hydration to avoid leaking unhydrated views
-  if (!isMounted) {
-    return (
-      <div
-        data-testid="splash-screen"
-        className="fixed inset-0 z-[var(--z-takeover)] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
-      >
-        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
-          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle p-0.5 shadow-md">
-            <img
-              src="/icon-pwa.png"
-              alt="Yomirra Logo"
-              width={112}
-              height={112}
-              className="w-full h-full object-cover rounded-lg select-none"
-              loading="eager"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
+    if (!authLoading && hasHydrated) {
+      finish();
+      return;
+    }
+
+    const timeout = window.setTimeout(finish, BOOT_RECOVERY_TIMEOUT_MS);
+    return () => window.clearTimeout(timeout);
+  }, [authLoading, hasHydrated, onComplete]);
 
   return (
     <motion.div
       data-testid="splash-screen"
-      initial={{ opacity: 1 }}
-      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.015 }}
+      initial={false}
+      exit={{ opacity: 0 }}
       transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-      className="fixed inset-0 z-[var(--z-takeover)] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
+      className="fixed inset-0 z-[var(--z-takeover)] flex items-center justify-center bg-surface-base text-text-primary"
     >
-      {/* Subtle adaptive ambient aura */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <motion.div
-          animate={reducedMotion ? { scale: 1, opacity: 0.35 } : {
-            scale: [1, 1.06, 1],
-            opacity: [0.35, 0.55, 0.35],
-          }}
-          transition={reducedMotion ? { duration: 0 } : {
-            duration: 3.5,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
-          className="size-104 rounded-full bg-accent/8 dark:bg-accent/18 blur-3xl pointer-events-none"
+      <div role="status" className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+        <span
+          aria-hidden="true"
+          className="size-5 rounded-full border-2 border-border-default border-t-accent motion-safe:animate-spin"
         />
+        <span>Menyiapkan aplikasi</span>
       </div>
-
-      {/* Brand Identity Showcase */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
-        <motion.div
-          initial={reducedMotion ? false : { scale: 0.9, opacity: 0, y: 12 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-          className="mb-5 relative"
-        >
-          <div className="absolute -inset-2 rounded-2xl sm:rounded-3xl bg-accent/10 blur-xl opacity-60 dark:opacity-80" />
-
-          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-md dark:shadow-2xl p-0.5">
-            <img
-              src="/icon-pwa.png"
-              alt="Yomirra Logo"
-              width={112}
-              height={112}
-              className="w-full h-full object-cover rounded-lg select-none"
-              loading="eager"
-              decoding="sync"
-            />
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={reducedMotion ? false : { y: 10 }}
-          animate={{ y: 0 }}
-          transition={reducedMotion ? { duration: 0 } : { ...transitions.gentle, delay: 0.1 }}
-          className="flex flex-col items-center text-center gap-1.5"
-        >
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-text-primary">
-            Yomirra
-          </h1>
-          <p className="text-xs sm:text-sm font-medium text-text-muted max-w-70 leading-relaxed">
-            Semua Komik, Satu Rumah.
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Hairline Progress & Watchdog Status */}
-      <motion.div
-        className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-3.5 w-full px-6"
-      >
-        <AnimatePresence mode="wait">
-          {!isTakingTooLong ? (
-            <motion.div
-              key="loading-bar"
-              initial={reducedMotion ? false : { y: 8 }}
-              animate={{ y: 0 }}
-              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
-              transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-              className="flex flex-col items-center gap-3 w-full"
-            >
-              <div className="w-full max-w-40 h-1.5 rounded-full bg-border-subtle overflow-hidden relative">
-                <motion.div
-                  className="h-full bg-accent rounded-full origin-left"
-                  initial={{ scaleX: 0, x: "-100%" }}
-                  animate={reducedMotion ? { scaleX: 1, x: 0 } : {
-                    scaleX: [0.6, 0.4, 0.6],
-                    x: ["-100%", "30%", "160%"],
-                  }}
-                  transition={reducedMotion ? { duration: 0 } : {
-                    duration: 1.4,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                  }}
-                />
-              </div>
-              <p className="text-2xs font-semibold tracking-wider text-text-muted uppercase">
-                Membuka Rak Kamu...
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="slow-warning-state"
-              initial={reducedMotion ? false : { y: 8 }}
-              animate={{ y: 0 }}
-              transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-              className="flex flex-col items-center gap-2 text-center p-5 rounded-xl bg-surface-raised border border-border-subtle shadow-md max-w-xs"
-            >
-              <p className="text-sm font-bold text-text-primary">
-                Koneksi Lagi Pelan
-              </p>
-              <p className="text-xs text-text-secondary leading-relaxed">
-                Ini makan waktu lebih lama dari biasanya. Cek koneksi kamu, atau coba lagi.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-5 min-h-11 py-2 rounded-xl bg-surface-overlay text-text-primary font-semibold text-xs hover:bg-surface-hover motion-safe:transition-colors border border-border-subtle shadow-xs mt-1 motion-safe:active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent"
-              >
-                Coba Lagi
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
     </motion.div>
   );
 }

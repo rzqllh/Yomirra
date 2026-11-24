@@ -25,7 +25,7 @@ import {
 } from "@/components/komik/card";
 import { MangaCover } from "@/components/komik/manga-cover";
 
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 
 function OfflineDownloadImage({ src, index, first }: { src: string; index: number; first: boolean }) {
   const [failed, setFailed] = useState(false);
@@ -158,13 +158,7 @@ export default function DownloadsPage() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="focused" hasMobileHeader>
-        <PageHeader
-          title="Unduhan"
-          subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
-          icon={<Download size={24} weight="regular" />}
-          actions={clearAllAction}
-          desktopActions={clearAllAction}
-        />
+        <DestinationHeader destination="downloads" actions={clearAllAction} desktopActions={clearAllAction} />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
 

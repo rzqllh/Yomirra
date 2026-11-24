@@ -9,6 +9,7 @@ import {
   canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases,
 } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import { getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -228,7 +229,7 @@ export function HomeFeedClient({
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
   const verifiedDiscoveryIndex = React.useMemo(
-    () => indexVerifiedGroups(groupVerifiedCatalogEntries(
+    () => indexDiscoveryCatalog(groupVerifiedCatalogEntries(
       Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
     )),
     [savedLibraryMap],
@@ -494,9 +495,9 @@ export function HomeFeedClient({
               <div className="col-span-full mt-4 flex flex-col items-center justify-center p-6 rounded-2xl border border-dashed border-border-default bg-surface-raised/40 hover:bg-surface-raised/80 hover:border-accent transition-all text-center">
                 <Compass size={32} className="text-accent mb-2" weight="duotone" />
                 <h3 className="font-bold text-base text-text-primary">Ingin mencari judul lainnya?</h3>
-                <p className="text-xs text-text-muted mt-1 max-w-sm">Cari komik berdasarkan genre, status, atau peringkat di Jelajah.</p>
+                <p className="text-xs text-text-muted mt-1 max-w-sm">Cari komik berdasarkan genre, status, atau peringkat.</p>
                 <Button asChild variant="primary" className="mt-4 rounded-xl px-6 min-h-11 font-bold">
-                  <Link href="/search">Buka Halaman Jelajah</Link>
+                  <Link href="/search">Cari komik</Link>
                 </Button>
               </div>
             </div>

@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ReadingTab } from "../reading-tab";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
@@ -33,6 +35,16 @@ const groupedHistory = [
 ];
 
 describe("ReadingTab", () => {
+  beforeEach(() => {
+    useSourcePreferencesStore.setState({ disabledSources: [] });
+    useSettingsStore.setState({ perTitleSourcePreferences: {} });
+  });
+
+  it("does not resume a disabled provider even with a legacy cursor", () => {
+    useSourcePreferencesStore.setState({ disabledSources: ["komiku"] });
+    render(<ReadingTab groupedHistory={groupedHistory} pendingDeletions={new Set()} onRemoveHistory={vi.fn()} />);
+    expect(screen.getByRole("link", { name: /lanjut (?:baca|membaca) nano machine/i }).getAttribute("href")).toBe("/catalog/saved/komiku%3A%3Anano-machine");
+  });
   it("renders the continue navigation without nested interactive elements", () => {
     const { container } = render(
       <ReadingTab
@@ -45,6 +57,7 @@ describe("ReadingTab", () => {
     const continueLink = screen.getByRole("link", {
       name: /lanjut (?:baca|membaca) nano machine/i,
     });
+    expect(continueLink.getAttribute("href")).toBe("/manga/komiku/nano-machine/read/chapter-12?returnTo=%2Flibrary");
     expect(continueLink.querySelector("button")).toBeNull();
     expect(container.querySelector("a button, button a, a a")).toBeNull();
   });

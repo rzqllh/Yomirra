@@ -11,21 +11,12 @@ import { portedKeiyoushiSources } from "../engines";
  * Prototypes/stubs are kept for the remaining 4 (1 duplicate Komikindo, 3 DRM/paywalled/token-blocked).
  * None is registered in public discovery, live sourceRegistry or public sourceMap.
  */
-const engineSourceMap = new Map<string, MangaSource>();
-
-// Register the 27 high-fidelity engines (with aliases for hyphen variations)
-for (const engine of portedKeiyoushiSources) {
-  engineSourceMap.set(engine.id, engine);
-  const unhyphenated = engine.id.replace(/-/g, "");
-  if (unhyphenated !== engine.id) {
-    engineSourceMap.set(unhyphenated, engine);
-  }
-}
+const engineSourceMap = new Map(portedKeiyoushiSources.map(engine => [engine.id, engine]));
 
 const stagedSources = new Map<string, MangaSource>(
   KEIYOUSHI_CANDIDATES.map((candidate) => {
     // Prefer the high-fidelity engine if available
-    const engine = engineSourceMap.get(candidate.id) || engineSourceMap.get(candidate.id.replace(/-/g, ""));
+    const engine = engineSourceMap.get(candidate.id);
     if (engine) {
       return [candidate.id, engine];
     }
@@ -41,7 +32,7 @@ const stagedSources = new Map<string, MangaSource>(
 
 export function getStagedKeiyoushiSource(id: string): MangaSource | undefined {
   const normalized = id.toLowerCase().trim();
-  return stagedSources.get(normalized) || engineSourceMap.get(normalized) || engineSourceMap.get(normalized.replace(/-/g, ""));
+  return stagedSources.get(normalized === "ainz-scans-id" ? "ainzscansid" : normalized);
 }
 
 export function getStagedKeiyoushiSourceIds(): string[] {

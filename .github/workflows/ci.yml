@@ -68,7 +68,11 @@ jobs:
 
   browser:
     name: Production build browser smoke
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # Match pnpm-lock.yaml: browsers and OS dependencies are preinstalled.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
     timeout-minutes: 30
     services:
       redis:
@@ -83,7 +87,7 @@ jobs:
     env:
       IMAGE_PROXY_SECRET: ci-only-unsigned-test-secret-not-for-production-2026
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      REDIS_URL: redis://localhost:6379
+      REDIS_URL: redis://redis:6379
       E2E_PRODUCTION_BUILD: "1"
     steps:
       - uses: actions/checkout@v4
@@ -95,16 +99,19 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Cache Playwright browser binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Verify browser image matches lockfile
+        run: |
+          node -e "if (require('@playwright/test/package.json').version !== '1.64.1') throw new Error('Update the Playwright container tag to match the lockfile')"
+          pnpm exec playwright --version
       - run: pnpm build
       - run: pnpm exec playwright test --reporter=list
+        timeout-minutes: 20
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
-          name: browser-smoke-failure
-          path: test-results/
+          name: browser-smoke-results
+          path: |
+            test-results/
+            artifacts/ios27-safari/test-results.json
+          if-no-files-found: ignore
+          retention-days: 7

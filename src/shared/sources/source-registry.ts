@@ -260,7 +260,7 @@ export const sourceRegistry: SourceMetadata[] = [
     baseUrl: "https://v1.westmanga.my",
     upstreamDomain: "v1.westmanga.my",
     healthCheckUrl: "https://v1.westmanga.my/api/visit-token",
-    icon: "https://s2.googleusercontent.com/s2/favicons?domain=westmanga.site&sz=128",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=v1.westmanga.my&sz=128",
     version: "1.0.0",
     adapterVersion: "1.0.0",
     isEnabled: true,

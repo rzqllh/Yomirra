@@ -225,9 +225,9 @@
     --border-strong: rgba(255, 255, 255, 0.20);
     --border-glass: rgba(255, 255, 255, 0.08);
 
-    --color-accent: #e0634e;
+    --color-accent: #ed7964;
     --color-accent-dim: #261213;
-    --color-accent-hover: #e87562;
+    --color-accent-hover: #ef806a;
 
     --color-semantic-success: #a9e3cb;
     --color-semantic-warning: #f3d9aa;
@@ -266,7 +266,7 @@
     --destructive-foreground: var(--status-error-bg);
     --border: var(--border-default);
     --input: var(--border-default);
-    --ring: var(--color-accent-dim);
+    --ring: var(--color-accent);
     --radius: 12px;
   }
 
@@ -330,7 +330,7 @@
     --destructive-foreground: var(--status-error-bg);
     --border: var(--border-default);
     --input: var(--border-default);
-    --ring: var(--color-accent-dim);
+    --ring: var(--color-accent);
   }
 
 
@@ -1009,8 +1009,8 @@ body.reader-active section[aria-label*="Notifications" i] {
   --text-secondary: #c7cad7;
   --text-muted: #b6bacb;
   --text-on-accent: #101118;
-  --color-accent: #e0634e;
-  --color-accent-hover: #e87562;
+  --color-accent: #ed7964;
+  --color-accent-hover: #ef806a;
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 32px rgba(0, 0, 0, 0.45);
   --border-subtle: rgb(255 255 255 / 22%);
   --border-default: rgb(255 255 255 / 30%);

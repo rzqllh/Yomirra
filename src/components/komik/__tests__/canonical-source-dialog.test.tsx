@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCanonicalBindingAvailable, prioritizeCanonicalBindings } from "../canonical-source-dialog";
+import { eligibleCanonicalBindings, isCanonicalBindingAvailable, prioritizeCanonicalBindings } from "../canonical-source-dialog";
 
 describe("canonical source availability", () => {
   it("pins a recently healthy last-read source first without selecting it", () => {
@@ -53,6 +53,14 @@ describe("canonical source availability", () => {
 
   it("keeps an active source selectable", () => {
     expect(isCanonicalBindingAvailable(binding, [])).toBe(true);
+  });
+
+  it("counts each eligible provider once and rejects conflicting editions", () => {
+    expect(eligibleCanonicalBindings([binding, binding])).toEqual([binding]);
+    expect(eligibleCanonicalBindings([binding, { ...binding, mangaId: "another-edition" }])).toEqual([]);
+    expect(eligibleCanonicalBindings([{ ...binding, mangaId: "" }])).toEqual([]);
+    expect(eligibleCanonicalBindings([{ ...binding, contentRating: "pornographic" }])).toEqual([]);
+    expect(eligibleCanonicalBindings([{ ...binding, sourceId: "missing-provider" }])).toEqual([]);
   });
 
   it("hides a source disabled by the user", () => {

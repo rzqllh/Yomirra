@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 import { getMangaDetailHref } from "@/shared/lib/routes";
-import { classifyContent } from "@/shared/sources/content-policy";
+import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
@@ -69,13 +69,36 @@ interface CanonicalSourceDialogProps {
 
 export function isCanonicalBindingAvailable(binding: SourceBinding, disabledSources: string[] = []) {
   const source = getSourceMetadata(binding.sourceId);
-  if (!source || disabledSources.includes(binding.sourceId)) return false;
+  if (!binding.sourceId?.trim() || !binding.mangaId?.trim() || !source || disabledSources.includes(binding.sourceId)) return false;
   return (
     source.isEnabled !== false &&
-    source.isInstalled !== false &&
+    source.isInstalled === true &&
+    source.capabilities?.detail === true &&
+    !source.maintenance &&
     source.status !== "unavailable" &&
-    source.status !== "in-fix"
+    source.status !== "in-fix" &&
+    source.status !== "in-dev"
   );
+}
+
+/** Count eligible distinct providers, never raw rows. Conflicting provider
+ * editions cannot silently choose a chapter or title for the reader. */
+export function eligibleCanonicalBindings(
+  bindings: readonly SourceBinding[],
+  disabledSources: string[] = [],
+  hideNsfw = true,
+): SourceBinding[] {
+  const byProvider = new Map<string, SourceBinding>();
+  const conflicts = new Set<string>();
+  for (const binding of bindings) {
+    const source = getSourceMetadata(binding.sourceId);
+    if (!source || !isCanonicalBindingAvailable(binding, disabledSources) ||
+        !isSourceContentVisible(source, hideNsfw) || !isContentVisible(binding, hideNsfw)) continue;
+    const previous = byProvider.get(binding.sourceId);
+    if (previous && previous.mangaId !== binding.mangaId) conflicts.add(binding.sourceId);
+    else if (!previous) byProvider.set(binding.sourceId, binding);
+  }
+  return [...byProvider.values()].filter(binding => !conflicts.has(binding.sourceId));
 }
 
 export function CanonicalSourceDialog({
@@ -90,10 +113,7 @@ export function CanonicalSourceDialog({
   const healthBySource = useSourceHealthStore((state) => state.healthBySource);
   const historyItems = useHistoryStore((state) => state.items);
   const availableBindings = React.useMemo(
-    () => sourceBindings.filter((binding) =>
-      isCanonicalBindingAvailable(binding, disabledSources) &&
-      (!hideNsfw || classifyContent(binding) !== "NSFW")
-    ),
+    () => eligibleCanonicalBindings(sourceBindings, disabledSources, hideNsfw),
     [sourceBindings, disabledSources, hideNsfw]
   );
   const lastUsedSourceId = React.useMemo(() => {
@@ -127,6 +147,7 @@ export function CanonicalSourceDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
+          {sortedBindings.length === 0 && <p role="status" className="text-sm text-text-secondary">Belum ada sumber yang dapat dibuka. Periksa pilihan sumber atau cari judul lainnya.</p>}
           {sortedBindings.map((binding) => {
             const source = getSourceMetadata(binding.sourceId);
             return (

@@ -54,3 +54,12 @@ export function keiyoushiNeedsRestrictedOptIn(source: KeiyoushiCandidate): boole
   // MIXED remains opt-in until item-level classification is verified.
   return source.category !== "SFW";
 }
+
+/** Reserve staged identities across hyphen/case variants without publishing them.
+ * A reserved name is not a claim that a provider is approved or operational.
+ */
+const reservedCandidateIds = new Set(KEIYOUSHI_CANDIDATES.map(candidate => candidate.id.replace(/-/g, "")));
+
+export function isReservedKeiyoushiId(id: unknown): boolean {
+  return typeof id === "string" && reservedCandidateIds.has(id.trim().toLowerCase().replace(/-/g, ""));
+}

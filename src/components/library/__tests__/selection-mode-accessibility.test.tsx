@@ -17,8 +17,8 @@ vi.mock("@/components/komik/view-mode-toggle", () => ({
 }))
 
 vi.mock("@/components/komik/card", () => ({
-  ShelfCard: ({ manga }: { manga: { title: string } }) => (
-    <Link href="/manga" data-testid="shelf-card">
+  ShelfCard: ({ manga, sourceId }: { manga: { title: string }; sourceId: string }) => (
+    <Link href="/manga" data-source-id={sourceId} data-testid="shelf-card">
       {manga.title}
     </Link>
   ),
@@ -72,6 +72,14 @@ describe("Library selection mode accessibility", () => {
     expect(card.parentElement?.hasAttribute("inert")).toBe(true)
     expect(selectionButton.getAttribute("aria-pressed")).toBe("true")
   })
+
+  it("uses each real provider identity in all-source results", () => {
+    render(<LibraryResults {...baseProps} activeSourceId="all" mangas={[
+      { id: "same", title: "First", sourceId: "source-a" },
+      { id: "same", title: "Second", sourceId: "source-b" },
+    ]} />);
+    expect(screen.getAllByTestId("shelf-card").map(card => card.getAttribute("data-source-id"))).toEqual(["source-a", "source-b"]);
+  });
 
   it("provides selection mode toggle via options dropdown", () => {
     render(

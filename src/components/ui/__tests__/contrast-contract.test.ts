@@ -56,6 +56,8 @@ describe("design-token contrast", () => {
     ["dark hover accent on-accent", darkBlock, "color-accent-hover", "text-on-accent"],
     ["dark hover surface primary", darkBlock, "text-primary", "surface-hover"],
     ["dark hover surface muted", darkBlock, "text-muted", "surface-hover"],
+    ["dark accent text on hover surface", darkBlock, "color-accent", "surface-hover"],
+    ["dark hover accent text on hover surface", darkBlock, "color-accent-hover", "surface-hover"],
     ["light accent button", lightBlock, "color-accent", "text-on-accent"],
     ["light muted metadata", lightBlock, "text-muted", "surface-base"],
     ["light secondary metadata", lightBlock, "text-secondary", "surface-base"],
@@ -68,6 +70,7 @@ describe("design-token contrast", () => {
     ["light hover accent on-accent", lightBlock, "color-accent-hover", "text-on-accent"],
     ["light hover surface primary", lightBlock, "text-primary", "surface-hover"],
     ["light hover surface muted", lightBlock, "text-muted", "surface-hover"],
+    ["light accent text on hover surface", lightBlock, "color-accent", "surface-hover"],
   ])("%s remains at least 4.5:1", (_label, block, foreground, background) => {
     expect(
       contrastRatio(token(block, foreground), token(block, background))

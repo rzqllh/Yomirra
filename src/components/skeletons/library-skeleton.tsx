@@ -3,7 +3,7 @@
 import * as React from "react";
 import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function LibrarySkeleton() {
@@ -12,11 +12,7 @@ export function LibrarySkeleton() {
 
   return (
     <div className="w-full flex flex-col">
-      <PageHeader
-        title="Jelajah"
-        subtitle="Jelajahi komik dari sumber pilihanmu."
-        hideDesktop={true}
-      />
+      <DestinationHeader destination="library" />
 
       {/* Mobile active source row placeholder */}
       <div className="flex items-center mb-3 md:hidden">

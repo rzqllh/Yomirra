@@ -13,7 +13,7 @@ import { SourceError } from "../../error";
 export class AinzScansSource extends BaseEngine {
   constructor() {
     super({
-      id: "ainz-scans-id",
+      id: "ainzscansid",
       name: "Ainz Scans ID",
       description: "Ainz Scans Indonesian manga reader API",
       language: "id",
@@ -21,6 +21,27 @@ export class AinzScansSource extends BaseEngine {
       category: "SFW",
       isNsfw: false,
     });
+  }
+
+  private parseListing(data: { results?: unknown[]; hasNextPage?: boolean }): MangaPageResult {
+    if (!Array.isArray(data?.results)) {
+      throw new SourceError("Ainz listing schema changed", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "search" });
+    }
+    const mangas: MangaItem[] = data.results.map(value => {
+      const item = value as Record<string, unknown> | null;
+      if (!item || (typeof item.id !== "string" && typeof item.id !== "number") ||
+          !String(item.id).trim() || typeof item.title !== "string" || !item.title.trim()) {
+        throw new SourceError("Invalid Ainz listing identity", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "search" });
+      }
+      return {
+        id: String(item.id),
+        title: item.title.trim(),
+        coverUrl: typeof item.thumbnail === "string" ? item.thumbnail : typeof item.cover === "string" ? item.cover : "",
+        description: typeof item.description === "string" ? item.description : undefined,
+        contentRating: "unknown",
+      };
+    });
+    return { mangas, hasNextPage: typeof data.hasNextPage === "boolean" ? data.hasNextPage : mangas.length >= 20 };
   }
 
   async getPopular(page: number, options?: SourceReadOptions): Promise<MangaPageResult> {
@@ -32,19 +53,7 @@ export class AinzScansSource extends BaseEngine {
         return this.client.get<{ results?: any[]; hasNextPage?: boolean }>(`/search?keyword=&page=${p}`);
       });
 
-      const mangas: MangaItem[] = (data?.results ?? []).map((item: any) => ({
-        id: String(item.id),
-        title: item.title ?? "",
-        coverUrl: item.thumbnail ?? item.cover ?? "",
-        description: item.description,
-        isNsfw: false,
-        contentRating: "safe",
-      }));
-
-      return this.filterListingResults(
-        { mangas, hasNextPage: Boolean(data?.hasNextPage || mangas.length >= 20) },
-        options
-      );
+      return this.filterListingResults(this.parseListing(data), options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -60,19 +69,7 @@ export class AinzScansSource extends BaseEngine {
         return this.client.get<{ results?: any[]; hasNextPage?: boolean }>(`/search?keyword=&page=${p}`);
       });
 
-      const mangas: MangaItem[] = (data?.results ?? []).map((item: any) => ({
-        id: String(item.id),
-        title: item.title ?? "",
-        coverUrl: item.thumbnail ?? item.cover ?? "",
-        description: item.description,
-        isNsfw: false,
-        contentRating: "safe",
-      }));
-
-      return this.filterListingResults(
-        { mangas, hasNextPage: Boolean(data?.hasNextPage || mangas.length >= 20) },
-        options
-      );
+      return this.filterListingResults(this.parseListing(data), options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -91,19 +88,7 @@ export class AinzScansSource extends BaseEngine {
         `/search?keyword=${encodeURIComponent(query)}&page=${p}`
       );
 
-      const mangas: MangaItem[] = (data?.results ?? []).map((item: any) => ({
-        id: String(item.id),
-        title: item.title ?? "",
-        coverUrl: item.thumbnail ?? item.cover ?? "",
-        description: item.description,
-        isNsfw: false,
-        contentRating: "safe",
-      }));
-
-      return this.filterListingResults(
-        { mangas, hasNextPage: Boolean(data?.hasNextPage || mangas.length >= 20) },
-        options
-      );
+      return this.filterListingResults(this.parseListing(data), options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -115,6 +100,9 @@ export class AinzScansSource extends BaseEngine {
     try {
       const item = await this.client.get<any>(`/detail/${encodeURIComponent(mangaId)}`);
 
+      if (!item || typeof item.title !== "string" || !item.title.trim() || (item.id != null && String(item.id) !== mangaId)) {
+        throw new SourceError("Invalid Ainz detail identity", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "detail" });
+      }
       let status: "ONGOING" | "COMPLETED" | "CANCELLED" | "UNKNOWN" = "UNKNOWN";
       const s = (item.status || "").toLowerCase();
       if (s.includes("ongoing")) status = "ONGOING";
@@ -129,8 +117,7 @@ export class AinzScansSource extends BaseEngine {
         status,
         author: Array.isArray(item.author) ? item.author.join(", ") : item.author,
         artist: Array.isArray(item.artist) ? item.artist.join(", ") : item.artist,
-        isNsfw: false,
-        contentRating: "safe",
+        contentRating: "unknown",
       };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DeadSourceRecovery } from "../dead-source-recovery";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 const mockPush = vi.fn();
 
@@ -34,6 +35,7 @@ vi.mock("@/shared/api-client", () => ({
 describe("DeadSourceRecovery Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useSourcePreferencesStore.setState({ disabledSources: [] });
     useLibraryStore.setState({ items: {} });
     useDownloadStore.setState({ downloads: {} });
   });
@@ -89,7 +91,7 @@ describe("DeadSourceRecovery Component", () => {
     expect(screen.getByText(/Baca Offline/i)).toBeDefined();
   });
 
-  it("shows quick switch button when AUTO_SAFE linked source is available and handles switch click", () => {
+  it("opens a confirmed alternative without replacing the saved primary source", () => {
     useLibraryStore.getState().addToLibrary({
       id: "saved-test-01",
       sourceId: "komikindo",
@@ -100,7 +102,7 @@ describe("DeadSourceRecovery Component", () => {
       author: "Chugong",
       linkedSources: [
         {
-          sourceId: "alt-src",
+          sourceId: "komiku",
           mangaId: "solo-alt",
           matchConfidence: "CONFIRMED",
           addedAt: Date.now(),
@@ -112,18 +114,18 @@ describe("DeadSourceRecovery Component", () => {
 
     render(<DeadSourceRecovery sourceId="komikindo" mangaId="solo-leveling" />);
 
-    const switchBtn = screen.getByRole("button", { name: /Alihkan ke ALT-SRC/i });
+    const switchBtn = screen.getByRole("button", { name: /Buka di Komiku/i });
     expect(switchBtn).toBeDefined();
 
     // Click quick switch
     fireEvent.click(switchBtn);
 
-    // Verify migration performed
+    // Original primary source must survive alternative navigation.
     const updated = useLibraryStore.getState().getLibraryItemById("saved-test-01");
-    expect(updated?.primarySourceId).toBe("alt-src");
-    expect(updated?.primaryMangaId).toBe("solo-alt");
+    expect(updated?.primarySourceId).toBe("komikindo");
+    expect(updated?.primaryMangaId).toBe("solo-leveling");
     // Verify redirection
-    expect(mockPush).toHaveBeenCalledWith("/manga/alt-src/solo-alt");
+    expect(mockPush).toHaveBeenCalledWith("/manga/komiku/solo-alt");
   });
 });
 

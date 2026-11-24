@@ -8,9 +8,11 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { getSourceMetadata, getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { apiClient } from "@/shared/api-client";
 import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher";
-import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-parser";
-import { executeSourceMigration } from "@/shared/lib/source-fallback";
-import { getReaderHref } from "@/shared/lib/routes";
+import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
+import { getMangaDetailHref } from "@/shared/lib/routes";
+import { eligibleCanonicalBindings } from "@/components/komik/canonical-source-dialog";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
 import type { AlternateSourceCandidate } from "@/components/komik/alternate-source-modal";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
@@ -28,35 +30,30 @@ export function useAlternateSource({
   mangaId,
   knownTitle: initialTitle,
   knownAuthor: initialAuthor,
-  currentChapterTitle: initialChapterTitle,
 }: UseAlternateSourceOptions) {
   const router = useRouter();
 
   const libraryItem = useLibraryStore((state) =>
     state.resolveBySourceRef(sourceId, mangaId) ?? state.getLibraryItem(sourceId, mangaId)
   );
-  const relinkTitle = useLibraryStore((state) => state.relinkTitle);
   const highestMilestone = useHistoryStore((state) => state.getHighestMilestoneForManga(sourceId, mangaId));
   const latestRead = useHistoryStore((state) => state.getLatestForManga(sourceId, mangaId));
   const historyItem = highestMilestone || latestRead;
-  const saveProgress = useHistoryStore((state) => state.saveProgress);
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const hideNsfw = useSettingsStore(state => state.hideNsfw);
 
   const title = initialTitle ?? libraryItem?.title ?? historyItem?.mangaTitle ?? mangaId;
   const author = initialAuthor ?? libraryItem?.author;
-  const lastReadChapter =
-    initialChapterTitle ?? historyItem?.chapterTitle ?? libraryItem?.lastReadChapterTitle;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [candidates, setCandidates] = useState<AlternateSourceCandidate[]>([]);
-  const [chapterMapResult, setChapterMapResult] = useState<ChapterMapResult | undefined>();
+  const chapterMapResult: ChapterMapResult | undefined = undefined;
 
   const openAndSearch = useCallback(async () => {
     setIsOpen(true);
     setIsSearching(true);
     setCandidates([]);
-    setChapterMapResult(undefined);
 
     try {
       const enabledSources = getAllSourceMetadata().filter(
@@ -67,13 +64,14 @@ export function useAlternateSource({
           s.isInstalled &&
           !disabledSources.includes(s.id) &&
           s.status !== "unavailable" &&
-          s.status !== "in-fix"
+          s.status !== "in-fix" && s.status !== "in-dev" && !s.maintenance &&
+          isSourceContentVisible(s, hideNsfw)
       );
 
       const searchPromises = enabledSources.map(async (src) => {
         try {
           const res = await apiClient.search(src.id, title, 1);
-          return (res.results || []).map((m) => ({
+          return (res.results || []).filter(m => isContentVisible(m, hideNsfw)).map((m) => ({
             sourceId: src.id,
             mangaId: m.id,
             title: m.title,
@@ -81,6 +79,8 @@ export function useAlternateSource({
             author: m.author,
             alternativeTitles: [m.originalTitle, ...(m.alternativeTitles ?? [])].filter(Boolean) as string[],
             sourceDisplayName: src.name,
+            isNsfw: m.isNsfw,
+            contentRating: m.contentRating,
           }));
         } catch {
           return [];
@@ -101,130 +101,32 @@ export function useAlternateSource({
         title: r.candidate.title,
         coverUrl: r.candidate.coverUrl,
         confidence: r.result.confidence,
+        isNsfw: (r.candidate as AlternateSourceCandidate).isNsfw,
+        contentRating: (r.candidate as AlternateSourceCandidate).contentRating,
       }));
 
       setCandidates(formatted);
 
-      if (formatted.length > 0 && lastReadChapter) {
-        try {
-          const top = formatted[0];
-          const chapters = await apiClient.getChapters(top.sourceId, top.mangaId);
-          const mapped = mapChapterProgress(
-            lastReadChapter,
-            chapters.map((c) => ({
-              chapterId: c.id,
-              chapterTitle: c.title,
-              title: c.title,
-            }))
-          );
-          setChapterMapResult(mapped);
-        } catch {
-          // Candidate search still works if chapter mapping fails.
-        }
-      }
     } catch (err) {
       console.error("Failed searching alternate sources:", err);
-      toast.info("Sumber Lain Tidak Ditemukan", {
+      toast.info("Sumber lain belum ditemukan", {
         description: "Belum ada sumber bacaan alternatif yang cocok saat ini.",
       });
     } finally {
       setIsSearching(false);
     }
-  }, [sourceId, title, author, lastReadChapter, disabledSources]);
+  }, [sourceId, title, author, disabledSources, hideNsfw]);
 
-  const handleConfirm = useCallback(
-    async (candidate: AlternateSourceCandidate) => {
-      try {
-        let targetChapterId = "";
-        try {
-          const targetChapters = await apiClient.getChapters(candidate.sourceId, candidate.mangaId);
-          if (targetChapters.length > 0) {
-            if (lastReadChapter) {
-              const mapped = mapChapterProgress(
-                lastReadChapter,
-                targetChapters.map((c) => ({
-                  chapterId: c.id,
-                  chapterTitle: c.title,
-                  title: c.title,
-                }))
-              );
-              targetChapterId =
-                mapped.type === "EXACT" && mapped.targetChapterId
-                  ? mapped.targetChapterId
-                  : mapped.nearestSafeCandidate?.chapterId ?? "";
-            } else {
-              targetChapterId = targetChapters[0].id;
-            }
-          }
-        } catch {
-        }
-
-        const effectiveLibraryItem = libraryItem ?? {
-          id: `${sourceId}::${mangaId}`,
-          sourceId,
-          mangaId,
-          title,
-          coverUrl: "",
-          addedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        const fallbackResult: Parameters<typeof executeSourceMigration>[0]["fallbackResult"] = {
-          status: "CONFIRM_REQUIRED",
-          reason: "User selected alternate source fallback",
-          candidate: {
-            sourceId: candidate.sourceId,
-            mangaId: candidate.mangaId,
-            title: candidate.title,
-            coverUrl: candidate.coverUrl,
-            author: candidate.author,
-            addedAt: Date.now(),
-            matchConfidence: candidate.confidence,
-          },
-          titleConfidence: candidate.confidence,
-          suggestedChapterId: targetChapterId || undefined,
-          requiresUserConfirmation: false,
-        };
-
-        executeSourceMigration({
-          libraryItem: effectiveLibraryItem,
-          fallbackResult,
-          historyItem: historyItem ?? undefined,
-          milestoneItem: highestMilestone ?? undefined,
-          isPermanent: true,
-          relinkTitleFn: libraryItem ? relinkTitle : undefined,
-          saveProgressFn: (src, mid, cid, pidx) => saveProgress(src, mid, cid, pidx),
-        });
-
-        toast.success("Sumber Berhasil Dialihkan", {
-          description: `Membaca dari ${candidate.sourceDisplayName}.`,
-        });
-        setIsOpen(false);
-
-        if (targetChapterId) {
-          router.replace(getReaderHref(candidate.sourceId, candidate.mangaId, targetChapterId));
-        } else {
-          router.replace(`/manga/${candidate.sourceId}/${candidate.mangaId}`);
-        }
-      } catch (err) {
-        console.error("Migration failed:", err);
-        toast.error("Pengalihan Sumber Gagal", {
-          description: "Terjadi kesalahan saat memindahkan data komik ke sumber baru.",
-        });
-      }
-    },
-    [
-      libraryItem,
-      sourceId,
-      mangaId,
-      lastReadChapter,
-      relinkTitle,
-      saveProgress,
-      router,
-      historyItem,
-      title,
-    ]
-  );
+  const handleConfirm = useCallback((candidate: AlternateSourceCandidate) => {
+    // Selecting another source is navigation, not proof of work/release
+    // equivalence. Preserve the original source, preference and cursors.
+    if (eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
+      toast.error("Sumber tidak dapat dibuka");
+      return;
+    }
+    setIsOpen(false);
+    router.replace(getMangaDetailHref(candidate.sourceId, candidate.mangaId));
+  }, [disabledSources, hideNsfw, router]);
 
   return {
     isOpen,

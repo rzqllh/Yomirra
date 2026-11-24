@@ -11,7 +11,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -117,11 +117,7 @@ export default function SourcesPage() {
     <PullToRefresh onRefresh={handleRefresh}>
       <Surface variant="base" className="min-h-screen">
         <PageContainer variant="management" hasMobileHeader>
-          <PageHeader
-            title="Sumber"
-            subtitle="Atur sumber yang digunakan saat menjelajah."
-            icon={<HardDrives size={24} weight="regular" />}
-          />
+          <DestinationHeader destination="sources" />
 
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">

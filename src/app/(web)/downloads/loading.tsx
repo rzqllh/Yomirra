@@ -1,18 +1,13 @@
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer, ContentLane } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { Download } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
     <Surface variant="base" className="min-h-screen">
-      <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Unduhan"
-          subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
-          icon={<Download size={24} weight="regular" />}
-        />
+      <PageContainer variant="focused" hasMobileHeader>
+        <DestinationHeader destination="downloads" />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
           <Skeleton className="h-20 w-full rounded-xl" />

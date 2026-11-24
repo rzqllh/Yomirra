@@ -3,8 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MangaCardSkeleton } from "@/components/komik/manga-card-skeleton";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { PageHeader } from "@/components/chrome/header";
-import { Fire } from "@phosphor-icons/react/dist/ssr";
+import { DestinationHeader } from "@/components/chrome/header";
 
 export function PopularFeedSkeleton({ cardCount = 8 }: { cardCount?: number }) {
   return (
@@ -29,12 +28,7 @@ export function PopularPageSkeleton() {
   return (
     <Surface variant="base" className="w-full min-h-screen">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Populer"
-          subtitle="Komik yang sedang populer dari sumber aktif."
-          icon={<Fire size={24} weight="regular" />}
-          hideDesktop={true}
-        />
+        <DestinationHeader destination="popular" />
 
         <PopularFeedSkeleton cardCount={8} />
         <PopularFeedSkeleton cardCount={8} />

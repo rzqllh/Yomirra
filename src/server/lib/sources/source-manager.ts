@@ -4,6 +4,7 @@ import { DynamicSourceAdapter, fetchDynamicSourceJson } from "./adapters/dynamic
 import { DynamicSourceManifestSchema } from "@/shared/sources/dynamic-source-registry";
 import { domainResolver } from "./domain-resolver";
 import { SourceError } from "./error";
+import { isReservedKeiyoushiId } from "@/shared/sources/keiyoushi-candidates";
 
 
 export class SourceManager {
@@ -13,6 +14,18 @@ export class SourceManager {
     options?: { allowDisabled?: boolean }
   ): Promise<MangaSource> {
     const normalizedId = id.toLowerCase().trim();
+
+    // Reserved staged identities cannot be impersonated by external manifests
+    // or persisted custom adapters. Diagnostic access is explicit and isolated.
+    if (isReservedKeiyoushiId(normalizedId)) {
+      if (manifestUrl || !options?.allowDisabled) {
+        throw new Error(`SOURCE_DISABLED: Source '${id}' is staged and not available for public access.`);
+      }
+      const { getStagedKeiyoushiSource } = await import("./adapters/keiyoushi");
+      const staged = getStagedKeiyoushiSource(normalizedId);
+      if (!staged) throw new Error(`Source ${id} not found`);
+      return staged;
+    }
 
     // Check admin override kill-switch
     if (!options?.allowDisabled) {
@@ -82,14 +95,6 @@ export class SourceManager {
         }
         // ignore and let next check handle
       }
-    }
-
-    // Keiyoushi ports are NOT public sources. Only an explicit diagnostic
-    // caller may resolve a staged HTML adapter. They are never added to the
-    // built-in sourceMap or discovery registry.
-    if (!source && options?.allowDisabled) {
-      const { getStagedKeiyoushiSource } = await import("./adapters/keiyoushi");
-      source = getStagedKeiyoushiSource(normalizedId);
     }
 
     if (!source) {
