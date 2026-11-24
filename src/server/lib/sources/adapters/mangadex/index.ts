@@ -315,8 +315,16 @@ export class MangaDexSource implements MangaSource {
         if (seenIds.has(chapter.id)) continue;
         seenIds.add(chapter.id);
         newIds++;
-        if (chapter.attributes.externalUrl || chapter.attributes.pages <= 0) continue;
-        allChapters.push(normalizeChapter(chapter, mangaId));
+        if (chapter.attributes.externalUrl || !Number.isSafeInteger(chapter.attributes.pages) || chapter.attributes.pages <= 0) continue;
+        const parent = chapter.relationships.find(relationship => relationship.type === "manga")?.id;
+        if (parent !== mangaId) {
+          throw new SourceError("Chapter feed returned a mismatched parent", {
+            code: "SCHEMA_CHANGED", sourceId: this.id, stage: "chapters",
+          });
+        }
+        // The official public feed describes an internal, nonempty release.
+        // Page availability is checked again by getPages before reading.
+        allChapters.push({ ...normalizeChapter(chapter, mangaId), isLocked: false });
       }
       offset += res.data.length;
       if (offset >= res.total) break;

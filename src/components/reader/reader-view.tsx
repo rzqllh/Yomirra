@@ -23,6 +23,7 @@ import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
 import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { chapterNavigationLabel } from "@/shared/lib/alternate-chapter-mapping";
 import { rasterImageContentType } from "@/shared/lib/raster-image";
 import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "@/shared/lib/pwa-cache-policy";
 import { ContentAccessBoundary } from "@/components/komik/content-access-boundary";
@@ -104,14 +105,14 @@ function ReaderContent({
     refetchOnReconnect: false,
   });
 
-  const chapterTitle = initialChapters?.find(c => c.id === chapterId)?.title || "Chapter";
+  const chapterTitle = currentChapter?.title || "Chapter";
 
   const alternateSource = useAlternateSource({
     sourceId,
     mangaId,
     currentChapterId: chapterId,
     knownTitle: initialDetail?.title,
-    currentChapterTitle: chapterTitle,
+    currentChapterTitle: chapterNavigationLabel(currentChapter),
   });
 
   const refreshChapter = useCallback(async (): Promise<PageItem[] | null> => {

@@ -126,7 +126,7 @@ export function normalizeChapter(chapter: MangaDexChapter, mangaId: string): Cha
   const lang = chapter.attributes.translatedLanguage;
   const isEn = lang === "en";
 
-  let title = chapter.attributes.title || `Chapter ${num || "?"}`;
+  let title = chapter.attributes.title || `Chapter ${chapter.attributes.chapter ?? "?"}`;
   // Add EN warning if not Indonesian
   if (isEn) {
     title = `${title} [EN]`;

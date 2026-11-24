@@ -9,13 +9,32 @@ export interface ChapterNumberEvidence {
  * list index, special, or a partial number extracted from arbitrary text. */
 export function readChapterNumberEvidence(label: string | undefined): ChapterNumberEvidence | null {
   if (typeof label !== "string" || !label) return null;
-  const value = label.trim();
+  const value = label.trim().replace(/\s+\[(?:EN|ID)\]$/i, "");
   const match = /^(?:(?:vol(?:ume)?\.?\s*)(\d+)\s*[-: ]\s*)?(?:(?:chapter|chap|ch|episode|ep)\.?\s*|#\s*)?(\d+(?:\.\d+)?)\s*$/i.exec(value);
   if (!match) return null;
   const number = Number(match[2]);
   const volume = match[1] === undefined ? undefined : Number(match[1]);
   if (!Number.isFinite(number) || number < 0 || (volume !== undefined && !Number.isSafeInteger(volume))) return null;
   return { number, volume };
+}
+
+/** Preserve explicit upstream numbering/volume rather than guessing from
+ * display labels (e.g. localized titles or MangaDex's [EN] annotation). */
+export function chapterNavigationLabel(chapter: Chapter | undefined): string | undefined {
+  if (!chapter) return undefined;
+  const title = readChapterNumberEvidence(chapter.title);
+  const explicit = chapter.chapterNumber === undefined ? null : readChapterNumberEvidence(chapter.chapterNumber);
+  if (chapter.chapterNumber !== undefined && !explicit) return undefined;
+  if (title && explicit && (title.number !== explicit.number ||
+      (title.volume !== undefined && explicit.volume !== undefined && title.volume !== explicit.volume))) return undefined;
+  const observed = explicit ?? title;
+  if (!observed) return undefined;
+  const labelVolume = title?.volume ?? explicit?.volume;
+  const volume = chapter.volume === undefined ? labelVolume :
+    typeof chapter.volume === "string" && /^\d+$/.test(chapter.volume.trim()) ? Number(chapter.volume) : null;
+  if (volume === null || (volume !== undefined && !Number.isSafeInteger(volume)) ||
+      (labelVolume !== undefined && volume !== labelVolume)) return undefined;
+  return (volume === undefined ? "" : "Vol. " + volume + " ") + "Chapter " + observed.number;
 }
 
 export type AlternateChapterMapping =
