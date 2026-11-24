@@ -6,7 +6,22 @@ import { env } from "@/env";
 import { formatUserReport } from "@/server/lib/ops/message-format";
 import { enqueueUserReport } from "@/server/lib/ops/admin-report-service";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
-import type { UserReportPayload } from "@/shared/types/report";
+import { z } from "zod";
+import { verifyReportChallenge } from "@/server/lib/security/turnstile";
+import { readBoundedJson } from "@/server/lib/security/bounded-json";
+
+const schema=z.object({
+  type:z.enum(["chapter_error","source_broken","image_broken","other"]),
+  category:z.string().trim().min(1).max(100),
+  detail:z.string().max(500).optional(),
+  sourceId:z.string().max(64).optional(),
+  mangaId:z.string().max(300).optional(),
+  mangaTitle:z.string().max(500).optional(),
+  chapterId:z.string().max(300).optional(),
+  chapterTitle:z.string().max(500).optional(),
+  pageIndex:z.number().int().min(0).max(100000).optional(),
+  turnstileToken:z.string().min(1).max(2048).optional(),
+});
 
 export const dynamic = "force-dynamic";
 
@@ -29,27 +44,15 @@ export async function POST(req: Request) {
   const limitedJson = (body: unknown, init?: ResponseInit) =>
     applyRateLimitHeaders(NextResponse.json(body, init), rateLimit);
 
-  let payload: UserReportPayload;
-
-  try {
-    payload = await req.json();
-  } catch {
-    return limitedJson({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  if (!payload.category || typeof payload.category !== "string") {
-    return limitedJson({ error: "Missing category" }, { status: 400 });
-  }
-
-  // Sanitize inputs
-  const category = payload.category.slice(0, 100);
-  const detail = payload.detail?.slice(0, 500) ?? undefined;
-
-  const sanitizedPayload: UserReportPayload = {
-    ...payload,
-    category,
-    detail,
-  };
+  let raw:unknown;
+  try { raw=await readBoundedJson(req,8192); }
+  catch { return limitedJson({error:"Invalid report"}, {status:400}); }
+  const parsed=schema.safeParse(raw);
+  if(!parsed.success)return limitedJson({error:"Invalid report"}, {status:400});
+  const {turnstileToken,...sanitizedPayload}=parsed.data;
+  const verification=await verifyReportChallenge(turnstileToken,env.NEXT_PUBLIC_APP_URL);
+  if(verification!=="ok")return limitedJson({error:verification==="unavailable"?"Verification unavailable":"Verification required",
+    code:"CHALLENGE_"+verification.toUpperCase()}, {status:verification==="unavailable"?503:403});
 
   // Enqueue report for Admin Dashboard Inbox
   await enqueueUserReport(sanitizedPayload);
