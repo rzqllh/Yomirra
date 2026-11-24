@@ -5,6 +5,7 @@ import { formatHealthDigest, sendTelegramMessage } from "./telegram-notifier";
 import { formatWibTime } from "./message-format";
 import { AlertSeverity } from "./severity";
 import { logger } from "@/shared/logger";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 
 // Only fresh results from this run count as completed probes. A missing result
 // must never be replaced by a potentially stale stored snapshot.
@@ -46,7 +47,7 @@ export async function sendHealthDigest(): Promise<boolean> {
     const probedSnapshots = await probeAllSourcesHealth({ deep: false });
     const runtimeSources = await getRuntimeSources();
     const activeIds = runtimeSources
-      .filter((source) => source.isEnabled && source.isInstalled)
+      .filter(isDiscoverySourceSystemEligible)
       .map((source) => source.id);
 
     const message = formatHealthDigestWithCoverage(activeIds, probedSnapshots);

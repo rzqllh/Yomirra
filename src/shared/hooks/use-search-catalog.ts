@@ -539,6 +539,7 @@ export function useSearchCatalog() {
             coverUrl: candidate.coverUrl || primaryBinding.coverUrl || "",
             originalTitle: candidate.originalTitle,
             alternativeTitles: candidate.alternativeTitles,
+            externalWorkIds: candidate.externalWorkIds,
             author: candidate.author,
             description: candidate.description,
             format: candidate.format,

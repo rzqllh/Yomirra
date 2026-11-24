@@ -115,7 +115,7 @@ export function toLivenessSourceHealth(snapshot: SourceHealthSnapshot): Liveness
     return { status: "ok", latencyMs: snapshot.latencyMs };
   }
 
-  if (snapshot.status === "DEGRADED" || snapshot.status === "RATE_LIMITED") {
+  if (snapshot.status === "DEGRADED" || snapshot.status === "RATE_LIMITED" || snapshot.status === "UNKNOWN") {
     return {
       status: "slow",
       latencyMs: snapshot.latencyMs,

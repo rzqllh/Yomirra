@@ -27,6 +27,7 @@ export function buildTrustedCatalogCandidate(
     coverUrl: manga.coverUrl,
     originalTitle: manga.originalTitle,
     alternativeTitles: manga.alternativeTitles,
+    externalWorkIds: manga.externalWorkIds,
     author: manga.author,
     description: manga.description,
     format: manga.format,

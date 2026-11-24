@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { comicFormat, type MetadataWork } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
+import { normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
 
 const ORIGIN = "https://api.mangabaka.org";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
@@ -37,7 +38,9 @@ export function parseMangaBakaWork(value: unknown): MetadataWork | null {
   if (!titles.length) return null;
   const preferred = titles.find(t => t.primary && t.language === "en") ??
     titles.find(t => t.primary) ?? titles[0];
+  const externalWorkIds = normalizeExternalWorkIds(row.source_ids);
   return {
+    ...(externalWorkIds ? { externalWorkIds } : {}),
     provider: "mangabaka",
     externalId: row.id,
     format,
@@ -100,7 +103,7 @@ export async function matchMangaBakaWorks(query: string): Promise<MetadataWork[]
   if (!isMangaBakaEnabled()) return [];
   const q = query.trim().normalize("NFKC");
   if (q.length < 3 || q.length > 160 || !normalizeTitle(q)) return [];
-  const key = "metadata:mangabaka:v2:match:" + createHash("sha256").update(q).digest("hex");
+  const key = "metadata:mangabaka:v3:match:" + createHash("sha256").update(q).digest("hex");
   try {
     return await withCache(key, async () => {
       const data = await request("/v2/series/match?" + new URLSearchParams({ q }).toString());
