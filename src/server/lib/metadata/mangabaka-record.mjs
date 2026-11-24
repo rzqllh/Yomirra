@@ -22,6 +22,7 @@ export function parseCatalogRecord(value,allRatings=false){
   const aliases=[...new Set([...(titles.length?titles.map(t=>t.title):[]),...legacy])];
   if(aliases.length>500)return null;
   const authors=Array.isArray(row.authors)?[...new Set(row.authors.map(clean).filter(Boolean))].slice(0,40):[];
+  const description=typeof row.description==="string"&&row.description.length<=12000?row.description.trim():undefined;
   const ids={};
   for(const key of ["anilist","my_anime_list","manga_updates"]){
     const raw=row.source_ids?.[key];
@@ -30,5 +31,5 @@ export function parseCatalogRecord(value,allRatings=false){
     if(key==="manga_updates"?/^(?=[a-z0-9]{1,32}$)(?=.*[a-z])[a-z0-9]+$/.test(id):/^[1-9][0-9]{0,14}$/.test(id))ids[key]=id;
   }
   return {provider:"mangabaka",externalId:row.id,title,aliases,format,contentRating:rating,
-    ...(authors.length?{authors}:{}),...(Object.keys(ids).length?{externalWorkIds:ids}:{})};
+    ...(description?{description}:{}),...(authors.length?{authors}:{}),...(Object.keys(ids).length?{externalWorkIds:ids}:{})};
 }

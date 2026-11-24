@@ -23,7 +23,7 @@ import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
 import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
-import { projectMetadataCatalogRows } from "@/shared/lib/metadata-catalog";
+import { projectMetadataCatalogRows,metadataOnlyWorks } from "@/shared/lib/metadata-catalog";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -700,6 +700,7 @@ export function useSearchCatalog() {
     activeSelectedSources,
     toggleSource,
     searchMangas,
+    metadataOnly:page===1&&!hasActiveFilters&&Boolean(parsedQuery.textQuery)?metadataOnlyWorks(combinedResults,[...(intelligenceQuery.data?.metadataWorks??[]),...(intelligenceQuery.data?.metadataDiscovery??[])]):[],
     hasNextPage,
     errorsToDisplay,
     isInitialLoading,

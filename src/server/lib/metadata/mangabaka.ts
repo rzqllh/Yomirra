@@ -4,7 +4,7 @@ import { comicFormat, type MetadataWork } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { compareExternalWorkIds, normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
 import { parseCatalogRecord } from "./mangabaka-record.mjs";
-import { findLocalMetadataWorks } from "./local-catalog-index";
+import { findLocalMetadataWorks,getLocalMetadataWork } from "./local-catalog-index";
 
 const ORIGIN = "https://api.mangabaka.org";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
@@ -130,4 +130,14 @@ export async function matchMangaBakaWorks(query: string, allRatings = false): Pr
   } catch {
     return [];
   }
+}
+
+export async function getPublicMetadataWork(id:number):Promise<MetadataWork|null>{
+  if(!isMangaBakaEnabled()||!Number.isSafeInteger(id)||id<=0)return null;
+  const local=getLocalMetadataWork(id);
+  if(local)return local;
+  try{return await withCache("metadata:mangabaka:v5:detail:"+id,async()=>{
+    const work=parseMangaBakaWork(await request(`/v2/series/${id}?schema=full`));
+    return work?.externalId===id?work:null;
+  },CACHE_TTL_SECONDS,{allowStaleOnError:false});}catch{return null;}
 }

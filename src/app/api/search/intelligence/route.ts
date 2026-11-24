@@ -5,6 +5,7 @@ import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
 import { getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
+import { discoverLocalMetadataWorks } from "@/server/lib/metadata/local-catalog-index";
 
 export const dynamic = "force-dynamic";
 
@@ -83,5 +84,6 @@ export async function POST(request: NextRequest) {
     rankSearchIntelligence({ ...parsed.data, hideNsfw }),
     matchMangaBakaWorks(parsed.data.query),
   ]);
-  return applyRateLimitHeaders(NextResponse.json({ data: { ...result, ...(metadataWorks.length ? { metadataWorks } : {}) } }), rateLimit);
+  const metadataDiscovery=discoverLocalMetadataWorks(parsed.data.query);
+  return applyRateLimitHeaders(NextResponse.json({ data: { ...result, ...(metadataWorks.length ? { metadataWorks } : {}), ...(metadataDiscovery.length?{metadataDiscovery}:{}) } }), rateLimit);
 }

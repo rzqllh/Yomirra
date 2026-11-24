@@ -13,6 +13,7 @@ export interface MetadataWork {
   format: ComicFormat;
   contentRating: NonNullable<MangaItem["contentRating"]>;
   authors?: string[];
+  description?: string;
   externalWorkIds?: ExternalWorkIds;
 }
 
@@ -74,19 +75,9 @@ export function projectMetadataCatalogRows(
   const byIdentity = new Map<string, MetadataWork>();
   const rowMatches = new Map<string, MetadataWork>();
   for (const row of rows) {
-    const format = comicFormat(row.manga.format);
-    if (!format || classifyContent(row.manga) === "NSFW") continue;
-    const names = aliases([row.manga.title, row.manga.originalTitle, ...(row.manga.alternativeTitles ?? [])]);
-    const candidates = works.filter(work => {
-      if (work.format !== format || work.contentRating !== "safe") return false;
-      const evidence = compareExternalWorkIds(row.manga.externalWorkIds, work.externalWorkIds);
-      // Contradictory tracker identities veto alias matches. A matching
-      // external ID may bridge a title omitted from the alias list.
-      return evidence !== "conflict" && (evidence === "match" ||
-        [...aliases([work.title, ...work.aliases])].some(name => names.has(name)));
-    });
-    if (candidates.length !== 1) continue;
-    const work = candidates[0];
+    if (classifyContent(row.manga) === "NSFW") continue;
+    const work = matchCanonicalMetadata(row.manga,works);
+    if (!work || work.contentRating !== "safe") continue;
     const ref = JSON.stringify([row.sourceId, row.manga.id]);
     rowMatches.set(ref, work);
   }
@@ -125,4 +116,17 @@ export function projectMetadataCatalogRows(
       },
     };
   });
+}
+
+/** Metadata-only cards are discovery, not source bindings or reading access. */
+export function metadataOnlyWorks(rows:readonly CatalogSearchRow[],works:readonly MetadataWork[]):MetadataWork[]{
+  const matched=new Set(rows.flatMap(row=>{
+    const work=matchCanonicalMetadata(row.manga,works);
+    return work?[work.externalId]:[];
+  }));
+  const seen=new Set<number>();
+  return works.filter(work=>{
+    if(work.contentRating!=="safe"||matched.has(work.externalId)||seen.has(work.externalId))return false;
+    seen.add(work.externalId);return true;
+  }).slice(0,20);
 }

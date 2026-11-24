@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { projectMetadataCatalogRows, matchCanonicalMetadata, inheritCanonicalRating, type MetadataWork } from "../metadata-catalog";
+import { projectMetadataCatalogRows, matchCanonicalMetadata, inheritCanonicalRating, metadataOnlyWorks, type MetadataWork } from "../metadata-catalog";
 import type { CatalogSearchRow } from "../canonical-search";
 
-const work: MetadataWork = { provider: "mangabaka", externalId: 1, title: "Canonical title", aliases: ["Native title", "Translated title"], format: "manhwa", contentRating: "safe" };
+const work: MetadataWork = { provider: "mangabaka", externalId: 1, title: "Canonical title", aliases: ["Native title", "Translated title"], format: "manhwa", contentRating: "safe", authors:["Author A"] };
 const row = (sourceId: string, id: string, title: string, format = "manhwa"): CatalogSearchRow => ({
-  sourceId, canonicalKey: JSON.stringify([sourceId, id]), manga: { id, title, format, coverUrl: "/cover.jpg" },
+  sourceId, canonicalKey: JSON.stringify([sourceId, id]), manga: { id, title, format, coverUrl: "/cover.jpg", author:"Author A" },
 });
 
 describe("metadata-assisted discovery", () => {
@@ -31,7 +31,7 @@ describe("metadata-assisted discovery", () => {
     expect(inheritCanonicalRating(item,matchCanonicalMetadata(item,[canonical])).contentRating).toBe("safe");
     expect(inheritCanonicalRating({...item,contentRating:"erotica"},canonical).contentRating).toBe("erotica");
     expect(inheritCanonicalRating(item,{...canonical,contentRating:"suggestive"})).toMatchObject({contentRating:"suggestive",isNsfw:true});
-    expect(matchCanonicalMetadata(row("a","1","Native title").manga,[canonical])).toBeUndefined();
+    expect(matchCanonicalMetadata({...row("a","1","Native title").manga,author:undefined},[canonical])).toBeUndefined();
     expect(matchCanonicalMetadata(item,[canonical,{...canonical,externalId:2}])).toBeUndefined();
     expect(matchCanonicalMetadata({...item,author:"A"},[{...canonical,authors:["B"]}])).toBeUndefined();
     expect(matchCanonicalMetadata({...row("a","1","Native title").manga,author:"A"},[{...work,authors:["A"]}])?.externalId).toBe(1);
@@ -45,4 +45,13 @@ describe("metadata-assisted discovery", () => {
     expect(projectMetadataCatalogRows([a,row("b","2","Translated title sequel")], [work])).toHaveLength(2);
     expect(projectMetadataCatalogRows([{...a,manga:{...a.manga,author:"A"}},{...b,manga:{...b.manga,author:"B"}}], [work])).toHaveLength(2);
   });
+});
+
+it("keeps alias-only rows separate and exposes unmatched safe metadata without source IDs",()=>{
+  const a=row("a","1","Native title");
+  const b=row("b","2","Translated title");
+  const unverified=[a,b].map(r=>({...r,manga:{...r.manga,author:undefined}}));
+  expect(projectMetadataCatalogRows(unverified,[work])).toHaveLength(2);
+  expect(metadataOnlyWorks([a],[work])).toEqual([]);
+  expect(metadataOnlyWorks([], [work,work,{...work,externalId:2,contentRating:"erotica"}])).toEqual([work]);
 });

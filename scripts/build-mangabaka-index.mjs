@@ -17,6 +17,7 @@ export async function buildCatalogIndex(input,output,{previous,permitted=false,m
   const temp=output+"."+randomUUID()+".partial";
   let db,created=false,read=0,accepted=0,changed=0,unchanged=0,skipped=0;
   const snapshot=new Date().toISOString();
+  const generation=randomUUID();
   const hash=createHash("sha256");
   try{
     if(previous){await copyFile(previous,temp,1);created=true;}
@@ -46,11 +47,11 @@ export async function buildCatalogIndex(input,output,{previous,permitted=false,m
       const payload=JSON.stringify(work);
       if(payload.length>64*1024)throw Error("Normalized record exceeds limit");
       const old=get.get(work.externalId);
-      if(old?.seen===snapshot)throw Error("Duplicate active work identity");
+      if(old?.seen===generation)throw Error("Duplicate active work identity");
       accepted++;
-      if(old?.payload===payload){mark.run(snapshot,work.externalId);unchanged++;}
+      if(old?.payload===payload){mark.run(generation,work.externalId);unchanged++;}
       else{
-        put.run(work.externalId,payload,snapshot);
+        put.run(work.externalId,payload,generation);
         clear.run(work.externalId);
         for(const title of new Set([work.title,...work.aliases].map(normalizeTitle).filter(Boolean)))add.run("title:"+title,work.externalId);
         for(const [namespace,id] of Object.entries(work.externalWorkIds??{}))add.run("id:"+namespace+":"+id,work.externalId);
@@ -60,7 +61,7 @@ export async function buildCatalogIndex(input,output,{previous,permitted=false,m
     if(accepted<minimum||accepted===0||accepted/read<0.1)throw Error("Insufficient valid records; refusing to publish");
     // Only the new candidate snapshot is reconciled. Previous snapshot,
     // user libraries and source references are never changed.
-    db.prepare("DELETE FROM works WHERE seen<>?").run(snapshot);
+    db.prepare("DELETE FROM works WHERE seen<>?").run(generation);
     db.exec("DELETE FROM manifest");
     const digest=hash.digest("hex");
     db.prepare("INSERT INTO manifest VALUES(1,?,?,?,?,?)").run(snapshot,"CC-BY-NC-SA-4.0","mangabaka",digest,accepted);

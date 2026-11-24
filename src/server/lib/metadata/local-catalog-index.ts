@@ -79,3 +79,27 @@ export function applyLocalCanonicalMetadata<T extends MangaItem>(item:T):T{
   const classified=inheritCanonicalRating(item,work);
   return {...classified,alternativeTitles:[...new Set([...(item.alternativeTitles??[]),work.title,...work.aliases])].slice(0,500)};
 }
+
+export function getLocalMetadataWork(id:number):MetadataWork|null{
+  if(!Number.isSafeInteger(id)||id<=0)return null;
+  try{
+    const row=dbForLookup()?.prepare("SELECT payload FROM works WHERE id=?").get(String(id)) as {payload?:string}|undefined;
+    if(!row?.payload||row.payload.length>64*1024)return null;
+    const work=JSON.parse(row.payload) as MetadataWork;
+    return work.provider==="mangabaka"&&work.externalId===id&&work.contentRating==="safe"&&typeof work.title==="string"&&Array.isArray(work.aliases)?work:null;
+  }catch{return null;}
+}
+/** Prefix lookup is discovery only. It must never participate in rating inheritance. */
+export function discoverLocalMetadataWorks(query:string):MetadataWork[]{
+  const key=normalizeTitle(query);
+  if(key.length<3||key.length>160)return [];
+  try{
+    const rows=dbForLookup()?.prepare("SELECT DISTINCT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key>=? AND l.key<? ORDER BY l.key LIMIT 20").all("title:"+key,"title:"+key+"\uffff")??[];
+    return rows.flatMap(row=>{
+      const raw=(row as {payload?:string}).payload;
+      if(!raw||raw.length>64*1024)return [];
+      const work=JSON.parse(raw) as MetadataWork;
+      return work.provider==="mangabaka"&&work.contentRating==="safe"&&Number.isSafeInteger(work.externalId)&&typeof work.title==="string"&&Array.isArray(work.aliases)?[work]:[];
+    });
+  }catch{return [];}
+}
