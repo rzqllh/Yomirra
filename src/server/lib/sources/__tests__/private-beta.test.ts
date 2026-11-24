@@ -51,6 +51,17 @@ describe("private reader boundaries", () => {
     await expect(readPrivateBetaDetail("manhwa-list","https://other.example")).rejects.toThrow("PRIVATE_BETA_INVALID_ID");
     expect(getStagedKeiyoushiSource).not.toHaveBeenCalled();
   });
+  it("rejects conflicting duplicate access evidence before requesting pages", async () => {
+    vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
+    const adapter=fixture();
+    adapter.getChapters.mockResolvedValue([
+      {id:"chapter-1",mangaId:"manga",title:"Chapter 1",isLocked:false},
+      {id:"chapter-1",mangaId:"manga",title:"Chapter 1",isLocked:true},
+    ]);
+    vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);
+    await expect(readPrivateBetaChapter("owner","manhwa-list","manga","chapter-1")).rejects.toThrow("PRIVATE_BETA_SCHEMA_CHANGED");
+    expect(adapter.getPages).not.toHaveBeenCalled();
+  });
   it("requires explicit unlocked status and matching parent before resolving pages", async () => {
     vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
     const adapter=fixture();vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);

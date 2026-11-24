@@ -41,13 +41,21 @@ export function validBetaIdentity(value: unknown): value is string {
     value.split("/").every(part => /^[A-Za-z0-9_-][A-Za-z0-9_.-]*$/.test(part) && part !== "." && part !== "..");
 }
 
+/** Only the generic SFW adapter's known series routes may contain a
+ * slash. Never authorize an arbitrary same-host endpoint as a manga ID. */
+function validBetaMangaId(sourceId: string, value: unknown): value is string {
+  if (!validBetaIdentity(value)) return false;
+  return !value.includes("/") || (sourceId === "soul-scans" &&
+    /^(comic|series|komik)\/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(value));
+}
+
 export async function readPrivateBetaCatalog(id: string, query: string) {
   const adapter = authorizedAdapter(id);
   const result = query ? await adapter.search(query, 1, undefined, options) : await adapter.getPopular(1, options);
   if (!Array.isArray(result?.mangas)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
   const rows = result.mangas.filter((m: MangaItem) =>
     m && typeof m.id === "string" && typeof m.title === "string" &&
-    validBetaIdentity(m.id) && !m.id.includes("/") && m.title.trim() && classifyContent(m) === "SAFE"
+    validBetaMangaId(id, m.id) && m.title.trim() && classifyContent(m) === "SAFE"
   ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
   return { items: rows, received: result.mangas.length };
 }
@@ -55,18 +63,29 @@ export async function readPrivateBetaCatalog(id: string, query: string) {
 /** Only proven safe detail and explicitly unlocked chapters may be opened.
  * Never accept an upstream URL as a user-supplied identity. */
 export async function readPrivateBetaDetail(id: string, mangaId: string) {
-  if (!validBetaIdentity(mangaId) || mangaId.includes("/")) throw new Error("PRIVATE_BETA_INVALID_ID");
+  if (!validBetaMangaId(id, mangaId)) throw new Error("PRIVATE_BETA_INVALID_ID");
   const adapter = authorizedAdapter(id);
   const detail = await adapter.getDetail(mangaId, options);
   if (!detail || detail.id !== mangaId || typeof detail.title !== "string" ||
       !detail.title.trim() || classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const chapters = await adapter.getChapters(mangaId, options);
   if (!Array.isArray(chapters)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+  const identities = new Map<string, { id: string; title: string; readable: boolean }>();
+  // Check every row before truncating; a conflicting later entry must not
+  // leave an earlier unlocked entry readable.
+  for (const ch of chapters) {
+    if (!ch || ch.mangaId !== mangaId || !validBetaIdentity(ch.id) ||
+        typeof ch.title !== "string" || !ch.title.trim()) continue;
+    const entry = { id: ch.id, title: ch.title.trim(), readable: ch.isLocked === false };
+    const previous = identities.get(ch.id);
+    if (previous && (previous.title !== entry.title || previous.readable !== entry.readable)) {
+      throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+    }
+    if (!previous) identities.set(ch.id, entry);
+  }
   return {
     title: detail.title.slice(0,300),
-    chapters: chapters.filter(ch => ch && ch.mangaId === mangaId && validBetaIdentity(ch.id) &&
-      typeof ch.title === "string" && ch.title.trim())
-      .slice(0,500).map(ch => ({ id: ch.id, title: ch.title.slice(0,200), readable: ch.isLocked === false })),
+    chapters: [...identities.values()].slice(0,500).map(ch => ({...ch,title:ch.title.slice(0,200)})),
   };
 }
 

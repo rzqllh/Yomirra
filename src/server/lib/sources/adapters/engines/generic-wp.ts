@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -20,6 +20,25 @@ export class GenericWpEngine extends BaseEngine {
     super(config);
     this.seriesPathRegex =
       config.seriesPathRegex ?? /\/(manga|comic|series|komik)\/([^\/]+)\/?/;
+  }
+
+  /** Preserve the actual series route instead of rewriting /comic/ and
+   * /series/ to /manga/. Legacy plain slugs keep their existing identity. */
+  private seriesIdentity(raw: string): string | null {
+    const url = sameProviderUrl(raw, this.baseUrl);
+    if (!url || url.search) return null;
+    const match = /^\/(manga|comic|series|komik)\/([A-Za-z0-9_-][A-Za-z0-9_.-]{0,199})\/?$/.exec(url.pathname);
+    if (!match || !url.pathname.match(this.seriesPathRegex)) return null;
+    return match[1] === "manga" ? match[2] : match[1] + "/" + match[2];
+  }
+
+  private seriesPath(id: string): string {
+    const identity = /^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(id)
+      ? id : this.seriesIdentity(id);
+    if (!identity || identity !== id) {
+      throw new SourceError("Invalid series identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
+    }
+    return identity.includes("/") ? "/" + identity + "/" : "/manga/" + encodeURIComponent(identity) + "/";
   }
 
   protected parseMangaItems($: cheerio.CheerioAPI): MangaItem[] {
@@ -48,8 +67,7 @@ export class GenericWpEngine extends BaseEngine {
         const latestChapter =
           $el.find(".lsch a, .chapter, .epxs").first().text().trim() || undefined;
 
-        const match = link.match(this.seriesPathRegex);
-        const id = match ? match[2] : link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+        const id = this.seriesIdentity(link);
 
         if (id && title) {
           mangas.push({
@@ -132,10 +150,7 @@ export class GenericWpEngine extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
-    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
-    const path = mangaId.startsWith("http")
-      ? mangaId
-      : `/manga/${encodeURIComponent(mangaId)}/`;
+    const path = this.seriesPath(mangaId);
 
     try {
       const html = await this.client.getHtml(path);
@@ -193,10 +208,7 @@ export class GenericWpEngine extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
-    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
-    const path = mangaId.startsWith("http")
-      ? mangaId
-      : `/manga/${encodeURIComponent(mangaId)}/`;
+    const path = this.seriesPath(mangaId);
 
     try {
       const html = await this.client.getHtml(path);
@@ -239,7 +251,7 @@ export class GenericWpEngine extends BaseEngine {
         }
       );
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");

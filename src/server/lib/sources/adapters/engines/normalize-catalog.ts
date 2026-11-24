@@ -1,4 +1,4 @@
-import type { MangaPageResult } from "@/shared/sources/source-types";
+import type { Chapter, MangaPageResult } from "@/shared/sources/source-types";
 import { SourceError } from "../../error";
 
 /** Validate staged metadata without adding network access or inferring ratings. */
@@ -44,4 +44,28 @@ export function normalizeStagedCatalog(result: MangaPageResult, base: string, so
     mangas.push({ ...manga, title, coverUrl: normalizeStagedMediaUrl(manga.coverUrl, base) });
   }
   return { mangas, hasNextPage: result.hasNextPage };
+}
+
+/** Reject conflicting duplicate chapter identities rather than guessing
+ * which lock state or title is authoritative. Preserve source-local order. */
+export function normalizeStagedChapters(
+  chapters: readonly Chapter[], mangaId: string, base: string, sourceId: string,
+): Chapter[] {
+  const seen = new Map<string, Chapter>();
+  for (const row of chapters) {
+    const url = sameProviderUrl(row.url ?? row.id, base);
+    if (!url || url.search || row.mangaId !== mangaId || !row.title.trim() ||
+        !Number.isFinite(row.number) || row.number < 0) {
+      throw new SourceError("Invalid chapter identity", { sourceId, code: "SCHEMA_CHANGED", stage: "chapters" });
+    }
+    const id = url.pathname.replace(/^\/|\/$/g, "");
+    const chapter = { ...row, id, title: row.title.trim(), url: url.href };
+    const previous = seen.get(id);
+    if (previous && (previous.title !== chapter.title || previous.number !== chapter.number ||
+        previous.isLocked !== chapter.isLocked)) {
+      throw new SourceError("Conflicting chapter identity", { sourceId, code: "SCHEMA_CHANGED", stage: "chapters" });
+    }
+    if (!previous) seen.set(id, chapter);
+  }
+  return [...seen.values()];
 }
