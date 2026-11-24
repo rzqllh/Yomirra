@@ -40,6 +40,15 @@ export function buildReviewedCatalogIndex(works: readonly ReviewedCatalogWork[])
 
 const reviewedIndex = buildReviewedCatalogIndex(reviewedCatalogWorks);
 
+export function getReviewedCatalogWork(workId: string, works: readonly ReviewedCatalogWork[] = reviewedCatalogWorks): ReviewedCatalogWork | undefined {
+  return works.find(work => work.workId === workId);
+}
+
+export function getReviewedWorkHref(sourceId: string, mangaId: string, index: ReadonlyMap<string,string> = reviewedIndex): string | undefined {
+  const identity = index.get(canonicalSourceKey(sourceId,mangaId));
+  return identity?.startsWith("global:") ? "/catalog/work/"+encodeURIComponent(identity.slice(7)) : undefined;
+}
+
 export function getReviewedCatalogIndex(): ReadonlyMap<string, string> {
   return reviewedIndex;
 }

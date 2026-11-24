@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildReviewedCatalogIndex, indexDiscoveryCatalog } from "../reviewed-catalog";
+import { buildReviewedCatalogIndex, indexDiscoveryCatalog, getReviewedCatalogWork, getReviewedWorkHref } from "../reviewed-catalog";
 import { canonicalSourceKey, groupVerifiedCatalogEntries } from "../canonical-identity";
 import { clusterCanonicalResults } from "../canonical-search";
 
@@ -22,6 +22,14 @@ describe("independent reviewed catalog", () => {
     expect(indexDiscoveryCatalog([], index)).toEqual(index);
   });
 
+  it("exposes a stable reviewed work route without a saved record",()=>{
+    const index=buildReviewedCatalogIndex(works);
+    expect(getReviewedCatalogWork("first",works)).toBe(works[0]);
+    expect(getReviewedWorkHref("a","1",index)).toBe("/catalog/work/first");
+    expect(getReviewedWorkHref("b","2",index)).toBe("/catalog/work/first");
+    expect(getReviewedWorkHref("unknown","1",index)).toBeUndefined();
+    expect(getReviewedCatalogWork("unknown",works)).toBeUndefined();
+  });
   it("rejects a duplicate provider, missing evidence or conflicting work assignment", () => {
     expect(() => buildReviewedCatalogIndex([{ workId: "x", bindings: [ref("a", "1"), ref("a", "2")] }])).toThrow();
     expect(() => buildReviewedCatalogIndex([{ workId: "x", bindings: [ref("a", "1"), { ...ref("b", "2"), evidence: "" }] }])).toThrow();

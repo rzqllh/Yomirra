@@ -93,6 +93,14 @@ describe("Cache: withCache", () => {
       .rejects.toThrow("provider unavailable");
   });
 
+  it("does not trust unversioned legacy cache entries for strict-fresh requests", async () => {
+    const {redis}=await import("../redis");
+    vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify({url:"https://example.test/unknown-expiry"}));
+    const fetcher=vi.fn().mockResolvedValue({url:"https://example.test/fresh"});
+    expect(await withCache("strict-legacy",fetcher,300,{allowStaleOnError:false})).toEqual({url:"https://example.test/fresh"});
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
   it("does not retain or serve stale pages when explicitly disabled", async () => {
     const { redis } = await import("../redis");
     vi.mocked(redis.get).mockResolvedValueOnce(null);
