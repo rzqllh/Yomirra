@@ -57,7 +57,9 @@ export function toPublicSourceHealth(
         ? `${snapshot.latencyMs}ms`
         : "-",
       uptime: rollingStats?.hasSufficientData ? rollingStats.successRate : "-",
-      message: snapshot.lastFailureCode
+      message: snapshot.status === "RATE_LIMITED"
+        ? "Sumber membatasi permintaan pemeriksaan. Coba kembali setelah batas permintaan pulih."
+        : snapshot.lastFailureCode
         ? `Pemeriksaan terganggu (${snapshot.consecutiveFailures}/3): ${failureMessage(snapshot)}. Reader mungkin tetap berfungsi.`
         : "Sumber merespons lebih lambat dari biasanya.",
       checkedAt: snapshot.lastCheckedAt,
@@ -74,7 +76,7 @@ export function toPublicSourceHealth(
       status: "unknown",
       latency: "-",
       uptime: "-",
-      message: "Sumber belum diperiksa.",
+      message: snapshot.lastFailureCode ? "Pemeriksaan belum konklusif; ketersediaan reader belum dapat dipastikan." : "Sumber belum diperiksa.",
       checkedAt: snapshot.lastCheckedAt,
       errorCode: snapshot.lastFailureCode,
       sampleCount: rollingStats?.totalSamples ?? 0,

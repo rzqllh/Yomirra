@@ -250,7 +250,7 @@ export function useSearchCatalog() {
       activeSelectedSources.filter((sourceId) => {
         const source = searchableSources.find((item) => item.id === sourceId);
         const unavailable =
-          source?.status === "unavailable" || source?.status === "in-fix";
+          !source || !isSearchSourceSystemEligible(source);
         return (
           !unavailable &&
           isSourceCompatibleWithTags(
@@ -269,7 +269,7 @@ export function useSearchCatalog() {
     queries: activeSelectedSources.map((sourceId) => {
       const source = searchableSources.find((item) => item.id === sourceId);
       const isUnreachable =
-        source?.status === "unavailable" || source?.status === "in-fix";
+        !source || !isSearchSourceSystemEligible(source);
       const isTagCompatible = isSourceCompatibleWithTags(
         sourceId,
         hardFilterTags,
@@ -365,7 +365,7 @@ export function useSearchCatalog() {
     activeSelectedSources.forEach((sourceId, index) => {
       const source = searchableSources.find((item) => item.id === sourceId);
       const isUnreachable =
-        source?.status === "unavailable" || source?.status === "in-fix";
+        !source || !isSearchSourceSystemEligible(source);
       const isTagCompatible = isSourceCompatibleWithTags(
         sourceId,
         hardFilterTags,

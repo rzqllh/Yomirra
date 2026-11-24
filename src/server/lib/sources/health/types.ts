@@ -20,6 +20,7 @@ export interface SourceHealthSnapshot {
     sampleMangaId?: string;
     sampleChapterId?: string;
     probeType?: "lightweight" | "deep";
+    pagesSkipped?: "locked" | "no-chapters";
   };
 }
 
@@ -41,6 +42,8 @@ export interface SourceHealthTransition {
 export interface HealthProbeOptions {
   deep?: boolean;
   timeoutMs?: number;
+  /** Internal batch watchdog; timed-out probes must not publish late observations. */
+  signal?: AbortSignal;
 }
 
 export interface SourceProbeSample {

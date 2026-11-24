@@ -80,6 +80,13 @@ describe("SourceHealthStore", () => {
     expect(recovered?.lastSuccessAt).toBeDefined();
   });
 
+  it("rejects observations older than the current stored result", async () => {
+    const fresh: SourceHealthSnapshot = { sourceId:"shinigami",status:"HEALTHY",latencyMs:100,resolvedHost:"example.test",lastCheckedAt:"2026-11-24T02:00:00Z",lastSuccessAt:null,lastFailureAt:null,consecutiveFailures:0 };
+    await store.recordSnapshot(fresh);
+    expect(await store.recordSnapshot({...fresh,lastCheckedAt:"2026-11-24T01:00:00Z",status:"BROKEN",lastFailureCode:"SOURCE_DOWN"})).toBeNull();
+    expect((await store.getSnapshot("shinigami"))?.status).toBe("HEALTHY");
+  });
+
   it("fires registered onTransition listeners", async () => {
     const listener = vi.fn();
     store.onTransition(listener);
