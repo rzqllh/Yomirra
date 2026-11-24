@@ -21,6 +21,7 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
 import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+import { useSharedChapterEvidence } from "@/shared/hooks/use-shared-chapter-evidence";
 
 
 type ObservedSourceHealth = Pick<SourceHealth, "status" | "lastSuccessAt" | "lastErrorAt">;
@@ -124,6 +125,7 @@ export function CanonicalSourceDialog({
     () => eligibleCanonicalBindings(sourceBindings, disabledSources, hideNsfw),
     [sourceBindings, disabledSources, hideNsfw]
   );
+  const sharedChapters=useSharedChapterEvidence(availableBindings,open&&hideNsfw);
   const lastUsedSourceId = React.useMemo(() => {
     const refs = new Set(availableBindings.map((binding) => JSON.stringify([binding.sourceId, binding.mangaId])));
     let latest = 0;
@@ -143,7 +145,7 @@ export function CanonicalSourceDialog({
 
   const choices=new Set(availableBindings.map(b=>preferences[b.sourceId+"::"+b.mangaId]).filter(Boolean));
   const preferred=choices.size===1?[...choices][0]:undefined;
-  const ranked=rankQualityRefs(sortedBindings,qualityEvidence,{preferred,languages,shared,sort:qualitySort});
+  const ranked=rankQualityRefs(sortedBindings,qualityEvidence,{preferred,languages,shared,sharedChapters,sort:qualitySort});
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

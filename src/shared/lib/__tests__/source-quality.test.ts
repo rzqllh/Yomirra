@@ -30,6 +30,19 @@ describe("evidence-based source quality",()=>{
     expect(rankQualityRefs([a,duplicate,b],snapshot,{verifiedGroup:true,now}).find(row=>row.ref===a)?.quality.metrics).toMatchObject({completeness:50,freshness:50});
     expect(rankQualityRefs([a,{sourceId:"a",mangaId:"3"},b],snapshot,{verifiedGroup:true,now}).every(row=>row.quality.score===null)).toBe(true);
   });
+  it("uses fresh shared public chapter observations without overwriting newer local evidence",()=>{
+    const refs=[{sourceId:"a",mangaId:"1"},{sourceId:"b",mangaId:"2"}];
+    const sharedChapters={
+      [qualityKey("a","1")]:{at:now-10,labels:["Vol. 1 Chapter 1","Vol. 1 Chapter 2"]},
+      [qualityKey("b","2")]:{at:now,labels:["Vol. 1 Chapter 1","Vol. 1 Chapter 2","Vol. 2 Chapter 1"]}
+    };
+    expect(rankQualityRefs(refs,{}, {verifiedGroup:true,sharedChapters,now})[0].ref.sourceId).toBe("b");
+    expect(rankQualityRefs(refs,{}, {verifiedGroup:true,sharedChapters,now}).find(row=>row.ref.sourceId==="a")?.quality.metrics).toEqual({completeness:67,freshness:67});
+    const local={[qualityKey("a","1")]:{samples:[],chapters:{at:now,labels:["Vol. 1 Chapter 1","Vol. 1 Chapter 2","Vol. 2 Chapter 1"]}}};
+    expect(rankQualityRefs(refs,local,{verifiedGroup:true,sharedChapters,now}).find(row=>row.ref.sourceId==="a")?.quality.metrics).toEqual({completeness:100,freshness:100});
+    expect(rankQualityRefs(refs,{}, {sharedChapters,now}).every(row=>row.quality.score===null)).toBe(true);
+    expect(rankQualityRefs(refs,{}, {verifiedGroup:true,sharedChapters,now:now+86400001}).every(row=>row.quality.score===null)).toBe(true);
+  });
   it("never counts locked or invented chapter indices",()=>{
     expect(chapterQualityEvidence([{id:"x",mangaId:"a",title:"Special",number:10,date:"",isLocked:false},{id:"y",mangaId:"a",title:"Chapter 2",number:2,date:"",isLocked:true}],"a",now)).toBeUndefined();
   });

@@ -6,6 +6,21 @@ export type QualitySample = {at:number;ok:boolean;ms:number;kind:"api"|"image";k
 export type QualityChapters = {at:number;labels:string[]};
 export type QualityEvidence = {samples:QualitySample[];chapters?:QualityChapters};
 export type QualitySnapshot = Record<string,QualityEvidence>;
+export type SharedChapterEvidence = Record<string,QualityChapters>;
+
+/** Only public, cache-backed chapter observations. Never merge user samples
+ * into global state or compare providers without a verified work group. */
+export function mergeSharedChapterEvidence(local:QualitySnapshot,shared:SharedChapterEvidence,now=Date.now()):QualitySnapshot{
+  const merged={...local};
+  for(const [key,chapters] of Object.entries(shared)){
+    if(!chapters||!recent(chapters.at,now)||!Array.isArray(chapters.labels)||!chapters.labels.length||
+       chapters.labels.length>10000||!chapters.labels.every(label=>typeof label==="string"&&label.length<=100&&readChapterNumberEvidence(label)))continue;
+    const previous=local[key];
+    if(previous?.chapters&&recent(previous.chapters.at,now)&&previous.chapters.at>=chapters.at)continue;
+    merged[key]={samples:previous?.samples??[],chapters};
+  }
+  return merged;
+}
 export type SharedHealthEvidence={checkedAt?:string;uptime:string;p95Latency?:string;sampleCount?:number;hasSufficientData?:boolean};
 export type SharedQualityEvidence=Record<string,SharedHealthEvidence>;
 export type QualitySort="quality"|"speed"|"completeness"|"freshness";
@@ -47,12 +62,24 @@ export function calculateSourceQuality(evidence:QualityEvidence|undefined,peers:
     // total published chapter count. Mixed volume conventions are unscored.
     const all=[...new Set(comparable.flatMap(p=>p.labels))];
     const parsed=all.map(readChapterNumberEvidence);
-    if(parsed.every(p=>p&&p.volume===undefined)){
+    const ownParsed=own.labels.map(readChapterNumberEvidence);
+    const global=parsed.every(p=>p&&p.volume===undefined)&&ownParsed.every(p=>p&&p.volume===undefined);
+    const volumeLocal=parsed.every(p=>p&&p.volume!==undefined)&&ownParsed.every(p=>p&&p.volume!==undefined);
+    if(global||volumeLocal){
       const ownSet=new Set(own.labels);
       metrics.completeness=percentage(all.filter(l=>ownSet.has(l)).length,all.length);
-      const newest=Math.max(...parsed.map(p=>p!.number));
-      const ownNewest=Math.max(...own.labels.map(l=>readChapterNumberEvidence(l)?.number??-1));
-      if(newest>=0 && ownNewest>=0)metrics.freshness=newest===0?100:Math.round(100*Math.min(1,ownNewest/newest));
+      if(global){
+        const newest=Math.max(...parsed.map(p=>p!.number));
+        const ownNewest=Math.max(...ownParsed.map(p=>p!.number));
+        if(newest>=0 && ownNewest>=0)metrics.freshness=newest===0?100:Math.round(100*Math.min(1,ownNewest/newest));
+      }else{
+        // No arbitrary numeric volume-to-chapter multiplier. Measure relative
+        // progress in the ordered union of actually observed releases.
+        const ordered=parsed.map(p=>p!).sort((a,b)=>a.volume!-b.volume!||a.number-b.number);
+        const latest=ownParsed.map(p=>p!).sort((a,b)=>b.volume!-a.volume!||b.number-a.number)[0];
+        const through=ordered.filter(p=>p.volume!<latest.volume!||p.volume===latest.volume&&p.number<=latest.number).length;
+        metrics.freshness=percentage(through,ordered.length);
+      }
     }
   }
   const coverage=Object.entries(metrics).reduce((sum,[key])=>sum+QUALITY_WEIGHTS[key as QualityMetric],0);
@@ -72,9 +99,10 @@ export function sharedProbeQuality(evidence:SharedHealthEvidence|undefined,now=D
   return {metrics,coverage,score:coverage?Math.round(Object.entries(metrics).reduce((n,[k,v])=>n+v*QUALITY_WEIGHTS[k as QualityMetric],0)/coverage):null,samples:evidence.sampleCount!};
 }
 export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot:QualitySnapshot,options:{
-  preferred?:string|null;languages?:readonly string[];chapterLabel?:string;verifiedGroup?:boolean;now?:number;shared?:SharedQualityEvidence;sort?:QualitySort
+  preferred?:string|null;languages?:readonly string[];chapterLabel?:string;verifiedGroup?:boolean;now?:number;shared?:SharedQualityEvidence;sharedChapters?:SharedChapterEvidence;sort?:QualitySort
 }={}){
   const now=options.now??Date.now();
+  if(options.sharedChapters)snapshot=mergeSharedChapterEvidence(snapshot,options.sharedChapters,now);
   // Different language entries of one provider/work are not independent
   // observations. Exclude ambiguous multiple work identities per provider.
   const peerWorks=new Map<string,Set<string>>();

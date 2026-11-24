@@ -21,6 +21,7 @@ import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
 import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
 import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+import { useSharedChapterEvidence } from "@/shared/hooks/use-shared-chapter-evidence";
 
 
 export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: string }) {
@@ -86,6 +87,8 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     const source = dynamicSourceRegistry.get(sourceId) ?? getSourceMetadata(sourceId);
     return !isNsfw && !nsfwSourceIds.has(sourceId) && source?.isNsfw !== true;
   };
+
+  const sharedChapters=useSharedChapterEvidence(group?.sourceBindings.filter(ref=>!disabledSources.includes(ref.sourceId)&&mayShow(ref.sourceId))??[],mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline);
 
   if (!mounted) return <main className="mx-auto max-w-3xl p-5 text-text-muted">Memuat katalog…</main>;
 
@@ -217,7 +220,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         {available.length === 0 && <div className="flex items-center gap-2 text-sm text-text-muted"><WarningCircle size={18} /> Belum ada sumber yang dapat dibuka</div>}
         <div className="grid gap-3">
           {available.length>1&&<SourceQualitySort value={qualitySort} onChange={setQualitySort}/>}
-          {rankQualityRefs(available.map(ref=>({...ref,language:getSourceMetadata(ref.sourceId)?.language})),qualityEvidence,{preferred:preferredSourceId,languages,verifiedGroup:true,shared,sort:qualitySort}).map(({ref,quality,scope}) => {
+          {rankQualityRefs(available.map(ref=>({...ref,language:getSourceMetadata(ref.sourceId)?.language})),qualityEvidence,{preferred:preferredSourceId,languages,verifiedGroup:true,shared,sharedChapters,sort:qualitySort}).map(({ref,quality,scope}) => {
             const recent = lastRead.filter(item => item.sourceId === ref.sourceId && item.mangaId === ref.mangaId)
               .sort((a,b) => b.readAt - a.readAt)[0];
             const isPreferred = preferredSourceId === ref.sourceId;
