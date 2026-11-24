@@ -1,14 +1,39 @@
 import type {
-  Chapter,
-  ChapterPages,
-  MangaDetail,
-  MangaItem,
-  MangaPageResult,
-  PageItem,
-  SourceReadOptions,
+  Chapter, ChapterPages, MangaDetail, MangaItem, MangaPageResult, SourceReadOptions,
 } from "@/shared/sources/source-types";
 import { BaseEngine } from "./base-engine";
 import { SourceError } from "../../error";
+import { UpstreamHttpError } from "../base/http-client";
+
+type Row = Record<string, unknown>;
+function record(value: unknown): Row | undefined {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Row : undefined;
+}
+function text(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+function identifier(value: unknown): string | undefined {
+  const id = typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? String(value) : text(value);
+  return id && /^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,299}$/.test(id) ? id : undefined;
+}
+function names(value: unknown): string | undefined {
+  return Array.isArray(value) ? value.map(text).filter(Boolean).join(", ") || undefined : text(value);
+}
+function number(value: unknown): number | undefined {
+  if (typeof value !== "number" && !(typeof value === "string" && /^\d+(?:\.\d+)?$/.test(value.trim()))) return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+}
+function httpsUrl(value: unknown, base: string): string | undefined {
+  const raw = text(value);
+  if (!raw || raw.length > 2000 || /[\u0000-\u001f\\]/.test(raw)) return undefined;
+  try {
+    const url = new URL(raw, base + "/");
+    return url.protocol === "https:" && !url.username && !url.password && !url.port && !url.hash
+      ? url.href : undefined;
+  } catch { return undefined; }
+}
 
 export class AinzScansSource extends BaseEngine {
   constructor() {
@@ -23,100 +48,78 @@ export class AinzScansSource extends BaseEngine {
     });
   }
 
-  private parseListing(data: { results?: unknown[]; hasNextPage?: boolean }): MangaPageResult {
-    if (!Array.isArray(data?.results)) {
-      throw new SourceError("Ainz listing schema changed", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "search" });
+  private schema(stage: "search" | "detail" | "chapters" | "pages"): never {
+    throw new SourceError("Ainz response schema changed", { code: "SCHEMA_CHANGED", sourceId: this.id, stage });
+  }
+  private requireId(value: unknown, stage: "detail" | "chapters" | "pages"): string {
+    const id = identifier(value);
+    if (!id || id !== value) {
+      throw new SourceError("Invalid Ainz identifier", { code: "CONTENT_NOT_FOUND", sourceId: this.id, stage, statusCode: 400 });
     }
+    return id;
+  }
+  private parseListing(value: unknown): MangaPageResult {
+    const data = record(value);
+    if (!data || !Array.isArray(data.results)) this.schema("search");
+    const seen = new Set<string>();
     const mangas: MangaItem[] = data.results.map(value => {
-      const item = value as Record<string, unknown> | null;
-      if (!item || (typeof item.id !== "string" && typeof item.id !== "number") ||
-          !String(item.id).trim() || typeof item.title !== "string" || !item.title.trim()) {
-        throw new SourceError("Invalid Ainz listing identity", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "search" });
-      }
+      const item = record(value);
+      const id = identifier(item?.id);
+      const title = text(item?.title);
+      if (!item || !id || !title || seen.has(id)) this.schema("search");
+      seen.add(id);
       return {
-        id: String(item.id),
-        title: item.title.trim(),
-        coverUrl: typeof item.thumbnail === "string" ? item.thumbnail : typeof item.cover === "string" ? item.cover : "",
-        description: typeof item.description === "string" ? item.description : undefined,
+        id, title,
+        coverUrl: httpsUrl(item.thumbnail, this.baseUrl) ?? httpsUrl(item.cover, this.baseUrl) ?? "",
+        description: text(item.description),
+        author: names(item.author),
         contentRating: "unknown",
       };
     });
     return { mangas, hasNextPage: typeof data.hasNextPage === "boolean" ? data.hasNextPage : mangas.length >= 20 };
   }
-
+  private async listing(path: string, page: number, options?: SourceReadOptions, fallback = false): Promise<MangaPageResult> {
+    try {
+      const data = await this.client.get<unknown>(path).catch(async (err: unknown) => {
+        // A missing optional listing endpoint may use the legacy search fallback.
+        // Do not amplify rate limits, denied access, timeouts or schema failures.
+        if (!fallback || !(err instanceof UpstreamHttpError) || ![404, 405].includes(err.status)) throw err;
+        return this.client.get<unknown>("/search?keyword=&page=" + page);
+      });
+      return this.filterListingResults(this.parseListing(data), options);
+    } catch (err) {
+      if (SourceError.isSourceError(err)) throw err;
+      throw SourceError.classify(err, this.id, "search");
+    }
+  }
   async getPopular(page: number, options?: SourceReadOptions): Promise<MangaPageResult> {
     const p = Math.max(1, page || 1);
-    try {
-      const data = await this.client.get<{ results?: any[]; hasNextPage?: boolean }>(
-        `/popular?page=${p}`
-      ).catch(async () => {
-        return this.client.get<{ results?: any[]; hasNextPage?: boolean }>(`/search?keyword=&page=${p}`);
-      });
-
-      return this.filterListingResults(this.parseListing(data), options);
-    } catch (err) {
-      if (SourceError.isSourceError(err)) throw err;
-      throw SourceError.classify(err, this.id, "search");
-    }
+    return this.listing("/popular?page=" + p, p, options, true);
   }
-
   async getLatest(page: number, options?: SourceReadOptions): Promise<MangaPageResult> {
     const p = Math.max(1, page || 1);
-    try {
-      const data = await this.client.get<{ results?: any[]; hasNextPage?: boolean }>(
-        `/latest?page=${p}`
-      ).catch(async () => {
-        return this.client.get<{ results?: any[]; hasNextPage?: boolean }>(`/search?keyword=&page=${p}`);
-      });
-
-      return this.filterListingResults(this.parseListing(data), options);
-    } catch (err) {
-      if (SourceError.isSourceError(err)) throw err;
-      throw SourceError.classify(err, this.id, "search");
-    }
+    return this.listing("/latest?page=" + p, p, options, true);
   }
-
-  async search(
-    query: string,
-    page: number,
-    _filters?: Record<string, string | string[]>,
-    options?: SourceReadOptions
-  ): Promise<MangaPageResult> {
+  async search(query: string, page: number, _filters?: Record<string, string | string[]>, options?: SourceReadOptions): Promise<MangaPageResult> {
     const p = Math.max(1, page || 1);
-    try {
-      const data = await this.client.get<{ results?: any[]; hasNextPage?: boolean }>(
-        `/search?keyword=${encodeURIComponent(query)}&page=${p}`
-      );
-
-      return this.filterListingResults(this.parseListing(data), options);
-    } catch (err) {
-      if (SourceError.isSourceError(err)) throw err;
-      throw SourceError.classify(err, this.id, "search");
-    }
+    return this.listing("/search?keyword=" + encodeURIComponent(query) + "&page=" + p, p, options);
   }
-
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
+    this.requireId(mangaId, "detail");
     try {
-      const item = await this.client.get<any>(`/detail/${encodeURIComponent(mangaId)}`);
-
-      if (!item || typeof item.title !== "string" || !item.title.trim() || (item.id != null && String(item.id) !== mangaId)) {
-        throw new SourceError("Invalid Ainz detail identity", { code: "SCHEMA_CHANGED", sourceId: this.id, stage: "detail" });
-      }
-      let status: "ONGOING" | "COMPLETED" | "CANCELLED" | "UNKNOWN" = "UNKNOWN";
-      const s = (item.status || "").toLowerCase();
-      if (s.includes("ongoing")) status = "ONGOING";
-      else if (s.includes("completed")) status = "COMPLETED";
-
+      const item = record(await this.client.get<unknown>("/detail/" + encodeURIComponent(mangaId)));
+      const title = text(item?.title);
+      if (!item || !title || (item.id != null && identifier(item.id) !== mangaId)) this.schema("detail");
+      const s = text(item.status)?.toLowerCase() ?? "";
+      const status = s.includes("ongoing") ? "ONGOING" : s.includes("completed") ? "COMPLETED" : "UNKNOWN";
       return {
-        id: String(item.id ?? mangaId),
-        title: item.title ?? "",
-        description: item.description ?? "",
-        coverUrl: item.thumbnail ?? item.cover ?? "",
-        genres: Array.isArray(item.genres) ? item.genres : [],
+        id: mangaId, title,
+        description: text(item.description) ?? "",
+        coverUrl: httpsUrl(item.thumbnail, this.baseUrl) ?? httpsUrl(item.cover, this.baseUrl) ?? "",
+        genres: Array.isArray(item.genres) ? item.genres.flatMap(g => text(g) ?? []) : [],
         status,
-        author: Array.isArray(item.author) ? item.author.join(", ") : item.author,
-        artist: Array.isArray(item.artist) ? item.artist.join(", ") : item.artist,
+        author: names(item.author), artist: names(item.artist),
         contentRating: "unknown",
       };
     } catch (err) {
@@ -124,47 +127,50 @@ export class AinzScansSource extends BaseEngine {
       throw SourceError.classify(err, this.id, "detail");
     }
   }
-
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
+    this.requireId(mangaId, "chapters");
     try {
-      const data = await this.client.get<{ chapters?: any[] }>(
-        `/chapters/${encodeURIComponent(mangaId)}`
-      );
-
-      return (data?.chapters ?? []).map((ch: any, idx: number) => ({
-        id: `${mangaId}/${String(ch.id)}`,
-        mangaId,
-        name: ch.name ?? `Chapter ${ch.number ?? idx + 1}`,
-        title: ch.name ?? `Chapter ${ch.number ?? idx + 1}`,
-        number: Number(ch.number) || idx + 1,
-        date: ch.date ?? "",
-        url: ch.url,
-      }));
+      const data = record(await this.client.get<unknown>("/chapters/" + encodeURIComponent(mangaId)));
+      if (!data || !Array.isArray(data.chapters)) this.schema("chapters");
+      const seen = new Set<string>();
+      return data.chapters.map(value => {
+        const ch = record(value);
+        const id = identifier(ch?.id);
+        const chapterNumber = number(ch?.number);
+        if (!ch || !id || chapterNumber === undefined || seen.has(id) ||
+            (ch.mangaId != null && identifier(ch.mangaId) !== mangaId)) this.schema("chapters");
+        seen.add(id);
+        return {
+          id: mangaId + "/" + id, mangaId, number: chapterNumber,
+          title: text(ch.name) ?? "Chapter " + chapterNumber,
+          date: text(ch.date) ?? "",
+          scanlator: text(ch.scan),
+          url: httpsUrl(ch.url, this.baseUrl),
+          ...(typeof ch.isLocked === "boolean" ? { isLocked: ch.isLocked } : {}),
+        };
+      });
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");
     }
   }
-
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
+    const parts = chapterId.split("/");
+    const mangaId = this.requireId(parts.length === 2 ? parts[0] : options?.mangaId, "pages");
+    const chId = this.requireId(parts.length === 2 ? parts[1] : chapterId, "pages");
+    if (parts.length > 2 || (options?.mangaId && options.mangaId !== mangaId)) {
+      throw new SourceError("Ainz chapter parent mismatch", { code: "CHAPTER_UNAVAILABLE", sourceId: this.id, stage: "pages", statusCode: 400 });
+    }
     try {
-      // chapterId may be formatted as mangaId/chapterId or single id
-      const parts = chapterId.split("/");
-      const mangaId = parts.length > 1 ? parts[0] : "manga";
-      const chId = parts.length > 1 ? parts[1] : parts[0];
-
-      const data = await this.client.get<{ pages?: any[] }>(
-        `/pages/${encodeURIComponent(mangaId)}/${encodeURIComponent(chId)}`
-      );
-
-      const pages: PageItem[] = (data?.pages ?? []).map((p: any, idx: number) => ({
-        index: p.index ?? idx + 1,
-        url: typeof p === "string" ? p : p.url,
-        referer: `${this.baseUrl}/`,
-      }));
-
+      const data = record(await this.client.get<unknown>("/pages/" + encodeURIComponent(mangaId) + "/" + encodeURIComponent(chId)));
+      if (!data || !Array.isArray(data.pages) || data.pages.length === 0) this.schema("pages");
+      const pages = data.pages.map((p, idx) => {
+        const url = httpsUrl(typeof p === "string" ? p : record(p)?.url, this.baseUrl);
+        if (!url) this.schema("pages");
+        return { index: idx + 1, url, referer: this.baseUrl + "/" };
+      });
       return { chapterId, pages };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
