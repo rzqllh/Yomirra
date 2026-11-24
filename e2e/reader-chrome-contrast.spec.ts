@@ -3,9 +3,9 @@ import Redis from "ioredis";
 import {randomUUID} from "node:crypto";
 
 test.use({serviceWorkers:"block",reducedMotion:"reduce"});
-// Solid 800x1200 PNG, matching declared chapter metadata. A 1x1 image
+// Solid 80x120 PNG, matching declared chapter metadata. A 1x1 image
 // changes the measured virtual page height on decode and moves the scroll anchor.
-const fixtureImage=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAyAAAASwAQAAAAAryhMIAAABtklEQVR42u3NMQEAAAgDoGn/zppiHxRgLn0biUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpGUPUnMCl8WETL2AAAAAElFTkSuQmCC","base64");
+const fixtureImage=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAFAAAAB4AQAAAABNlUhbAAAAGklEQVR42mP8zwADTAyjzFHmKHOUOcrEYAIAkioB78sU6ikAAAAASUVORK5CYII=","base64");
 // Exercise the actual ReaderView/ReaderShell with disposable CI Redis
 // fixtures. No upstream requests, public user data or production cache writes.
 for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["black","light",393,"paged"],["deepLagoon","light",1440,"paged"],["black","dark",393,"vertical"]] as const){
@@ -21,7 +21,7 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
     const title="Reader contrast fixture";
     const entries=[{id:after,mangaId:id,title:"Chapter 3",number:3,date:"2026-01-01",isLocked:false},{id:chapter,mangaId:id,title:"Chapter 2",number:2,date:"2026-01-01",isLocked:false},{id:before,mangaId:id,title:"Chapter 1",number:1,date:"2026-01-01",isLocked:false}];
     const detail={id,title,format:"manga",contentRating:"safe",isNsfw:false,coverUrl:"",description:"Fixture",genres:[],status:"ONGOING"};
-    const pages={chapterId:chapter,pages:Array.from({length:mode==="vertical"?8:2},(_,index)=>({index:index+1,url:"https://example.test/fixture-"+index+".png",width:800,height:1200}))};
+    const pages={chapterId:chapter,pages:Array.from({length:mode==="vertical"?8:2},(_,index)=>({index:index+1,url:"https://example.test/fixture-"+index+".png",width:80,height:120}))};
     const scope=JSON.stringify({safety:"safe-v2",languages:["id","en"],dataSaver:false});
     const key=(op:string,params:string)=>"source:mangadex:"+op+":content-v2:"+scope+":"+params;
     try{
@@ -86,7 +86,7 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       await tap.click();await expect(header).toBeVisible();await expect(dock).toBeVisible();
     }else{
       const end=page.locator("[data-reader-end-controls]");
-      await expect.poll(()=>page.locator(".reader-page-container img").first().evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([800,1200]);
+      await expect.poll(()=>page.locator(".reader-page-container img").first().evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([80,120]);
       await end.scrollIntoViewIfNeeded();await expect(end).toBeInViewport();await expect(dock).toHaveCount(0);
       await expect(page.getByTestId("reader-page-scrubber")).toHaveCount(0);
       // Explicit keyboard toggle must still expose header at chapter end.
