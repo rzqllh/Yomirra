@@ -36,6 +36,17 @@ describe("metadata-assisted discovery", () => {
     expect(matchCanonicalMetadata({...item,author:"A"},[{...canonical,authors:["B"]}])).toBeUndefined();
     expect(matchCanonicalMetadata({...row("a","1","Native title").manga,author:"A"},[{...work,authors:["A"]}])?.externalId).toBe(1);
   });
+  it("prioritizes a unique exact tracker over alias-only evidence, but never falls back from a conflicting tracker",()=>{
+    const item={...row("a","1","Native title").manga,externalWorkIds:{anilist:"100",my_anime_list:"200"}};
+    const linked={...work,externalWorkIds:{anilist:"100",my_anime_list:"200"}};
+    const aliasOnly={...work,externalId:2};
+    expect(matchCanonicalMetadata(item,[aliasOnly,linked])?.externalId).toBe(1);
+    expect(matchCanonicalMetadata(item,[aliasOnly,{...linked,externalWorkIds:{anilist:"100",my_anime_list:"201"}}])).toBeUndefined();
+    expect(matchCanonicalMetadata(item,[aliasOnly,{...linked,format:"manga"}])).toBeUndefined();
+    expect(matchCanonicalMetadata(item,[aliasOnly,{...linked,authors:["Different author"]}])).toBeUndefined();
+    expect(matchCanonicalMetadata(item,[linked,{...linked,externalId:3}])).toBeUndefined();
+    expect(matchCanonicalMetadata(item,[aliasOnly,{...linked,externalWorkIds:{anilist:"101"}}])).toBeUndefined();
+  });
   it("does not group ambiguous aliases, mismatched formats, or same-provider editions", () => {
     const a = row("a", "1", "Native title");
     const b = row("b", "2", "Translated title");

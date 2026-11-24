@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { NatsuIdConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class NatsuIdEngine extends BaseEngine {
   protected searchAction: string;
@@ -269,7 +269,7 @@ export class NatsuIdEngine extends BaseEngine {
         }
       );
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");

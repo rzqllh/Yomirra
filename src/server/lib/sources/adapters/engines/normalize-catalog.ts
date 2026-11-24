@@ -63,7 +63,8 @@ export function normalizeStagedChapters(
     const chapter = { ...row, id, title: row.title.trim(), url: url.href };
     const previous = seen.get(id);
     if (previous && (previous.title !== chapter.title || previous.number !== chapter.number ||
-        previous.isLocked !== chapter.isLocked)) {
+        previous.isLocked !== chapter.isLocked || previous.chapterNumber !== chapter.chapterNumber ||
+        previous.volume !== chapter.volume || previous.language !== chapter.language)) {
       throw new SourceError("Conflicting chapter identity", { sourceId, code: "SCHEMA_CHANGED", stage: "chapters" });
     }
     if (!previous) seen.set(id, chapter);

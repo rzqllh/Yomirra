@@ -2,7 +2,7 @@ import { normalizeTitle } from "./title-matcher";
 import { reconcileCatalogRows, type CatalogSearchRow } from "./canonical-search";
 import { classifyContent } from "@/shared/sources/content-policy";
 import type { ExternalWorkIds, MangaItem } from "@/shared/sources/source-types";
-import { compareExternalWorkIds } from "./external-work-ids";
+import { compareExternalWorkIds, normalizeExternalWorkIds } from "./external-work-ids";
 
 export type ComicFormat = "manga" | "manhwa" | "manhua";
 export interface MetadataWork {
@@ -33,18 +33,30 @@ export function matchCanonicalMetadata(item: MangaItem, works: readonly Metadata
   if (!format) return undefined;
   const names = aliases([item.title,item.originalTitle,...(item.alternativeTitles??[])]);
   const author = normalizeTitle(item.author);
-  const possible = works.filter(work => {
-    if (work.format !== format) return false;
-    const ids = compareExternalWorkIds(item.externalWorkIds, work.externalWorkIds);
-    return ids !== "conflict" && (ids === "match" ||
-      [...aliases([work.title,...work.aliases])].some(name=>names.has(name)));
+  const itemIds=normalizeExternalWorkIds(item.externalWorkIds);
+  const trackerKeys=Object.keys(itemIds??{}) as (keyof ExternalWorkIds)[];
+  // A partially matching tracker with contradictory IDs or format is a veto,
+  // not permission to fall back to a weaker alias-only candidate.
+  const linked=works.filter(work=>{
+    const ids=normalizeExternalWorkIds(work.externalWorkIds);
+    return trackerKeys.some(key=>itemIds?.[key]===ids?.[key]);
   });
-  if (possible.length !== 1) return undefined;
-  const work = possible[0];
-  const authorNames = aliases(work.authors??[]);
-  if (author && authorNames.size && !authorNames.has(author)) return undefined;
-  const exactId = compareExternalWorkIds(item.externalWorkIds,work.externalWorkIds)==="match";
-  return exactId || (author && authorNames.has(author)) ? work : undefined;
+  if(linked.length){
+    if(linked.length!==1)return undefined;
+    const work=linked[0];
+    const authorNames=aliases(work.authors??[]);
+    if(work.format!==format||compareExternalWorkIds(itemIds,work.externalWorkIds)!=="match"||
+       (author&&authorNames.size&&!authorNames.has(author)))return undefined;
+    return work;
+  }
+  const possible=works.filter(work=>work.format===format&&
+    [...aliases([work.title,...work.aliases])].some(name=>names.has(name)));
+  // Keep ambiguous aliases and known contradictions unresolved.
+  if(possible.length!==1)return undefined;
+  const work=possible[0];
+  if(compareExternalWorkIds(itemIds,work.externalWorkIds)==="conflict")return undefined;
+  const authorNames=aliases(work.authors??[]);
+  return author&&authorNames.has(author)?work:undefined;
 }
 
 const ratingOrder = {unknown:0,safe:1,suggestive:2,erotica:3,pornographic:4} as const;

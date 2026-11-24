@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -237,7 +237,8 @@ export class MangaThemesiaEngine extends BaseEngine {
 
         const numAttr = $el.attr("data-num") || "";
         const numMatch = title.match(/(\d+(?:\.\d+)?)/);
-        const number = parseFloat(numAttr) || (numMatch ? parseFloat(numMatch[1]) : idx + 1);
+        const explicitNumber = /^\d+(?:\.\d+)?$/.test(numAttr.trim()) && Number.isFinite(Number(numAttr)) ? numAttr.trim() : undefined;
+        const number = explicitNumber !== undefined ? Number(explicitNumber) : (numMatch ? parseFloat(numMatch[1]) : idx + 1);
 
         const date =
           $el.find(".chapterdate").first().text().trim() ||
@@ -257,6 +258,7 @@ export class MangaThemesiaEngine extends BaseEngine {
           id,
           mangaId,
           number,
+          ...(explicitNumber !== undefined ? {chapterNumber:explicitNumber} : {}),
           title,
           date,
           url: link,
@@ -308,7 +310,7 @@ export class MangaThemesiaEngine extends BaseEngine {
         }
       }
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");
