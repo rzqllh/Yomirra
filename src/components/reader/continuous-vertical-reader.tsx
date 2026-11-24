@@ -413,7 +413,7 @@ export function ContinuousVerticalReader({
   });
 
   React.useEffect(() => {
-    if (isRestored || layoutWidth<=0) return;
+    if (isRestored) return;
 
     const isStoreReady =
       hasHydrated ||
@@ -424,6 +424,9 @@ export function ContinuousVerticalReader({
 
     const saved = historyItem;
     if (saved && saved.chapterId === chapterId && typeof saved.pageIndex === "number" && saved.pageIndex > 0) {
+      // Only indexed resume needs measured geometry. A new chapter or
+      // page zero must restore immediately, even while layout is unavailable.
+      if(layoutWidth<=0)return;
       const targetIndex = Math.min(saved.pageIndex, Math.max(0, streamItems.length - 1));
 
       resetLoadQueue(targetIndex);
@@ -514,7 +517,10 @@ export function ContinuousVerticalReader({
         style={{
           height: `${virtualizer.getTotalSize()}px`,
           width: '100%',
-          position: 'relative'
+          position: 'relative',
+          // Virtualizer owns row-size compensation; browser anchoring must
+          // not apply a second adjustment to the same virtual rows.
+          overflowAnchor: 'none'
         }}
         suppressHydrationWarning
       >

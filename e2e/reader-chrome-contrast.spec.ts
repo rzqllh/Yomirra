@@ -93,20 +93,28 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       await expect.poll(()=>page.locator(".reader-page-container img").first().evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([80,120]);
       await end.scrollIntoViewIfNeeded();await expect(end).toBeInViewport();await expect(dock).toHaveCount(0);
       await expect(page.getByTestId("reader-page-scrubber")).toHaveCount(0);
+      // Settle the actual virtual layout before starting another movement.
+      // WebKit may defer compensation of virtual row measurements.
+      const position=()=>page.evaluate(async()=>{
+        const card=document.querySelector("[data-reader-end-controls]")!;
+        const read=()=>({y:window.scrollY,top:card.getBoundingClientRect().top,height:document.documentElement.scrollHeight});
+        const first=read();
+        // Observe a quiet 200ms window, not just two frames in the middle of momentum.
+        await new Promise<void>(resolve=>setTimeout(resolve,200));
+        const last=read();
+        return {...last,stable:Math.abs(first.y-last.y)<=1&&Math.abs(first.top-last.top)<=1&&first.height===last.height};
+      });
+      await expect.poll(async()=>{const p=await position();return p.stable&&p.y>60;},{message:"End-card layout must settle before header intent"}).toBe(true);
       // Explicit keyboard toggle must still expose header at chapter end.
       if(!await header.isVisible())await page.keyboard.press("m");
       await expect(header).toBeVisible();await expect(dock).toHaveCount(0);
-      expect(await page.evaluate(()=>window.scrollY)).toBeGreaterThan(0);
-      await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
-      await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
+      const origin=await position();expect(origin.stable).toBe(true);expect(origin.y).toBeGreaterThan(60);
+      // Exercise actual upward scroll and verify the viewport moved before
+      // checking chrome. A failed navigation is not mislabeled as a chrome bug.
+      await page.evaluate(()=>window.scrollTo(0,0));
+      await expect.poll(async()=>{const p=await position();return p.stable&&p.y<=1&&p.top>=await page.evaluate(()=>innerHeight);},{message:"Return to top must move and settle outside the end card"}).toBe(true);
       await expect(end).not.toBeInViewport();
-      // Await actual scroll settlement across two animation frames. WebKit
-      // may apply the programmatic scroll asynchronously.
-      await expect.poll(()=>page.evaluate(async()=>{
-        const before=window.scrollY;
-        await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
-        return Math.abs(before-window.scrollY)<=1&&window.scrollY<=1;
-      })).toBe(true);
+      await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
       await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));
       await expect(header).toBeVisible();await expect(dock).toBeVisible();
       await page.mouse.click(width/2,Math.floor((await page.viewportSize())!.height/2));
