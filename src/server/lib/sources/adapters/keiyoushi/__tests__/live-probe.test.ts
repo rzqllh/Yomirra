@@ -1,27 +1,42 @@
 import { describe, expect, it } from "vitest";
-import { KEIYOUSHI_CANDIDATES } from "@/shared/sources/keiyoushi-candidates";
-import { getStagedKeiyoushiSource } from "../index";
-
-const requestedId = process.env.KEIYOUSHI_PROBE_SOURCE;
-const allowed = KEIYOUSHI_CANDIDATES.find(candidate => candidate.id === requestedId && candidate.category === "SFW");
-const supportedIds = new Set(["manhwa-list", "izanamiscans", "ainzscansid", "soul-scans"]);
-const describeLive = process.env.KEIYOUSHI_LIVE_PROBE === "1" ? describe : describe.skip;
-
-describeLive("Manual authorized upstream metadata verification", () => {
-  it("requires an explicitly permitted SFW source and a nonempty public listing", async () => {
-    // This opt-in test must only be run where upstream permission is established.
-    // Never bulk probe, fetch locked chapters, or treat a failed request as PASS.
+import { privateBetaSources, readPrivateBetaCatalog, readPrivateBetaDetail, readPrivateBetaChapter, verifyBetaPageTicket } from "@/server/lib/sources/private-beta";
+const enabled=process.env.KEIYOUSHI_LIVE_PROBE==="1";
+const describeLive=enabled?describe:describe.skip;
+describeLive("Manual authorized native source acceptance",()=>{
+  it("checks bounded catalog, search, pagination, detail and permitted chapter references",async()=>{
+    // Explicit opt-in is mandatory. Never request account credentials or
+    // bypass the existing private-beta allowlist/content/access checks.
     expect(process.env.KEIYOUSHI_PROBE_PERMISSION).toBe("confirmed");
-    expect(allowed && supportedIds.has(allowed.id)).toBeTruthy();
-    const adapter = getStagedKeiyoushiSource(allowed!.id)!;
-    expect(adapter.isEnabled).toBe(false);
-    const results = await adapter.getPopular(1, { hideNsfw: true });
-    expect(results.mangas.length).toBeGreaterThan(0);
-    const sample = results.mangas.find(row => row.id && row.title && row.isNsfw !== true && row.contentRating === "safe");
-    expect(sample).toBeDefined();
-    const detail = await adapter.getDetail(sample!.id, { hideNsfw: true });
-    expect(detail.id).toBe(sample!.id);
+    const source=process.env.KEIYOUSHI_PROBE_SOURCE;
+    const requestedTitle=process.env.KEIYOUSHI_PROBE_TITLE?.trim();
+    const requestedManga=process.env.KEIYOUSHI_PROBE_MANGA_ID;
+    expect(privateBetaSources().some(s=>s.id===source&&s.available)).toBe(true);
+    expect(requestedTitle&&requestedTitle.length<=160&&requestedManga).toBeTruthy();
+    const id=source!;
+    const popular=await readPrivateBetaCatalog(id,"",1,"popular");
+    const latest=await readPrivateBetaCatalog(id,"",1,"latest");
+    expect(popular.received).toBeGreaterThan(0);
+    expect(latest.received).toBeGreaterThan(0);
+    const search=await readPrivateBetaCatalog(id,requestedTitle!,1,"search");
+    expect(search.items.some(row=>row.id===requestedManga)).toBe(true);
+    if(popular.hasNextPage){
+      const next=await readPrivateBetaCatalog(id,"",2,"popular");
+      expect(next.page).toBe(2);
+      expect(next.received).toBeGreaterThan(0);
+      expect(next.items.some(row=>!popular.items.some(first=>first.id===row.id))).toBe(true);
+    }else throw Error("Pagination not established on selected source");
+    const detail=await readPrivateBetaDetail(id,requestedManga!);
     expect(detail.title.trim()).not.toBe("");
-    expect(detail.isNsfw).not.toBe(true);
-  }, 30000);
+    const chapter=detail.chapters.find(row=>row.id===process.env.KEIYOUSHI_PROBE_CHAPTER_ID&&row.readable);
+    expect(chapter).toBeDefined();
+    // An explicitly approved public chapter is required; no image is fetched
+    // and no real user UID, history, token or ticket is printed.
+    expect(process.env.KEIYOUSHI_PROBE_CHAPTER_PERMISSION).toBe("confirmed");
+    const result=await readPrivateBetaChapter("isolated-native-acceptance",id,requestedManga!,chapter!.id);
+    expect(result.pages.length).toBeGreaterThan(0);
+    for(const ticket of result.pages){
+      expect(verifyBetaPageTicket(ticket,"isolated-native-acceptance")?.source).toBe(id);
+      expect(verifyBetaPageTicket(ticket,"unrelated-fixture")).toBeNull();
+    }
+  },90000);
 });

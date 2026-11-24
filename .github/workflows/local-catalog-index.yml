@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/build-mangabaka-index.mjs'
+      - 'scripts/canonical-review.mjs'
+      - 'scripts/__tests__/canonical-review.test.mjs'
       - 'scripts/prepare-mangabaka-refresh.py'
       - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
       - 'scripts/__tests__/build-mangabaka-index.test.mjs'
@@ -25,5 +27,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs
+      - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs scripts/__tests__/canonical-review.test.mjs
       - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
