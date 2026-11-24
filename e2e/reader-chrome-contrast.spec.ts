@@ -3,6 +3,8 @@ import Redis from "ioredis";
 import {randomUUID} from "node:crypto";
 
 test.use({serviceWorkers:"block",reducedMotion:"reduce"});
+// Reader acceptance must pass on the first attempt, not hide a WebKit race.
+test.describe.configure({retries:0});
 // Solid 80x120 PNG, matching declared chapter metadata. A 1x1 image
 // changes the measured virtual page height on decode and moves the scroll anchor.
 const fixtureImage=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAFAAAAB4AQAAAABNlUhbAAAAGklEQVR42mP8zwADTAyjzFHmKHOUOcrEYAIAkioB78sU6ikAAAAASUVORK5CYII=","base64");
@@ -22,10 +24,11 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
     const entries=[{id:after,mangaId:id,title:"Chapter 3",number:3,date:"2026-01-01",isLocked:false},{id:chapter,mangaId:id,title:"Chapter 2",number:2,date:"2026-01-01",isLocked:false},{id:before,mangaId:id,title:"Chapter 1",number:1,date:"2026-01-01",isLocked:false}];
     const detail={id,title,format:"manga",contentRating:"safe",isNsfw:false,coverUrl:"",description:"Fixture",genres:[],status:"ONGOING"};
     const pages={chapterId:chapter,pages:Array.from({length:mode==="vertical"?8:2},(_,index)=>({index:index+1,url:"https://example.test/fixture-"+index+".png",width:80,height:120}))};
+    const nextPages={...pages,chapterId:after};
     const scope=JSON.stringify({safety:"safe-v2",languages:["id","en"],dataSaver:false});
     const key=(op:string,params:string)=>"source:mangadex:"+op+":content-v2:"+scope+":"+params;
     try{
-      for(const [k,data] of [[key("manga",id),detail],[key("chapters",id),entries],[key("pages",JSON.stringify([id,chapter])),pages]] as const)
+      for(const [k,data] of [[key("manga",id),detail],[key("chapters",id),entries],[key("pages",JSON.stringify([id,chapter])),pages],[key("pages",JSON.stringify([id,after])),nextPages]] as const)
         await redis.setex(k,300,JSON.stringify({data,expiresAt:Date.now()+300000}));
     }finally{await redis.quit();}
     await page.setViewportSize({width,height:width>=768?900:720});
@@ -37,6 +40,7 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
     },{bg:background,theme:appTheme,readingMode:mode});
     await page.route("**/api/proxy/image?**",route=>route.fulfill({contentType:"image/png",body:fixtureImage}));
     await page.route("**/api/sources/mangadex/manga/"+id+"/chapters/"+chapter+"/pages?**",route=>route.fulfill({contentType:"application/json",body:JSON.stringify({data:pages})}));
+    await page.route("**/api/sources/mangadex/manga/"+id+"/chapters/"+after+"/pages?**",route=>route.fulfill({contentType:"application/json",body:JSON.stringify({data:nextPages})}));
     await page.route("https://example.test/**",route=>route.fulfill({contentType:"image/png",body:fixtureImage}));
     await page.goto("/manga/mangadex/"+id+"/read/"+chapter);
     const header=page.locator(".reader-contrast-scope header.reader-chrome-surface");
@@ -92,6 +96,7 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       // Explicit keyboard toggle must still expose header at chapter end.
       if(!await header.isVisible())await page.keyboard.press("m");
       await expect(header).toBeVisible();await expect(dock).toHaveCount(0);
+      expect(await page.evaluate(()=>window.scrollY)).toBeGreaterThan(0);
       await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
       await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
       await expect(end).not.toBeInViewport();

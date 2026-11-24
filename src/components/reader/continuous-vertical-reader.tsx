@@ -28,6 +28,7 @@ import {
   advanceReaderReveal,
   getReaderLookAheadWindow,
   getReaderPageLoadState,
+  estimateVerticalPageSize,
 } from "@/shared/lib/reader-load-order"
 
 export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; url: string; index: number; width?: number; height?: number };
@@ -202,10 +203,24 @@ export function ContinuousVerticalReader({
     }));
   }, [currentPages, chapterId]);
 
-  const cacheKey = `yomirra-virtualizer-cache-${sourceId}-${mangaId}-${chapterId}`;
+  const comicContainerRef = React.useRef<HTMLDivElement>(null);
+  const [layoutWidth,setLayoutWidth]=React.useState(0);
+  const pageGap=preferences.pageGap==="none"?0:preferences.pageGap==="small"?4:16;
+  React.useLayoutEffect(()=>{
+    const el=comicContainerRef.current;
+    if(!el)return;
+    const measureWidth=()=>{const width=el.clientWidth;if(width>0)setLayoutWidth(width);};
+    measureWidth();
+    const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(measureWidth):null;
+    observer?.observe(el);
+    window.addEventListener("resize",measureWidth);
+    return()=>{observer?.disconnect();window.removeEventListener("resize",measureWidth);};
+  },[]);
+  // Measurements from another viewport or page-gap setting are not reusable.
+  const cacheKey = `yomirra-virtualizer-cache-v2-${sourceId}-${mangaId}-${chapterId}-${layoutWidth}-${pageGap}`;
 
   const initialCache = React.useMemo(() => {
-    if (typeof sessionStorage !== 'undefined') {
+    if (layoutWidth > 0 && typeof sessionStorage !== 'undefined') {
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -214,19 +229,25 @@ export function ContinuousVerticalReader({
       }
     }
     return undefined;
-  }, [cacheKey]);
+  }, [cacheKey,layoutWidth]);
 
   const virtualizer = useWindowVirtualizer({
     count: streamItems.length,
-    estimateSize: () => 1200, // loose estimate for webtoons
+    estimateSize: index => estimateVerticalPageSize(streamItems[index],layoutWidth,pageGap),
     overscan: 3,
     initialOffset: 0,
     ...(initialCache ? { initialMeasurementsCache: initialCache } : {})
   });
 
+  // Recompute unmounted rows and invalidate old measurements after a
+  // genuine width/gap change, not after every page decode or scroll.
+  React.useLayoutEffect(()=>{
+    if(layoutWidth>0)virtualizer.measure();
+  },[virtualizer,layoutWidth,pageGap]);
+
   React.useEffect(() => {
     const saveCache = () => {
-      if (typeof sessionStorage !== 'undefined') {
+      if (layoutWidth > 0 && typeof sessionStorage !== 'undefined') {
         const measurements = virtualizer.measurementsCache;
         if (measurements && measurements.length > 0) {
           sessionStorage.setItem(cacheKey, JSON.stringify(measurements));
@@ -239,7 +260,7 @@ export function ContinuousVerticalReader({
       saveCache();
       window.removeEventListener('beforeunload', saveCache);
     };
-  }, [virtualizer, cacheKey]);
+  }, [virtualizer, cacheKey,layoutWidth]);
 
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -256,7 +277,6 @@ export function ContinuousVerticalReader({
   }, [isRestored, firstMountedIndex, revealedThrough]);
 
   const [scrollProgress, setScrollProgress] = React.useState(0);
-  const comicContainerRef = React.useRef<HTMLDivElement>(null);
   const hasMarkedCompletionRef = React.useRef<string | null>(null);
   const [reachedComicEnd, setReachedComicEnd] = React.useState(false);
 
@@ -393,7 +413,7 @@ export function ContinuousVerticalReader({
   });
 
   React.useEffect(() => {
-    if (isRestored) return;
+    if (isRestored || layoutWidth<=0) return;
 
     const isStoreReady =
       hasHydrated ||
@@ -424,7 +444,7 @@ export function ContinuousVerticalReader({
       window.scrollTo({ top: 0, behavior: "instant" });
       setIsRestored(true);
     }
-  }, [hasHydrated, historyItem, chapterId, streamItems.length, virtualizer, isRestored]);
+  }, [hasHydrated, historyItem, chapterId, streamItems.length, virtualizer, isRestored,layoutWidth]);
 
   const isWebtoon = true;
 
@@ -517,7 +537,7 @@ export function ContinuousVerticalReader({
                 left: 0,
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
-                paddingBottom: preferences.pageGap === 'none' ? '0px' : preferences.pageGap === 'small' ? '4px' : '16px'
+                paddingBottom: `${pageGap}px`
               }}
             >
               <ReaderImage
