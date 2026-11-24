@@ -149,6 +149,18 @@ describe("Phase 5.3 & 5.4 — Progressive Indexing and Vector Catalog Invalidati
     expect(record?.description).toBe("Updated description with new lore");
   });
 
+  it("invalidates stale embedding when trusted catalog text changes without a new vector", async () => {
+    const {buildCatalogText}=await import("@/shared/lib/search-intelligence");
+    const candidate=buildTrustedCatalogCandidate("shinigami",{id:"fixture",title:"Original",coverUrl:""});
+    const hash=hashEmbeddingText(buildCatalogText(candidate));
+    await upsertSearchCatalogRecords([candidate],new Map([[candidate.canonicalKey,{values:[1,0],textHash:hash}]]));
+    await upsertSearchCatalogRecords([candidate]);
+    expect((await getSearchCatalogRecord(candidate.canonicalKey))?.embedding).toEqual([1,0]);
+    await upsertSearchCatalogRecords([{...candidate,title:"Changed"}]);
+    expect((await getSearchCatalogRecord(candidate.canonicalKey))?.embedding).toBeUndefined();
+    expect(await getRecentSearchCatalogRecords(0)).toEqual([]);
+  });
+
   it("handles redis outage fail-safe without throwing", async () => {
     redisMock.mget.mockRejectedValueOnce(new Error("Redis connection lost"));
 

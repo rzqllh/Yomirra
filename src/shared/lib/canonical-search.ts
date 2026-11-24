@@ -255,7 +255,8 @@ export function clusterCanonicalResults(
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
       // Confidence describes an observed cross-provider identity match,
       // not merely the presence of a single provider result.
-      matchedCluster.matchConfidence = options.mergePolicy === "verified-only"
+      const identity = options.verifiedIndex?.get(sourceReference);
+      matchedCluster.matchConfidence = options.mergePolicy === "verified-only" && !identity?.startsWith("tracker:")
         ? "CONFIRMED" : "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;

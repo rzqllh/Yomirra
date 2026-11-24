@@ -20,7 +20,7 @@ export function buildReviewedCatalogIndex(works: readonly ReviewedCatalogWork[])
   const index = new Map<string, string>();
   const seenWorkIds = new Set<string>();
   for (const work of works) {
-    if (!work.workId.trim() || seenWorkIds.has(work.workId) || work.bindings.length < 2) {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(work.workId) || seenWorkIds.has(work.workId) || work.bindings.length < 2) {
       throw new Error("Invalid or duplicate reviewed catalog work");
     }
     seenWorkIds.add(work.workId);
