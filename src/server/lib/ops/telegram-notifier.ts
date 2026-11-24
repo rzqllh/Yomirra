@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { logger } from "@/shared/logger";
 import { AlertSeverity } from "./severity";
-import { getAlertState, saveAlertState } from "./alert-state";
+import { getAlertState, saveAlertState, type AlertState } from "./alert-state";
 import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
 import {
   failureGuidance,
@@ -180,6 +180,7 @@ export async function sendTelegramMessage(
   }
 
   const now = new Date();
+  let pendingAlert: AlertState | undefined;
 
   if (options.fingerprint) {
     if (
@@ -222,8 +223,10 @@ export async function sendTelegramMessage(
         return false;
       }
 
-      state.alertedAt = now.toISOString();
-      state.cooldownUntil = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
+      // Reserve a short retry interval without claiming delivery. The
+      // previous confirmed alertedAt, if any, remains intact on failure.
+      state.cooldownUntil = new Date(now.getTime() + 60_000).toISOString();
+      pendingAlert = { ...state };
       await saveAlertState(state);
     } else if (options.severity === AlertSeverity.RECOVERY) {
       const state = await getAlertState(options.fingerprint);
@@ -239,11 +242,30 @@ export async function sendTelegramMessage(
     }
   }
 
+  async function finishDelivery() {
+    if (!options.fingerprint) return true;
+    const state = await getAlertState(options.fingerprint);
+    if (!state) return true;
+    if (pendingAlert && state.cooldownUntil === pendingAlert.cooldownUntil) {
+      state.alertedAt = new Date().toISOString();
+      state.cooldownUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await saveAlertState(state);
+    } else if (options.severity === AlertSeverity.RECOVERY && state.alertedAt) {
+      state.alertedAt = null;
+      state.recoveredAt = new Date().toISOString();
+      state.consecutiveFailures = 0;
+      state.cooldownUntil = null;
+      await saveAlertState(state);
+    }
+    return true;
+  }
+
   try {
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(5000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
@@ -255,13 +277,14 @@ export async function sendTelegramMessage(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error("Failed to send Telegram alert", { error: errorText });
+      logger.error("Failed to send Telegram alert", { status: response.status });
 
       if (errorText.includes("can't parse entities")) {
         const fallbackResponse = await fetch(
           `https://api.telegram.org/bot${botToken}/sendMessage`,
           {
             method: "POST",
+            signal: AbortSignal.timeout(5000),
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
@@ -272,27 +295,17 @@ export async function sendTelegramMessage(
 
         if (fallbackResponse.ok) {
           logger.info("Successfully delivered Telegram alert via plain-text fallback");
-          return true;
+          return await finishDelivery();
         }
       }
 
       return false;
     }
 
-    if (options.fingerprint && options.severity === AlertSeverity.RECOVERY) {
-      const state = await getAlertState(options.fingerprint);
-      if (state) {
-        state.alertedAt = null;
-        state.recoveredAt = now.toISOString();
-        state.consecutiveFailures = 0;
-        state.cooldownUntil = null;
-        await saveAlertState(state);
-      }
-    }
-
-    return true;
-  } catch (error: any) {
-    logger.error("Telegram notifier error", { error: error.message });
+    return await finishDelivery();
+  } catch {
+    // Do not log fetch exception messages which may include the bot URL.
+    logger.error("Telegram notifier error");
     return false;
   }
 }
