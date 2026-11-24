@@ -1,0 +1,45 @@
+name: Official MangaBaka dump validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/validate-mangabaka-dump.py'
+      - 'scripts/__tests__/validate-mangabaka-dump.test.py'
+      - '.github/workflows/mangabaka-dump-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mangabaka-dump-validation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  observe:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'integrate/yomirra-complete-release-20261124')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Run once on diagnostic change
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || git diff --name-only HEAD^ HEAD | grep -Eq '^scripts/validate-mangabaka-dump\.py$|^scripts/__tests__/validate-mangabaka-dump\.test\.py$|^\.github/workflows/mangabaka-dump-validation\.yml$'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          node-version: 22
+      - name: Test exact dump selection and checksum boundary
+        if: steps.scope.outputs.run == 'true'
+        run: python3 scripts/__tests__/validate-mangabaka-dump.test.py
+      - name: Build and measure isolated permitted-use index
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          command -v zstd
+          python3 scripts/validate-mangabaka-dump.py
