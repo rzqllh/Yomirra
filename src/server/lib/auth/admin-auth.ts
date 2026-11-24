@@ -379,9 +379,13 @@ export async function verifyVerifiedAdultSession(session: string | null | undefi
 export async function verifyPrivateBetaOwner(req: Request): Promise<string | null> {
   const configuredEmail = process.env.YOMIRRA_PRIVATE_BETA_EMAIL?.trim().toLowerCase();
   const header = req.headers.get("authorization");
-  if (!configuredEmail || !header?.startsWith("Bearer ") || !isFirebaseAdminConfigured()) return null;
+  if (!configuredEmail || !header?.startsWith("Bearer ")) return null;
   const token = header.slice(7).trim();
   if (!token || token.length > 8192) return null;
+  if (!isFirebaseAdminConfigured()) {
+    const { verifyPrivateBetaRestIdentity } = await import("./private-beta-rest");
+    return verifyPrivateBetaRestIdentity(token, configuredEmail);
+  }
   try {
     const auth = await getAdminAuth();
     if (!auth) return null;

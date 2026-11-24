@@ -4,7 +4,7 @@ The public source registry, normal source APIs, reader and public discovery rema
 
 Server environment:
 - YOMIRRA_PRIVATE_BETA_EMAIL: owner's verified email. Never expose in NEXT_PUBLIC variables or commit the actual address.
-- FIREBASE_SERVICE_ACCOUNT_KEY: existing Firebase Admin configuration, required. Fail closed if absent.
+- FIREBASE_SERVICE_ACCOUNT_KEY: optional existing Firebase Admin configuration. If absent, the private beta uses Firebase's official accounts:lookup REST endpoint with the existing NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_PROJECT_ID. Google must accept the exact ID token; account UID, verified email, issuer/audience, timestamps and validSince are checked. Missing fields or failed validation deny access. This fallback grants no admin privileges.
 - YOMIRRA_PRIVATE_BETA_SOURCE_IDS: comma-separated supported source IDs for which upstream access has been approved. Defaults to empty; no live calls until configured. No wildcard.
 
 Only four implemented SFW candidates are eligible for this metadata test. Restricted, duplicate and access-limited prototypes remain excluded. The panel does not resolve pages, download images, mutate reading state or insert beta records in the public catalog. Live parity and upstream permission must be established before extending to full reader/discovery access. The token is sent in Authorization and every response is private/no-store; the service worker uses NetworkOnly for the beta path.
