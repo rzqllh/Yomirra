@@ -4,6 +4,8 @@ import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { canonicalSourceKey } from "./canonical-identity";
 import { getReviewedCatalogIndex } from "./reviewed-catalog";
 import { classifyContent } from "@/shared/sources/content-policy";
+import { extendCatalogEvidence } from "./catalog-evidence";
+import { compareExternalWorkIds } from "./external-work-ids";
 
 const RECIPROCAL_RANK_K = 60;
 
@@ -59,6 +61,7 @@ export function aggregatePopularFeeds(
   feeds: PopularSourceFeed[],
   verifiedIndex: ReadonlyMap<string, string> = getReviewedCatalogIndex(),
 ): AggregatedPopularItem[] {
+  verifiedIndex = extendCatalogEvidence(feeds.filter(feed=>!feed.loadFailed).flatMap(feed=>feed.mangas.map(manga=>({sourceId:feed.sourceId,manga}))),verifiedIndex);
   const clusters: WorkingCluster[] = [];
 
   for (const feed of feeds) {
@@ -71,6 +74,7 @@ export function aggregatePopularFeeds(
 
       let cluster = clusters.find(candidate =>
         candidate.identity === identity &&
+        compareExternalWorkIds(candidate.representative.externalWorkIds,manga.externalWorkIds)!=="conflict" &&
         !candidate.bindings.some(binding => binding.sourceId === feed.sourceId && binding.mangaId !== manga.id) &&
         ((classifyContent(candidate.representative) === "NSFW") === (classifyContent(manga) === "NSFW")) &&
         (!candidate.representative.format || !manga.format ||

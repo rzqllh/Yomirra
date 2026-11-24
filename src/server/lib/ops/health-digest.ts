@@ -22,7 +22,9 @@ export function formatHealthDigestWithCoverage(
   const completed: Record<string, SourceHealthSnapshot> = Object.create(null);
   for (const id of ids) {
     const snapshot = probedSnapshots[id];
-    if (snapshot) completed[id] = snapshot;
+    const checkedAt = Date.parse(snapshot?.lastCheckedAt ?? "");
+    const now = timestamp.getTime();
+    if (snapshot?.sourceId === id && Number.isFinite(checkedAt) && checkedAt <= now && now-checkedAt <= 5*60*1000) completed[id] = snapshot;
   }
 
   const measured = Object.keys(completed).length;

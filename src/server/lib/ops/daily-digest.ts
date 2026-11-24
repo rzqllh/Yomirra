@@ -29,7 +29,7 @@ export function formatDailyDigest(
 
   for (const id of ids) {
     const snapshot = snapshots[id];
-    if (!snapshot) continue;
+    if (!snapshot || snapshot.sourceId !== id) continue;
 
     const checkedAt = Date.parse(snapshot.lastCheckedAt);
     if (

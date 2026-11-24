@@ -170,8 +170,8 @@ async function readThroughCache<T>(
           if (isCurrent()) rememberNear(flightKey, cached, staleEntry.expiresAt);
           return staleEntry.data;
         }
-      } else {
-        // Legacy cache format
+      } else if (options.allowStaleOnError !== false) {
+        // Legacy cache lacks an expiry. Never use it for strict-fresh data.
         return parsed as T;
       }
     }

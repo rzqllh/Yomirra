@@ -24,6 +24,7 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
+import { getReviewedWorkHref } from "@/shared/lib/reviewed-catalog";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { sourceRegistry, getSourceDisplayName } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -286,7 +287,7 @@ export function MangaCard({
 
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find((s) => s.id === sourceId);
   const sourceDisplayName = sourceObj?.name || sourceId;
-  const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
+  const isUnavailable = Boolean(sourceObj?.maintenance) || sourceObj?.status === "in-dev" || sourceObj?.status === "in-fix";
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
   const availableBindings = eligibleCanonicalBindings(effectiveBindings, disabledSources, hideNsfw);
@@ -306,12 +307,13 @@ export function MangaCard({
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
   const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
-  const cardDetailHref = canonicalDetailHref ?? getMangaDetailHref(
+  const workHref = canonicalDetailHref ?? getReviewedWorkHref(sourceId,manga.id);
+  const cardDetailHref = workHref ?? getMangaDetailHref(
     cardSourceId,
     cardMangaId,
     fullPath
   );
-  const allowCatalogNavigation = Boolean(canonicalDetailHref);
+  const allowCatalogNavigation = Boolean(workHref);
   const opensSourcePicker = isMultiSource && !allowCatalogNavigation;
   const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
   const [isFallbackDialogOpen, setIsFallbackDialogOpen] = React.useState(false);

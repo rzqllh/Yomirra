@@ -1,5 +1,7 @@
 import { MangaItem } from "@/shared/sources/source-types";
 import { classifyContent } from "@/shared/sources/content-policy";
+import { extendCatalogEvidence } from "./catalog-evidence";
+import { compareExternalWorkIds } from "./external-work-ids";
 import {
   matchTitles,
   matchAgainstAlternates,
@@ -88,6 +90,7 @@ export function reconcileCatalogRows(
   cached: readonly CatalogSearchRow[],
   verifiedIndex: ReadonlyMap<string, string> = new Map(),
 ): CatalogSearchRow[] {
+  verifiedIndex = extendCatalogEvidence([...live,...cached].filter(row=>(row.sourceBindings?.length??0)<=1),verifiedIndex);
   const keys = new Set<string>();
   const output: CatalogSearchRow[] = [];
   for (const row of [...live, ...cached]) {
@@ -96,6 +99,7 @@ export function reconcileCatalogRows(
     const verified = verifiedIndex.get(primaryRef);
     const match = verified ? output.findIndex(existing => {
       if (verifiedIndex.get(refKey({ sourceId: existing.sourceId, mangaId: existing.manga.id })) !== verified) return false;
+      if (compareExternalWorkIds(existing.manga.externalWorkIds,row.manga.externalWorkIds)==="conflict") return false;
       const existingSafety = classifyContent(existing.manga);
       const rowSafety = classifyContent(row.manga);
       if ((existingSafety === "NSFW") !== (rowSafety === "NSFW")) return false;
@@ -136,6 +140,7 @@ export function clusterCanonicalResults(
   items: Array<{ manga: MangaItem; sourceId: string }>,
   options: CanonicalSearchOptions = {},
 ): CanonicalSearchResult[] {
+  if (options.mergePolicy === "verified-only") options = {...options,verifiedIndex:extendCatalogEvidence(items,options.verifiedIndex)};
   const clusters: CanonicalSearchResult[] = [];
   const seenSourceReferences = new Set<string>();
 
@@ -177,6 +182,7 @@ export function clusterCanonicalResults(
       }
 
       const clusterPrimary = cluster.primaryResult;
+      if (compareExternalWorkIds(manga.externalWorkIds,clusterPrimary.externalWorkIds)==="conflict") continue;
       // Do not let a known adult item borrow an otherwise safe cover/card
       // through heuristic cross-provider title matching.
       const leftSafety = classifyContent(manga);
@@ -249,7 +255,8 @@ export function clusterCanonicalResults(
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
       // Confidence describes an observed cross-provider identity match,
       // not merely the presence of a single provider result.
-      matchedCluster.matchConfidence = options.mergePolicy === "verified-only"
+      const identity = options.verifiedIndex?.get(sourceReference);
+      matchedCluster.matchConfidence = options.mergePolicy === "verified-only" && !identity?.startsWith("tracker:")
         ? "CONFIRMED" : "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;

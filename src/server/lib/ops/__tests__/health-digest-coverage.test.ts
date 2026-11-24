@@ -46,6 +46,15 @@ describe("formatHealthDigestWithCoverage", () => {
     expect(message).not.toContain("3 source diperiksa");
   });
 
+  it("rejects mismatched identity, old and future observations", () => {
+    const message = formatHealthDigestWithCoverage(["shinigami","komikindo","mangadex"],{
+      shinigami:{...healthySnapshot("other")},
+      komikindo:{...healthySnapshot("komikindo"),lastCheckedAt:new Date(NOW.getTime()-10*60*1000).toISOString()},
+      mangadex:{...healthySnapshot("mangadex"),lastCheckedAt:new Date(NOW.getTime()+60_000).toISOString()},
+    },NOW);
+    expect(message).toContain("0 dari 3 source berhasil diperiksa");
+    expect(message).not.toContain("Tidak ada tindakan");
+  });
   it("preserves full-coverage reporting when all probes complete", () => {
     const message = formatHealthDigestWithCoverage(
       ["shinigami", "komikindo"],

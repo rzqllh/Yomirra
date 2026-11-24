@@ -14,6 +14,7 @@ import { useSourcePreferencesStore } from "@/shared/store/source-preferences-sto
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
@@ -107,8 +108,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const available = safeBindings.filter(ref => {
     const source = dynamicSourceRegistry.get(ref.sourceId) ?? getSourceMetadata(ref.sourceId);
     return !disabledSources.includes(ref.sourceId) &&
-      Boolean(source && source.isEnabled !== false && source.isInstalled !== false &&
-        source.status !== "unavailable" && source.status !== "in-fix");
+      Boolean(source && isDiscoverySourceSystemEligible(source));
   });
   const preferenceKey = canonicalGroupPreferenceKey(group);
   const preferenceAliases = canonicalGroupPreferenceAliases(group);

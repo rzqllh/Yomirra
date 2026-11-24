@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type { MangaItem } from "@/shared/sources/source-types";
-import type { SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
+import { buildCatalogText, type SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 
 const INDEX_KEY = "yomirra:search:catalog:index";
 const RECORD_PREFIX = "yomirra:search:catalog:record:";
@@ -85,6 +85,7 @@ export async function upsertSearchCatalogRecords(
       }
 
       const nextEmbedding = embeddings.get(candidate.canonicalKey);
+      const previousMatches = previous?.embeddingTextHash === hashEmbeddingText(buildCatalogText(candidate));
       const record: StoredSearchCatalogRecord = {
         ...previous,
         ...candidate,
@@ -92,8 +93,8 @@ export async function upsertSearchCatalogRecords(
           candidate.sourceBindings && candidate.sourceBindings.length > 0
             ? candidate.sourceBindings
             : previous?.sourceBindings,
-        embedding: nextEmbedding?.values ?? previous?.embedding,
-        embeddingTextHash: nextEmbedding?.textHash ?? previous?.embeddingTextHash,
+        embedding: nextEmbedding?.values ?? (previousMatches ? previous?.embedding : undefined),
+        embeddingTextHash: nextEmbedding?.textHash ?? (previousMatches ? previous?.embeddingTextHash : undefined),
         updatedAt: now,
       };
 
@@ -136,7 +137,7 @@ export async function getSearchCatalogRecord(
 export async function getRecentSearchCatalogRecords(
   limit = 250
 ): Promise<StoredSearchCatalogRecord[]> {
-  if (!isRedisConfigured) return [];
+  if (!isRedisConfigured || !Number.isFinite(limit) || limit < 1) return [];
   try {
     const ids = await redis.zrevrange(INDEX_KEY, 0, Math.max(0, Math.min(limit, MAX_RECORDS) - 1));
     if (ids.length === 0) return [];

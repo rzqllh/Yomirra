@@ -29,6 +29,10 @@ export interface SearchIntelligenceResult {
   catalogMatches: SearchCatalogCandidate[];
 }
 
+function hasCurrentEmbedding(record: StoredSearchCatalogRecord | undefined): boolean {
+  return Boolean(record?.embedding?.length && record.embeddingTextHash === hashEmbeddingText(buildCatalogText(record)));
+}
+
 function clampSimilarity(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -103,9 +107,10 @@ export async function rankSearchIntelligence(params: {
       }
 
       for (const candidate of candidates) {
-        const embedding =
-          generated.get(candidate.canonicalKey)?.values ??
-          recentByKey.get(candidate.canonicalKey)?.embedding;
+        const stored = recentByKey.get(candidate.canonicalKey);
+        const exactText = stored?.embeddingTextHash === hashEmbeddingText(buildCatalogText(candidate));
+        const embedding = generated.get(candidate.canonicalKey)?.values ??
+          (exactText && hasCurrentEmbedding(stored) ? stored?.embedding : undefined);
         if (!embedding) continue;
         scores[candidate.canonicalKey] = clampSimilarity(
           cosineSimilarity(queryVector, embedding)
@@ -113,7 +118,7 @@ export async function rankSearchIntelligence(params: {
       }
 
       const trustedMissing = recent
-        .filter((record) => !record.embedding && candidateMatchesTags(record, params.tags))
+        .filter((record) => !hasCurrentEmbedding(record) && candidateMatchesTags(record, params.tags))
         .sort((a, b) => lexicalSearchScore(query, b) - lexicalSearchScore(query, a))
         .slice(0, 6);
 
@@ -134,7 +139,7 @@ export async function rankSearchIntelligence(params: {
       for (const record of recent) {
         const embedding =
           trustedGenerated.get(record.canonicalKey)?.values ??
-          record.embedding;
+          (hasCurrentEmbedding(record) ? record.embedding : undefined);
         if (!embedding || !candidateMatchesTags(record, params.tags)) continue;
         const semantic = clampSimilarity(cosineSimilarity(queryVector, embedding));
         if (semantic > (scores[record.canonicalKey] ?? 0)) {
@@ -241,7 +246,7 @@ export async function findRelatedSearchTitles(
     const textHash = hashEmbeddingText(buildCatalogText(target));
     if (storedTarget?.embedding?.length && storedTarget.embeddingTextHash === textHash) {
       targetEmbedding = { values: storedTarget.embedding, textHash };
-    } else if (otherRecords.some((record) => record.embedding?.length) && await allowNewEmbedding()) {
+    } else if (otherRecords.some(hasCurrentEmbedding) && await allowNewEmbedding()) {
       targetEmbedding = await ensureCandidateEmbedding(target);
     }
   }
@@ -251,7 +256,7 @@ export async function findRelatedSearchTitles(
       const metaScore = metadataRelatedScore(target, record);
       let finalScore = metaScore;
 
-      if (targetEmbedding && record.embedding) {
+      if (targetEmbedding && record.embedding && hasCurrentEmbedding(record)) {
         const semScore = clampSimilarity(cosineSimilarity(targetEmbedding.values, record.embedding));
         finalScore = Math.max(metaScore, semScore * 0.7 + metaScore * 0.3);
       }
