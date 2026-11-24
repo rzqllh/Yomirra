@@ -9,6 +9,7 @@ import { SourceListSkeleton } from "@/components/skeletons/source-list-skeleton"
 import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
+import { PrivateBetaPanel } from "@/components/source/private-beta-panel";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { DestinationHeader } from "@/components/chrome/header";
@@ -153,6 +154,8 @@ export default function SourcesPage() {
               </button>
             ) : null}
           </div>
+
+          {isMounted && user && <PrivateBetaPanel key={user.uid} user={user} />}
 
           {isLoading ? (
             <SourceListSkeleton />

@@ -35,6 +35,7 @@ const SESSION_SENSITIVE_PREFIXES = [
   "/api/account",
   "/api/admin",
   "/api/auth",
+  "/api/private-beta",
 ] as const;
 
 const OFFLINE_NAVIGATION_PREFIXES = [
