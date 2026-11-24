@@ -23,12 +23,28 @@ describe("private beta scope", () => {
     const adapter = {id:"manhwa-list",isEnabled:false,isNsfw:false,getPopular:vi.fn().mockResolvedValue({mangas:[
       {id:"safe",title:"Safe title",contentRating:"safe",coverUrl:"https://example.test/cover"},
       {id:"unknown",title:"Unknown rating"}, {id:"restricted",title:"Restricted",contentRating:"erotica"}
-    ]}),getPages:vi.fn()};
+    ],hasNextPage:false}),getPages:vi.fn()};
     vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);
     expect(privateBetaAllowsSource("manhwa-list")).toBe(true);
-    expect(await readPrivateBetaCatalog("manhwa-list","")).toEqual({items:[{id:"safe",title:"Safe title",format:undefined}],received:3});
+    expect(await readPrivateBetaCatalog("manhwa-list","")).toEqual({items:[{id:"safe",title:"Safe title",format:undefined}],received:3,page:1,hasNextPage:false});
     expect(adapter.getPages).not.toHaveBeenCalled();
     expect(adapter.isEnabled).toBe(false);
+  });
+});
+
+describe("private catalogue pagination", () => {
+  it("dispatches one explicit operation without exposing unknown-rated content", async () => {
+    vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
+    const result={mangas:[{id:"fixture",title:"Fixture",coverUrl:"",contentRating:"safe"},{id:"unknown",title:"Unknown",coverUrl:"",contentRating:"unknown"}],hasNextPage:true};
+    const adapter={id:"manhwa-list",isEnabled:false,isNsfw:false,getPopular:vi.fn().mockResolvedValue(result),getLatest:vi.fn().mockResolvedValue(result),search:vi.fn().mockResolvedValue(result)};
+    vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);
+    expect(await readPrivateBetaCatalog("manhwa-list","",2,"latest")).toMatchObject({items:[{id:"fixture"}],received:2,page:2,hasNextPage:true});
+    expect(adapter.getLatest).toHaveBeenCalledWith(2,expect.objectContaining({hideNsfw:true}));
+    expect(await readPrivateBetaCatalog("manhwa-list","fixture",20,"search")).toMatchObject({page:20,hasNextPage:false});
+    expect(adapter.search).toHaveBeenCalledWith("fixture",20,undefined,expect.objectContaining({hideNsfw:true}));
+    expect(adapter.getPopular).not.toHaveBeenCalled();
+    await expect(readPrivateBetaCatalog("manhwa-list","",21,"latest")).rejects.toThrow("PRIVATE_BETA_INVALID_CATALOG_REQUEST");
+    expect(adapter.getLatest).toHaveBeenCalledTimes(1);
   });
 });
 

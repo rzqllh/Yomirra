@@ -49,15 +49,26 @@ function validBetaMangaId(sourceId: string, value: unknown): value is string {
     /^(comic|series|komik)\/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(value));
 }
 
-export async function readPrivateBetaCatalog(id: string, query: string) {
+export type PrivateBetaCatalogMode = "popular" | "latest" | "search";
+export const PRIVATE_BETA_MAX_PAGE = 20;
+
+export async function readPrivateBetaCatalog(
+  id: string, query: string, page = 1, mode: PrivateBetaCatalogMode = query.trim() ? "search" : "popular",
+) {
+  if (!Number.isSafeInteger(page) || page < 1 || page > PRIVATE_BETA_MAX_PAGE ||
+      !["popular","latest","search"].includes(mode) || query.length > 160 ||
+      (mode === "search" ? !query.trim() : Boolean(query.trim()))) {
+    throw new Error("PRIVATE_BETA_INVALID_CATALOG_REQUEST");
+  }
   const adapter = authorizedAdapter(id);
-  const result = query ? await adapter.search(query, 1, undefined, options) : await adapter.getPopular(1, options);
-  if (!Array.isArray(result?.mangas)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+  const result = mode === "search" ? await adapter.search(query.trim(), page, undefined, options) :
+    mode === "latest" ? await adapter.getLatest(page, options) : await adapter.getPopular(page, options);
+  if (!Array.isArray(result?.mangas) || typeof result.hasNextPage !== "boolean") throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
   const rows = result.mangas.filter((m: MangaItem) =>
     m && typeof m.id === "string" && typeof m.title === "string" &&
     validBetaMangaId(id, m.id) && m.title.trim() && classifyContent(m) === "SAFE"
   ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
-  return { items: rows, received: result.mangas.length };
+  return { items: rows, received: result.mangas.length, page, hasNextPage: page < PRIVATE_BETA_MAX_PAGE && result.hasNextPage };
 }
 
 /** Only proven safe detail and explicitly unlocked chapters may be opened.

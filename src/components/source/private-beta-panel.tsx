@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { PrivateBetaReader } from "./private-beta-reader";
 
 type Candidate = { id: string; name: string; available: boolean };
-type Catalog = { items: { id: string; title: string; format?: string }[]; received: number };
+type Catalog = { items: { id: string; title: string; format?: string }[]; received: number; page: number; hasNextPage: boolean };
+type CatalogMode = "popular" | "latest" | "search";
 
 async function betaRequest(user: User, signal: AbortSignal, params = "") {
   const { auth } = await initFirebase();
@@ -30,6 +31,8 @@ export function PrivateBetaPanel({ user }: { user: User }) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [selected, setSelected] = useState("");
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<CatalogMode>("popular");
+  const [executedQuery, setExecutedQuery] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [selectedManga, setSelectedManga] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,13 +63,13 @@ export function PrivateBetaPanel({ user }: { user: User }) {
   }, [user]);
 
   if (!candidates) return null;
-  const load = async (id: string, text: string) => {
+  const load = async (id: string, text: string, nextMode: CatalogMode = text.trim() ? "search" : "popular", page = 1) => {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setSelected(id); setBusy(true); setFailed(false); setCatalog(null); setSelectedManga(null);
+    setSelected(id); setMode(nextMode); setExecutedQuery(text.trim()); setBusy(true); setFailed(false); setCatalog(null); setSelectedManga(null);
     try {
-      const params = "?" + new URLSearchParams({source:id,q:text}).toString();
+      const params = "?" + new URLSearchParams({source:id,q:text.trim(),mode:nextMode,page:String(page)}).toString();
       const body = await betaRequest(user, controller.signal, params);
       if (!controller.signal.aborted) setCatalog(body.data);
     } catch {
@@ -92,9 +95,15 @@ export function PrivateBetaPanel({ user }: { user: User }) {
         ))}
       </div>
       {selected && (
-        <form className="flex gap-2" onSubmit={event => { event.preventDefault(); void load(selected, query); }}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={mode === "popular" ? "primary" : "outline"} disabled={busy} onClick={() => void load(selected, "", "popular")}>Populer</Button>
+          <Button variant={mode === "latest" ? "primary" : "outline"} disabled={busy} onClick={() => void load(selected, "", "latest")}>Terbaru</Button>
+        </div>
+      )}
+      {selected && (
+        <form className="flex gap-2" onSubmit={event => { event.preventDefault(); if (query.trim()) void load(selected, query, "search"); }}>
           <input aria-label="Cari judul beta" className="min-w-0 flex-1 rounded-lg border border-border-subtle bg-surface-base px-3 py-2 text-sm" value={query} maxLength={160} onChange={event => setQuery(event.target.value)} />
-          <Button type="submit" disabled={busy}>Cari</Button>
+          <Button type="submit" disabled={busy || !query.trim()}>Cari</Button>
         </form>
       )}
       {busy && <p role="status" className="text-sm text-text-secondary">Memeriksa katalog…</p>}
@@ -105,6 +114,11 @@ export function PrivateBetaPanel({ user }: { user: User }) {
         <ul className="mt-2 divide-y divide-border-subtle">
           {catalog.items.map((item, index) => <li key={JSON.stringify([item.id,index])} className="py-2 text-sm"><button type="button" className="text-left font-semibold hover:underline" onClick={() => setSelectedManga(item.id)}>{item.title}{item.format ? ` · ${item.format}` : ""}</button></li>)}
         </ul>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <Button variant="outline" disabled={busy || catalog.page <= 1} onClick={() => void load(selected, executedQuery, mode, catalog.page - 1)}>Sebelumnya</Button>
+          <span className="text-xs text-text-secondary">Halaman {catalog.page}</span>
+          <Button variant="outline" disabled={busy || !catalog.hasNextPage} onClick={() => void load(selected, executedQuery, mode, catalog.page + 1)}>Berikutnya</Button>
+        </div>
       </div>}
     </section>
   );
