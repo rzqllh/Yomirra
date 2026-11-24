@@ -413,6 +413,7 @@ export function PagedReader({
           className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2 [touch-action:pan-y_pinch-zoom]!"
         >
           <ReaderImage
+            qualityRef={{sourceId,mangaId,chapterId}}
             pageIndex={currentPageIndex}
             pageUrl={currentUrl}
             isWebtoon={false}

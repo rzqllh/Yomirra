@@ -9,6 +9,7 @@ import {
 } from "@/shared/lib/reader-load-order"
 
 import { PageImageError } from "./page-image-error"
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
 interface ReaderImageProps {
   pageIndex: number
@@ -31,6 +32,7 @@ interface ReaderImageProps {
   onPermanentFailure?: (index: number) => void;
   pageWidth?: number;
   pageHeight?: number;
+  qualityRef?: {sourceId:string;mangaId:string;chapterId:string};
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -53,7 +55,8 @@ export const ReaderImage = React.memo(function ReaderImage({
   onReport,
   onSwitchSource,
   dataIndex,
-  totalPages
+  totalPages,
+  qualityRef
 }: ReaderImageProps) {
   const knownAspectRatio =
     pageWidth && pageHeight && pageWidth > 0 && pageHeight > 0
@@ -69,6 +72,8 @@ export const ReaderImage = React.memo(function ReaderImage({
   const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadGenerationRef = React.useRef(0)
   const mountedRef = React.useRef(true)
+  const observedStart = React.useRef(0)
+  const observedGeneration = React.useRef(-1)
 
   const moveQueueState = React.useCallback((event: Parameters<typeof transitionReaderPageQueueState>[1]) => {
     const next = transitionReaderPageQueueState(queueStateRef.current, event)
@@ -103,6 +108,7 @@ export const ReaderImage = React.memo(function ReaderImage({
 
   React.useLayoutEffect(() => {
     const generation = ++loadGenerationRef.current
+    observedStart.current=performance.now()
     clearRetryTimer()
     setHasLoaded(false)
     setAspectRatio(knownAspectRatio)
@@ -136,6 +142,16 @@ export const ReaderImage = React.memo(function ReaderImage({
     }
   }, [clearRetryTimer])
 
+  const recordQuality = (ok:boolean) => {
+    if(!qualityRef || offlineUrl || !/^https?:\/\/|^\//.test(currentUrl) ||
+       currentUrl.startsWith("/offline-images/") || observedGeneration.current===loadGenerationRef.current ||
+       (typeof navigator!=="undefined"&&navigator.onLine===false))return;
+    observedGeneration.current=loadGenerationRef.current;
+    useSourceQualityStore.getState().record(qualityRef.sourceId,qualityRef.mangaId,{
+      kind:"image",ok,ms:Math.max(0,performance.now()-observedStart.current),at:Date.now(),
+      key:JSON.stringify([qualityRef.sourceId,qualityRef.mangaId,qualityRef.chapterId,pageIndex]),
+    });
+  };
   const handleImageError = async (generation = loadGenerationRef.current) => {
     if (!mountedRef.current || generation !== loadGenerationRef.current) return
 
@@ -198,6 +214,7 @@ export const ReaderImage = React.memo(function ReaderImage({
 
     moveQueueState("fail")
     setHasError(true)
+    recordQuality(false)
     onError(pageIndex)
     onPermanentFailure?.(pageIndex)
   }
@@ -284,6 +301,7 @@ export const ReaderImage = React.memo(function ReaderImage({
                 setAspectRatio(target.naturalWidth / target.naturalHeight)
                 moveQueueState("decode")
                 setHasLoaded(true)
+                recordQuality(true)
                 onLoadComplete(pageIndex)
               }}
               onError={() => void handleImageError()}

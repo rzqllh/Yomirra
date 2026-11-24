@@ -15,6 +15,9 @@ import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { rankQualityRefs } from "@/shared/lib/source-quality";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+
 import { MangaCover } from "./manga-cover";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +25,8 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
   const router=useRouter();
   const scope=useSettingsStore(sourceReadScope);
   const preferences=useSettingsStore(s=>s.perTitleSourcePreferences);
+  const qualityEvidence=useSourceQualityStore(s=>s.evidence);
+  const languages=useSettingsStore(s=>s.preferredLanguages);
   const history=useHistoryStore(s=>s.items);
   const disabled=useSourcePreferencesStore(s=>s.disabledSources);
   const [showPicker,setShowPicker]=useState(false);
@@ -91,10 +96,11 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
       <section aria-label="Sumber katalog" className="space-y-3">
         <h2 className="text-lg font-bold">Sumber bacaan</h2>
         {showPicker && <p role="status" className="text-sm text-text-secondary">Pilih sumber untuk membaca. Pilihan ini tidak mengganti sumber utama.</p>}
-        {result.visible.map(row=><Link key={canonicalSourceKey(row.sourceId,row.mangaId)} prefetch={false} href={getMangaDetailHref(row.sourceId,row.mangaId,returnTo)}
+        {rankQualityRefs(result.visible.map(row=>({...row,language:row.detail.language??getSourceMetadata(row.sourceId)?.language})),qualityEvidence,{preferred,languages,verifiedGroup:result.verified}).map(({ref:row,quality,scope})=><Link key={canonicalSourceKey(row.sourceId,row.mangaId)} prefetch={false} href={getMangaDetailHref(row.sourceId,row.mangaId,returnTo)}
           className="block rounded-lg border border-border-subtle p-3 text-text-primary hover:bg-surface-hover">
           {getSourceMetadata(row.sourceId)?.name??row.sourceId}
           <span className="block text-sm text-text-secondary">{row.detail.title}</span>
+          <span className="block text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":"sumber"}`}</span>
         </Link>)}
         {result.visible.length<refs.length && <p className="text-xs text-text-muted">Sebagian sumber belum dapat diverifikasi atau dinonaktifkan.</p>}
       </section>

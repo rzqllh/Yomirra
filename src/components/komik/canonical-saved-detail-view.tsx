@@ -18,6 +18,9 @@ import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-sour
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { rankQualityRefs } from "@/shared/lib/source-quality";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+
 
 export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: string }) {
   const mounted = useMounted();
@@ -28,6 +31,8 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const setPreferred = useSettingsStore(state => state.setPerTitleSourcePreference);
   const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
+  const qualityEvidence=useSourceQualityStore(state=>state.evidence);
+  const languages=useSettingsStore(state=>state.preferredLanguages);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [offline, setOffline] = React.useState(false);
@@ -208,7 +213,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         )}
         {available.length === 0 && <div className="flex items-center gap-2 text-sm text-text-muted"><WarningCircle size={18} /> Belum ada sumber yang dapat dibuka</div>}
         <div className="grid gap-3">
-          {available.map(ref => {
+          {rankQualityRefs(available.map(ref=>({...ref,language:getSourceMetadata(ref.sourceId)?.language})),qualityEvidence,{preferred:preferredSourceId,languages,verifiedGroup:true}).map(({ref,quality,scope}) => {
             const recent = lastRead.filter(item => item.sourceId === ref.sourceId && item.mangaId === ref.mangaId)
               .sort((a,b) => b.readAt - a.readAt)[0];
             const isPreferred = preferredSourceId === ref.sourceId;
@@ -220,6 +225,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
                   <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
                     {sourceName} {isPreferred && <CheckCircle className="text-accent" size={16} aria-label="Pilihan utama" />}
                   </p>
+                  <p className="text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":"sumber"}`}</p>
                   <p className="text-xs text-text-muted">{recent ? `Terakhir: ${recent.chapterId}` : "Belum ada riwayat pada sumber ini"}</p>
                 </div>
                 <div className="flex items-center gap-2">

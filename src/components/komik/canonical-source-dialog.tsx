@@ -18,6 +18,9 @@ import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSourceHealthStore, type SourceHealth } from "@/shared/store/source-health-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { rankQualityRefs } from "@/shared/lib/source-quality";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+
 
 type ObservedSourceHealth = Pick<SourceHealth, "status" | "lastSuccessAt" | "lastErrorAt">;
 
@@ -111,6 +114,9 @@ export function CanonicalSourceDialog({
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const healthBySource = useSourceHealthStore((state) => state.healthBySource);
   const historyItems = useHistoryStore((state) => state.items);
+  const qualityEvidence=useSourceQualityStore(state=>state.evidence);
+  const preferences=useSettingsStore(state=>state.perTitleSourcePreferences);
+  const languages=useSettingsStore(state=>state.preferredLanguages);
   const availableBindings = React.useMemo(
     () => eligibleCanonicalBindings(sourceBindings, disabledSources, hideNsfw),
     [sourceBindings, disabledSources, hideNsfw]
@@ -132,6 +138,10 @@ export function CanonicalSourceDialog({
     [availableBindings, lastUsedSourceId, healthBySource]
   );
 
+  const choices=new Set(availableBindings.map(b=>preferences[b.sourceId+"::"+b.mangaId]).filter(Boolean));
+  const preferred=choices.size===1?[...choices][0]:undefined;
+  const ranked=rankQualityRefs(sortedBindings,qualityEvidence,{preferred,languages});
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -147,7 +157,7 @@ export function CanonicalSourceDialog({
 
         <div className="flex flex-col gap-2">
           {sortedBindings.length === 0 && <p role="status" className="text-sm text-text-secondary">Belum ada sumber yang dapat dibuka. Periksa pilihan sumber atau cari judul lainnya.</p>}
-          {sortedBindings.map((binding) => {
+          {ranked.map(({ref:binding,quality,scope}) => {
             const source = getSourceMetadata(binding.sourceId);
             return (
               <Link
@@ -163,6 +173,8 @@ export function CanonicalSourceDialog({
                   <p className="mt-0.5 truncate text-xs text-text-muted">
                     {[binding.language, binding.latestChapter, getObservedHealthLabel(healthBySource[binding.sourceId], Date.now())].filter(Boolean).join(" · ")}
                   </p>
+                  <p className="mt-0.5 text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":"sumber"}`}</p>
+                  {binding.sourceId === preferred && <p className="mt-0.5 text-xs text-text-muted">Sumber utama</p>}
                   {binding.sourceId === lastUsedSourceId && (
                     <p className="mt-0.5 text-xs text-text-muted">Terakhir dibaca</p>
                   )}

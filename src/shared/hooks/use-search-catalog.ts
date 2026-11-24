@@ -631,6 +631,7 @@ export function useSearchCatalog() {
     });
   }, [
     combinedResults,
+    hideNsfw,
     sort,
     parsedQuery.textQuery,
     intelligenceQuery.data?.scores,

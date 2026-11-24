@@ -3,6 +3,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import type { ResolvedSearchTag, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 import type { GlobalSearchResponse } from "@/shared/types/search";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
 export class ApiRequestError extends Error {
   constructor(message: string, readonly code: string, readonly status: number) {
@@ -34,13 +35,16 @@ class ApiClient {
     return data.data;
   }
 
-  private async fetchSource<T>(sourceId: string, url: string, options?: RequestInit): Promise<T> {
+  private async fetchSource<T>(sourceId: string, url: string, options?: RequestInit, mangaId?: string): Promise<T> {
     const start = performance.now();
     try {
       const result = await this.fetcher<T>(url, options);
       const latency = performance.now() - start;
       const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
       useSourceHealthStore.getState().recordSuccess(sourceId, latency);
+      if (!options?.signal?.aborted) useSourceQualityStore.getState().record(sourceId,mangaId,{
+        kind:"api",ok:true,ms:latency,at:Date.now(),key:String(start)+":"+String(Math.random()),
+      });
       return result;
     } catch (error: any) {
       // Local transport failures and client-side 4xx responses are not evidence of source health.
@@ -52,6 +56,11 @@ class ApiClient {
           ["CONTENT_RESTRICTED", "MAPPING_UNAVAILABLE", "CHAPTER_UNAVAILABLE", "CONTENT_NOT_FOUND", "SOURCE_DISABLED"].includes(error?.code)) throw error;
       const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
       useSourceHealthStore.getState().recordError(sourceId, error);
+      // Only classified upstream errors count; unknown application errors
+      // (including Redis failures) are not attributed to provider quality.
+      if (error instanceof ApiRequestError && ["SOURCE_DOWN","DOMAIN_CHANGED","ROUTE_CHANGED","PARSER_BROKEN","SCHEMA_CHANGED","UPSTREAM_TIMEOUT","UPSTREAM_BLOCKED","IMAGE_CDN_FAILURE"].includes(error.code)) {
+        useSourceQualityStore.getState().record(sourceId,mangaId,{kind:"api",ok:false,ms:performance.now()-start,at:Date.now(),key:String(start)+":"+String(Math.random())});
+      }
       throw error;
     }
   }
@@ -193,11 +202,14 @@ class ApiClient {
   }
 
   getDetail(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetchSource<MangaDetail>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options);
+    return this.fetchSource<MangaDetail>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options, mangaId);
   }
 
   getChapters(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
+    return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options, mangaId).then(chapters=>{
+      if (!options?.signal?.aborted) useSourceQualityStore.getState().recordChapters(sourceId,mangaId,chapters);
+      return chapters;
+    });
   }
 
   pagesQuery(sourceId: string, mangaId: string, chapterId: string) {
@@ -208,7 +220,7 @@ class ApiClient {
 
     return {
       queryKey: ["pages", url] as const,
-      queryFn: () => this.fetchSource<ChapterPages>(sourceId, url),
+      queryFn: () => this.fetchSource<ChapterPages>(sourceId, url, undefined, mangaId),
     };
   }
 

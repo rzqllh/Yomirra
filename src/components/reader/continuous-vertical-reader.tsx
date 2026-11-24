@@ -517,6 +517,7 @@ export function ContinuousVerticalReader({
               }}
             >
               <ReaderImage
+                qualityRef={{sourceId,mangaId,chapterId:item.chapterId}}
                 pageIndex={item.pageIndex}
                 pageUrl={item.url}
                 isWebtoon={isWebtoon}
