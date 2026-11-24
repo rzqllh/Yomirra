@@ -88,7 +88,16 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     return !isNsfw && !nsfwSourceIds.has(sourceId) && source?.isNsfw !== true;
   };
 
-  const sharedChapters=useSharedChapterEvidence(group?.sourceBindings.filter(ref=>!disabledSources.includes(ref.sourceId)&&mayShow(ref.sourceId))??[],mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline);
+  const explicitNsfwRefs = new Set([
+    ...Object.values(libraryItems),
+    ...Object.values(historyItems),
+  ].filter(item => item.isNsfw === true).map(item =>
+    canonicalSourceKey(item.sourceId, item.mangaId)
+  ));
+  const sharedChapters=useSharedChapterEvidence(group?.sourceBindings.filter(ref=>
+    !disabledSources.includes(ref.sourceId)&&mayShow(ref.sourceId)&&
+    !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId,ref.mangaId)))??[],
+    mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline&&Boolean(group?.members.some(member=>mayShow(member.sourceId,member.isNsfw))));
 
   if (!mounted) return <main className="mx-auto max-w-3xl p-5 text-text-muted">Memuat katalog…</main>;
 
@@ -104,12 +113,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   }
 
   const selected = visibleMembers.find(member => !disabledSources.includes(member.sourceId)) ?? visibleMembers[0];
-  const explicitNsfwRefs = new Set([
-    ...Object.values(libraryItems),
-    ...Object.values(historyItems),
-  ].filter(item => item.isNsfw === true).map(item =>
-    canonicalSourceKey(item.sourceId, item.mangaId)
-  ));
+
   // A safe primary must not expose a known-adult alternate from the same
   // general-purpose provider through a confirmed linkedSources entry.
   const safeBindings = group.sourceBindings.filter(ref =>
