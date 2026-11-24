@@ -6,7 +6,14 @@ import { initFirebase } from "@/shared/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { PrivateBetaReader } from "./private-beta-reader";
 
-type Candidate = { id: string; name: string; available: boolean };
+type Candidate = { id: string; name: string; available: boolean; eligible:boolean; implementation:"engine"|"duplicate"|"restricted-prototype"; state:string; liveVerified:false };
+const inventoryStateLabels:Record<string,string>={
+  "duplicate":"Duplikat sumber existing",
+  "restricted-prototype":"Prototipe terbatas",
+  "validation-pending":"Validasi dan izin belum lengkap",
+  "permission-required":"Izin upstream belum dikonfigurasi",
+  "configured":"Pengujian diizinkan; hasil belum diverifikasi",
+};
 type Catalog = { items: { id: string; title: string; format?: string }[]; received: number; page: number; hasNextPage: boolean };
 type CatalogMode = "popular" | "latest" | "search";
 
@@ -83,17 +90,24 @@ export function PrivateBetaPanel({ user }: { user: User }) {
     <section aria-label="Beta privat" className="space-y-3 rounded-xl border border-border-subtle bg-surface-raised p-4">
       <h2 className="text-lg font-bold text-text-primary">Beta privat</h2>
       <p className="text-sm text-text-secondary">Katalog pengujian khusus akun ini. Tidak memengaruhi sumber publik, Library, atau riwayat baca.</p>
+      <p className="text-xs text-text-secondary">{candidates.length} kandidat · {candidates.filter(source=>source.implementation==="engine").length} adapter engine · {candidates.filter(source=>source.available).length} diizinkan untuk diuji. Belum ada klaim lulus uji live.</p>
       <div className="grid gap-2 sm:grid-cols-2">
-        {candidates.map(source => (
+        {candidates.filter(source=>source.eligible).map(source => (
           <div key={source.id} className="flex items-center justify-between gap-2 rounded-lg border border-border-subtle p-3">
             <div>
               <p className="text-sm font-semibold">{source.name}</p>
-              <p className="text-xs text-text-secondary">{source.available ? "Uji katalog tersedia" : "Izin akses upstream belum dikonfigurasi"}</p>
+              <p className="text-xs text-text-secondary">{inventoryStateLabels[source.state]??"Belum diverifikasi"}</p>
             </div>
             <Button disabled={!source.available || busy} onClick={() => void load(source.id, "")}>Uji katalog</Button>
           </div>
         ))}
       </div>
+      <details className="rounded-lg border border-border-subtle p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-text-primary">Kandidat lain ({candidates.filter(source=>!source.eligible).length})</summary>
+        <ul className="mt-2 divide-y divide-border-subtle">
+          {candidates.filter(source=>!source.eligible).map(source=><li key={source.id} className="flex flex-wrap justify-between gap-1 py-2 text-xs"><span className="font-medium text-text-primary">{source.name}</span><span className="text-text-secondary">{inventoryStateLabels[source.state]??"Belum diverifikasi"}</span></li>)}
+        </ul>
+      </details>
       {selected && (
         <div className="flex flex-wrap gap-2">
           <Button variant={mode === "popular" ? "primary" : "outline"} disabled={busy} onClick={() => void load(selected, "", "popular")}>Populer</Button>

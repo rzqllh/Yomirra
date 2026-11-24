@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { sourceRegistry } from "../source-registry";
-import { KEIYOUSHI_CANDIDATES } from "../keiyoushi-candidates";
+import { KEIYOUSHI_CANDIDATES, candidatePortKind } from "../keiyoushi-candidates";
 import { sourceMap } from "@/server/lib/sources/adapters";
 import { getStagedKeiyoushiSource } from "@/server/lib/sources/adapters/keiyoushi";
+import { portedKeiyoushiSources } from "@/server/lib/sources/adapters/engines";
 
 // Directory names from the owner's src.zip, 2026-11-24. Explicit aliases
 // preserve persisted Yomirra source IDs; no new duplicate public providers.
@@ -28,6 +29,7 @@ describe("owner source archive inventory", () => {
     expect(sourceRegistry.map(source => source.id).sort()).toEqual(Object.values(builtIn).sort());
     for (const id of Object.values(builtIn)) expect(sourceMap.get(id)?.id).toBe(id);
     expect(KEIYOUSHI_CANDIDATES.map(candidate => candidate.zipDirectory).sort()).toEqual([...staged].sort());
+    expect(KEIYOUSHI_CANDIDATES.filter(c=>candidatePortKind(c.id)==="engine").map(c=>c.id).sort()).toEqual(portedKeiyoushiSources.map(c=>c.id).sort());
     for (const directory of staged) {
       const candidate = KEIYOUSHI_CANDIDATES.find(item => item.zipDirectory === directory)!;
       expect(candidate).toBeDefined();

@@ -11,9 +11,11 @@ beforeEach(() => {vi.clearAllMocks();vi.mocked(verifyPrivateBetaOwner).mockResol
 describe("private beta API boundary", () => {
   it("does not disclose source data or call adapters to guest/other user", async () => {
     for(const token of ["","Bearer another-user"]){
-      const res=await GET(request("?source=fixture",token));
-      expect(res.status).toBe(404);
-      expect(res.headers.get("cache-control")).toContain("no-store");
+      for(const suffix of ["","?source=fixture"]){
+        const res=await GET(request(suffix,token));
+        expect(res.status).toBe(404);
+        expect(res.headers.get("cache-control")).toContain("no-store");
+      }
     }
     expect(readPrivateBetaCatalog).not.toHaveBeenCalled();
   });

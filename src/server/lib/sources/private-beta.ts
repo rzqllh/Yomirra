@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { rasterImageContentType } from "@/shared/lib/raster-image";
 import { env } from "@/env";
-import { KEIYOUSHI_CANDIDATES } from "@/shared/sources/keiyoushi-candidates";
+import { KEIYOUSHI_CANDIDATES, candidatePortKind } from "@/shared/sources/keiyoushi-candidates";
 import { classifyContent } from "@/shared/sources/content-policy";
 import type { MangaItem } from "@/shared/sources/source-types";
 import { getStagedKeiyoushiSource } from "./adapters/keiyoushi";
@@ -18,9 +18,14 @@ const supported = new Set(["manhwa-list", "izanamiscans", "ainzscansid", "soul-s
 
 export function privateBetaSources(approved = process.env.YOMIRRA_PRIVATE_BETA_SOURCE_IDS ?? "") {
   const allowed = new Set(approved.split(",").map(id => id.trim()).filter(Boolean));
-  return KEIYOUSHI_CANDIDATES.filter(c => c.category === "SFW" && supported.has(c.id)).map(c => ({
-    id: c.id, name: c.name, available: allowed.has(c.id),
-  }));
+  return KEIYOUSHI_CANDIDATES.map(c => {
+    const implementation=candidatePortKind(c.id);
+    const eligible=c.category==="SFW"&&supported.has(c.id)&&implementation==="engine";
+    const available=eligible&&allowed.has(c.id);
+    const state=implementation==="duplicate"?"duplicate":implementation==="restricted-prototype"?"restricted-prototype":
+      !eligible?"validation-pending":available?"configured":"permission-required";
+    return {id:c.id,name:c.name,category:c.category,implementation,eligible,available,state,liveVerified:false as const};
+  });
 }
 
 export function privateBetaAllowsSource(id: string): boolean {

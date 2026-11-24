@@ -12,7 +12,13 @@ afterEach(() => {vi.unstubAllEnvs(); vi.clearAllMocks();});
 describe("private beta scope", () => {
   it("defaults to no permitted live sources and excludes restricted/duplicate/prototype identities", () => {
     vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","");
-    expect(privateBetaSources().every(s => !s.available)).toBe(true);
+    const inventory=privateBetaSources();
+    expect(inventory).toHaveLength(31);
+    expect(inventory.every(s => !s.available&&!s.liveVerified)).toBe(true);
+    expect(inventory.filter(s=>s.eligible)).toHaveLength(4);
+    expect(inventory.filter(s=>s.implementation==="engine")).toHaveLength(27);
+    expect(inventory.filter(s=>s.implementation==="duplicate")).toHaveLength(1);
+    expect(inventory.filter(s=>s.implementation==="restricted-prototype")).toHaveLength(3);
     expect(privateBetaSources("manhwa-list,kiryuu,komikindoid,manga-plus-by-shueisha,webcomics").filter(s => s.available).map(s => s.id)).toEqual(["manhwa-list"]);
   });
   it("cannot invoke an adapter without explicit permission", async () => {
