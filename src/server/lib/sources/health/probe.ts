@@ -66,14 +66,14 @@ export async function probeSourceHealth(
     const sampleManga = popularResult.mangas.find(manga => typeof manga.id === "string" && manga.id.trim() && typeof manga.title === "string" && manga.title.trim());
     if (!sampleManga) throw new SourceError("Listing contains no valid title identity", { code: "SCHEMA_CHANGED", sourceId: normalizedId, stage });
     let sampleChapterId: string | undefined;
-    let pagesSkipped: "locked" | "no-chapters" | undefined;
+    let pagesSkipped: "locked" | "no-chapters" | "access-unknown" | undefined;
 
     if (options.deep) {
       // Stage: DETAIL
       stage = "detail";
       const detail = await adapter.getDetail(sampleManga.id);
       checkDeadline();
-      if (!detail || !detail.title) {
+      if (!detail || detail.id !== sampleManga.id || typeof detail.title !== "string" || !detail.title.trim()) {
         throw new SourceError(`Detail verification failed for manga '${sampleManga.id}'`, {
           code: "SCHEMA_CHANGED",
           sourceId: normalizedId,
@@ -91,18 +91,18 @@ export async function probeSourceHealth(
 
       // A new series or locked chapter is not an adapter outage. Do not
       // attempt to resolve pages behind an access boundary.
-      const targetChapter = chapters.find(c => !c.isLocked && typeof c.id === "string" && c.id.trim());
+      const targetChapter = chapters.find(c => c && c.isLocked === false && c.mangaId === sampleManga.id && typeof c.id === "string" && c.id.trim());
       if (!targetChapter) {
-        if (chapters.length && chapters.some(c => !c.isLocked)) {
+        if (chapters.some(c => c && c.isLocked === false && (c.mangaId !== sampleManga.id || typeof c.id !== "string" || !c.id.trim()))) {
           throw new SourceError("Invalid unlocked chapter identity", { code: "SCHEMA_CHANGED", sourceId: normalizedId, stage });
         }
-        pagesSkipped = chapters.length ? "locked" : "no-chapters";
+        pagesSkipped = !chapters.length ? "no-chapters" : chapters.every(c => c?.isLocked === true) ? "locked" : "access-unknown";
       } else {
         stage = "pages";
         sampleChapterId = targetChapter.id;
-        const pagesResult = await adapter.getPages(targetChapter.id);
+        const pagesResult = await adapter.getPages(targetChapter.id, { mangaId: sampleManga.id });
         checkDeadline();
-        if (!pagesResult || !Array.isArray(pagesResult.pages) || pagesResult.pages.length === 0) {
+        if (!pagesResult || pagesResult.chapterId !== targetChapter.id || !Array.isArray(pagesResult.pages) || pagesResult.pages.length === 0) {
           throw new SourceError("Unlocked chapter returned no page references", { code: "PARSER_BROKEN", sourceId: normalizedId, stage });
         }
       }

@@ -214,7 +214,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(snapshot.metadata?.probeType).toBe("deep");
     expect(mockAdapter.getDetail).toHaveBeenCalledWith("solo-leveling");
     expect(mockAdapter.getChapters).toHaveBeenCalledWith("solo-leveling");
-    expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1");
+    expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1", { mangaId: "solo-leveling" });
   });
 
   it("does not request locked chapter pages or mark a valid empty chapter list broken", async () => {
@@ -228,6 +228,20 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(locked.stage).toBe("chapters");
     expect(locked.metadata?.pagesSkipped).toBe("locked");
     expect((await probeSourceHealth("asurascans", { deep: true })).metadata?.pagesSkipped).toBe("no-chapters");
+    expect(getPages).not.toHaveBeenCalled();
+  });
+
+  it("does not inspect unknown-access chapters or foreign parents", async () => {
+    const getPages = vi.fn();
+    const getChapters = vi.fn()
+      .mockResolvedValueOnce([{ id: "unknown", mangaId: "sample" }])
+      .mockResolvedValueOnce([{ id: "foreign", mangaId: "other", isLocked: false }]);
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "asurascans", getPopular: vi.fn().mockResolvedValue({ mangas: [{ id: "sample", title: "Sample" }] }),
+      getDetail: vi.fn().mockResolvedValue({ id: "sample", title: "Sample" }), getChapters, getPages,
+    } as any);
+    expect((await probeSourceHealth("asurascans", { deep: true })).metadata?.pagesSkipped).toBe("access-unknown");
+    expect((await probeSourceHealth("asurascans", { deep: true })).lastFailureCode).toBe("SCHEMA_CHANGED");
     expect(getPages).not.toHaveBeenCalled();
   });
 

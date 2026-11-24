@@ -12,6 +12,7 @@ import type { SourceCapabilities } from "@/shared/sources/source-capabilities";
 import { HttpClient } from "../base/http-client";
 import { SourceError } from "../../error";
 import type { BaseEngineConfig, SourceCategory } from "./types";
+import { normalizeStagedCatalog } from "./normalize-catalog";
 
 const ADULT_KEYWORDS = [
   "hentai",
@@ -128,6 +129,7 @@ export abstract class BaseEngine implements MangaSource {
     results: MangaPageResult,
     options?: SourceReadOptions
   ): MangaPageResult {
+    results = normalizeStagedCatalog(results, this.baseUrl, this.id);
     if (this.isNsfw) {
       if (options?.hideNsfw !== false) {
         return { mangas: [], hasNextPage: false };

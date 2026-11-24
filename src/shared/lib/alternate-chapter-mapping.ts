@@ -8,7 +8,7 @@ export interface ChapterNumberEvidence {
 /** Parse only explicit numeric chapter labels, never an opaque provider ID,
  * list index, special, or a partial number extracted from arbitrary text. */
 export function readChapterNumberEvidence(label: string | undefined): ChapterNumberEvidence | null {
-  if (!label) return null;
+  if (typeof label !== "string" || !label) return null;
   const value = label.trim();
   const match = /^(?:(?:vol(?:ume)?\.?\s*)(\d+)\s*[-: ]\s*)?(?:(?:chapter|chap|ch|episode|ep)\.?\s*|#\s*)?(\d+(?:\.\d+)?)\s*$/i.exec(value);
   if (!match) return null;
@@ -44,14 +44,16 @@ export function suggestAlternateChapter(
       ? readChapterNumberEvidence(chapter.chapterNumber) : null;
     if (chapter.chapterNumber !== undefined && !explicit) continue;
     if (!title && !explicit) continue;
-    if (title && explicit && title.number !== explicit.number) continue;
+    if (title && explicit && (title.number !== explicit.number ||
+        (title.volume !== undefined && explicit.volume !== undefined && title.volume !== explicit.volume))) continue;
     const observed = title ?? explicit!;
     if (observed.number !== current.number) continue;
     const rawVolume = chapter.volume;
-    const volume = rawVolume === undefined ? observed.volume :
-      /^\d+$/.test(rawVolume.trim()) ? Number(rawVolume) : null;
+    const labelVolume = title?.volume ?? explicit?.volume;
+    const volume = rawVolume === undefined ? labelVolume :
+      typeof rawVolume === "string" && /^\d+$/.test(rawVolume.trim()) ? Number(rawVolume) : null;
     if (volume === null || (volume !== undefined && !Number.isSafeInteger(volume)) ||
-        (observed.volume !== undefined && volume !== observed.volume)) continue;
+        (labelVolume !== undefined && volume !== labelVolume)) continue;
     if (current.volume !== undefined && volume !== current.volume) continue;
     matches.push(chapter);
   }

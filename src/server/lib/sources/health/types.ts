@@ -20,7 +20,7 @@ export interface SourceHealthSnapshot {
     sampleMangaId?: string;
     sampleChapterId?: string;
     probeType?: "lightweight" | "deep";
-    pagesSkipped?: "locked" | "no-chapters";
+    pagesSkipped?: "locked" | "no-chapters" | "access-unknown";
   };
 }
 

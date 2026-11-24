@@ -11,6 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { NatsuIdConfig } from "./types";
 import { SourceError } from "../../error";
+import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
 
 export class NatsuIdEngine extends BaseEngine {
   protected searchAction: string;
@@ -31,7 +32,7 @@ export class NatsuIdEngine extends BaseEngine {
         $el.find("a[href*='/manga/']").attr("href") ||
         $el.find("a").first().attr("href") ||
         "";
-      if (!link || link.includes("/chapter-")) return;
+      if (!sameProviderUrl(link, this.baseUrl) || link.includes("/chapter-")) return;
 
       const title =
         $el.find(".tt, .title, h4, h3, h1, a[href*='/manga/'] h1, a[href*='/manga/'] h2").first().text().trim() ||
@@ -67,7 +68,7 @@ export class NatsuIdEngine extends BaseEngine {
           latestChapter,
           format,
           isNsfw: this.isNsfw,
-          contentRating: this.isNsfw ? "pornographic" : "safe",
+          contentRating: this.isNsfw ? "pornographic" : "unknown",
         });
       }
     });
@@ -152,6 +153,7 @@ export class NatsuIdEngine extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
     const path = mangaId.startsWith("http")
       ? mangaId
       : `/manga/${encodeURIComponent(mangaId)}/`;
@@ -161,7 +163,8 @@ export class NatsuIdEngine extends BaseEngine {
       const $ = cheerio.load(html);
 
       const title =
-        $("h1.entry-title, .post-title, h1").first().text().trim() || mangaId;
+        $("h1.entry-title, .post-title, h1").first().text().trim() || "";
+      if (!title) throw new SourceError("Detail title missing", { sourceId: this.id, code: "PARSER_BROKEN", stage: "detail" });
 
       const description =
         $(".entry-content, .synopsis, .summary__content").first().text().trim() || "";
@@ -191,13 +194,13 @@ export class NatsuIdEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
-        coverUrl,
+        coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,
         status,
         author,
         isNsfw: this.isNsfw,
-        contentRating: this.isNsfw ? "pornographic" : "safe",
+        contentRating: this.isNsfw ? "pornographic" : "unknown",
       };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
@@ -232,7 +235,7 @@ export class NatsuIdEngine extends BaseEngine {
         (idx, el) => {
           const $el = $(el);
           const link = $el.attr("href") || "";
-          if (!link) return;
+          if (!sameProviderUrl(link, this.baseUrl)) return;
 
           const title =
             $el.find(".chapternum, span").first().text().trim() || $el.text().trim();
@@ -275,6 +278,7 @@ export class NatsuIdEngine extends BaseEngine {
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
 
+    if (!sameProviderUrl(chapterId, this.baseUrl)) throw new SourceError("Invalid provider chapter identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND", stage: "pages" });
     const path = chapterId.startsWith("http")
       ? chapterId
       : `/${chapterId.replace(/^\/+/, "")}`;

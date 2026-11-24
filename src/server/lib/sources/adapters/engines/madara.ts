@@ -11,6 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MadaraConfig } from "./types";
 import { SourceError } from "../../error";
+import { sameProviderUrl, normalizeStagedMediaUrl } from "./normalize-catalog";
 
 export class MadaraEngine extends BaseEngine {
   protected itemSelector: string;
@@ -31,7 +32,7 @@ export class MadaraEngine extends BaseEngine {
         $el.find(".post-title a, h3 a, h4 a").first().attr("href") ||
         $el.find("a").first().attr("href") ||
         "";
-      if (!link) return;
+      if (!sameProviderUrl(link, this.baseUrl)) return;
 
       const title =
         $el.find(".post-title a, h3 a, h4 a").first().text().trim() ||
@@ -58,7 +59,7 @@ export class MadaraEngine extends BaseEngine {
           coverUrl,
           latestChapter,
           isNsfw: this.isNsfw,
-          contentRating: this.isNsfw ? "pornographic" : "safe",
+          contentRating: this.isNsfw ? "pornographic" : "unknown",
         });
       }
     });
@@ -131,6 +132,7 @@ export class MadaraEngine extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
     const path = mangaId.startsWith("http")
       ? mangaId
       : `/manga/${encodeURIComponent(mangaId)}/`;
@@ -140,7 +142,8 @@ export class MadaraEngine extends BaseEngine {
       const $ = cheerio.load(html);
 
       const title =
-        $(".post-title h1, h1.entry-title").first().text().trim() || mangaId;
+        $(".post-title h1, h1.entry-title").first().text().trim() || "";
+      if (!title) throw new SourceError("Detail title missing", { sourceId: this.id, code: "PARSER_BROKEN", stage: "detail" });
 
       const description =
         $(".description-summary, .summary__content, .manga-excerpt")
@@ -171,13 +174,13 @@ export class MadaraEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
-        coverUrl,
+        coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,
         status,
         author,
         isNsfw: this.isNsfw,
-        contentRating: this.isNsfw ? "pornographic" : "safe",
+        contentRating: this.isNsfw ? "pornographic" : "unknown",
       };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
@@ -188,6 +191,7 @@ export class MadaraEngine extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
     const path = mangaId.startsWith("http")
       ? mangaId
       : `/manga/${encodeURIComponent(mangaId)}/`;
@@ -217,7 +221,7 @@ export class MadaraEngine extends BaseEngine {
       $("li.wp-manga-chapter").each((idx, el) => {
         const $el = $(el);
         const link = $el.find("a").first().attr("href") || "";
-        if (!link) return;
+        if (!sameProviderUrl(link, this.baseUrl)) return;
 
         const title = $el.find("a").first().text().trim();
         const numMatch = title.match(/(\d+(?:\.\d+)?)/);
@@ -255,6 +259,7 @@ export class MadaraEngine extends BaseEngine {
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
 
+    if (!sameProviderUrl(chapterId, this.baseUrl)) throw new SourceError("Invalid provider chapter identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND", stage: "pages" });
     const path = chapterId.startsWith("http")
       ? chapterId
       : `/${chapterId.replace(/^\/+/, "")}`;
