@@ -181,6 +181,24 @@ describe("background source health probe locking", () => {
     expect(getInMemoryCachedPayload()).toMatchObject({ data: {}, meta: { cached: true } });
   });
 
+  it("does not repeat upstream probes while a successful local result is fresh", async () => {
+    mocks.configured = false;
+    const { triggerBackgroundProbe, isInMemoryHealthPayloadFresh } = await import("../background-probe");
+    expect(await triggerBackgroundProbe()).toBe(true);
+    await vi.waitFor(() => expect(isInMemoryHealthPayloadFresh()).toBe(true));
+    const clock = Date.now();
+    const now = vi.spyOn(Date, "now").mockReturnValue(clock + 60_000);
+    try {
+      expect(await triggerBackgroundProbe()).toBe(false);
+      expect(mocks.probe).toHaveBeenCalledTimes(1);
+      now.mockReturnValue(clock + 601_000);
+      expect(await triggerBackgroundProbe()).toBe(true);
+      expect(mocks.probe).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it("does not release the lock after cache persistence opens the quota circuit", async () => {
     mocks.setex.mockImplementationOnce(async () => {
       mocks.circuit = "open";

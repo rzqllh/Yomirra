@@ -54,7 +54,12 @@ export default function SourcesPage() {
   const { data: healthStats, refetch: refetchHealth } = useQuery({
     queryKey: ["sources-health"],
     queryFn: () => apiClient.getHealth(),
-    refetchInterval: 60000, // Refetch every 1 minute
+    // Server health snapshots have a ten-minute cache lifetime. Polling
+    // every minute provides no additional evidence and consumes quota.
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 
   const handleRefresh = async () => {
