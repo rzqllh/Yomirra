@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   });
 
   if (!delivered) {
-    logger.warn("Failed to deliver user report to Telegram", { category });
+    logger.warn("Failed to deliver user report to Telegram", { category: sanitizedPayload.category });
     // Still return 200 — user tidak perlu tau internal failure
     return limitedJson({ success: true, delivered: false });
   }

@@ -1,5 +1,5 @@
 /** Read a small JSON request without trusting Content-Length. */
-export async function readBoundedJson(request:Request,maxBytes:number):Promise<unknown>{
+export async function readBoundedJson(request:Pick<Request,"body">,maxBytes:number):Promise<unknown>{
   const reader=request.body?.getReader();
   if(!reader)throw Error("Missing body");
   const decoder=new TextDecoder("utf-8",{fatal:true});

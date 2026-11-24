@@ -93,7 +93,6 @@ export function ReportSheet({
       const t = setTimeout(() => {
         setSelected(null);
         setDetail("");
-        setIsSending(false);
       }, 300);
       return () => clearTimeout(t);
     }
@@ -192,7 +191,7 @@ export function ReportSheet({
                 <button
                   key={tpl.label}
                   type="button"
-                  onClick={() => {setChallengeToken("");setSelected(isSelected ? null : tpl)}}
+                  onClick={() => {resetChallenge();setSelected(isSelected ? null : tpl)}}
                   className={cn(
                     "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left text-sm font-medium transition-all active:scale-[0.97]",
                     isSelected
