@@ -24,10 +24,12 @@ function record(value: unknown): JsonRecord | undefined {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : undefined;
 }
 
-export function parseMangaBakaWork(value: unknown): MetadataWork | null {
+export function parseMangaBakaWork(value: unknown, allRatings = false): MetadataWork | null {
   const row = record(value);
   if (!row || typeof row.id !== "number" || !Number.isSafeInteger(row.id) || row.id <= 0 ||
-      row.state !== "active" || row.content_rating !== "safe" || !Array.isArray(row.titles)) return null;
+      row.state !== "active" || !Array.isArray(row.titles)) return null;
+  const rating = row.content_rating;
+  if (rating !== "safe" && (!allRatings || (rating !== "suggestive" && rating !== "erotica" && rating !== "pornographic"))) return null;
   const format = comicFormat(typeof row.type === "string" ? row.type : undefined);
   if (!format) return null;
   const titles = row.titles.flatMap(value => {
@@ -44,7 +46,7 @@ export function parseMangaBakaWork(value: unknown): MetadataWork | null {
     provider: "mangabaka",
     externalId: row.id,
     format,
-    contentRating: "safe",
+    contentRating: rating,
     title: preferred.title,
     aliases: [...new Set(titles.map(t => t.title))],
   };
@@ -99,11 +101,11 @@ async function request(path: string, followup = false): Promise<unknown> {
  * No per-card harvesting, pagination or retries. Only full v2 title records
  * are used. Ambiguity or partial failures leave the original results intact.
  */
-export async function matchMangaBakaWorks(query: string): Promise<MetadataWork[]> {
+export async function matchMangaBakaWorks(query: string, allRatings = false): Promise<MetadataWork[]> {
   if (!isMangaBakaEnabled()) return [];
   const q = query.trim().normalize("NFKC");
   if (q.length < 3 || q.length > 160 || !normalizeTitle(q)) return [];
-  const key = "metadata:mangabaka:v3:match:" + createHash("sha256").update(q).digest("hex");
+  const key = "metadata:mangabaka:v4:" + (allRatings ? "classification:" : "match:") + createHash("sha256").update(q).digest("hex");
   try {
     return await withCache(key, async () => {
       const data = await request("/v2/series/match?" + new URLSearchParams({ q }).toString());
@@ -120,14 +122,14 @@ export async function matchMangaBakaWorks(query: string): Promise<MetadataWork[]
         if (!comicFormat(row.type)) continue;
         // A restricted candidate sharing an alias is a reason not to collapse
         // the result, even if another candidate appears safe.
-        if (row.content_rating !== "safe") return [];
-        let work = parseMangaBakaWork(row);
+        if (!allRatings && row.content_rating !== "safe") return [];
+        let work = parseMangaBakaWork(row, allRatings);
         if (!work) {
           if (++detailLookups > MAX_DETAIL_LOOKUPS) return [];
           const detail = await request(`/v2/series/${row.id}?schema=full`, true);
-          work = parseMangaBakaWork(detail);
+          work = parseMangaBakaWork(detail, allRatings);
         }
-        if (!work || work.externalId !== row.id || work.format !== comicFormat(row.type)) return [];
+        if (!work || work.externalId !== row.id || work.format !== comicFormat(row.type) || work.contentRating !== row.content_rating) return [];
         // /match accepts phrase fragments; require the user's complete title
         // to be present as an alias before any automatic projection.
         if (work.aliases.some(title => normalizeTitle(title) === normalizeTitle(q))) {

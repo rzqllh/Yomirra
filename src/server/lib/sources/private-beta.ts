@@ -6,6 +6,8 @@ import { KEIYOUSHI_CANDIDATES } from "@/shared/sources/keiyoushi-candidates";
 import { classifyContent } from "@/shared/sources/content-policy";
 import type { MangaItem } from "@/shared/sources/source-types";
 import { getStagedKeiyoushiSource } from "./adapters/keiyoushi";
+import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
+import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
 
 /** Only non-restricted, implemented candidates may be considered for private
  * metadata testing. No duplicate, DRM, login/paywall prototype or explicit
@@ -64,7 +66,11 @@ export async function readPrivateBetaCatalog(
   const result = mode === "search" ? await adapter.search(query.trim(), page, undefined, options) :
     mode === "latest" ? await adapter.getLatest(page, options) : await adapter.getPopular(page, options);
   if (!Array.isArray(result?.mangas) || typeof result.hasNextPage !== "boolean") throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
-  const rows = result.mangas.filter((m: MangaItem) =>
+  // No request per listing item. Only an explicit title search may supply
+  // canonical evidence, and only strong identity can inherit its rating.
+  const works = mode === "search" ? await matchMangaBakaWorks(query.trim(),true) : [];
+  const normalized = result.mangas.map(m => m && inheritCanonicalRating(m,matchCanonicalMetadata(m,works)));
+  const rows = normalized.filter((m: MangaItem) =>
     m && typeof m.id === "string" && typeof m.title === "string" &&
     validBetaMangaId(id, m.id) && m.title.trim() && classifyContent(m) === "SAFE"
   ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
@@ -76,9 +82,12 @@ export async function readPrivateBetaCatalog(
 export async function readPrivateBetaDetail(id: string, mangaId: string) {
   if (!validBetaMangaId(id, mangaId)) throw new Error("PRIVATE_BETA_INVALID_ID");
   const adapter = authorizedAdapter(id);
-  const detail = await adapter.getDetail(mangaId, options);
-  if (!detail || detail.id !== mangaId || typeof detail.title !== "string" ||
-      !detail.title.trim() || classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+  const rawDetail = await adapter.getDetail(mangaId, options);
+  if (!rawDetail || rawDetail.id !== mangaId || typeof rawDetail.title !== "string" ||
+      !rawDetail.title.trim() || classifyContent(rawDetail) === "NSFW") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+  const works = await matchMangaBakaWorks(rawDetail.title,true);
+  const detail = inheritCanonicalRating(rawDetail,matchCanonicalMetadata(rawDetail,works));
+  if (classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const chapters = await adapter.getChapters(mangaId, options);
   if (!Array.isArray(chapters)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
   const identities = new Map<string, { id: string; title: string; readable: boolean }>();

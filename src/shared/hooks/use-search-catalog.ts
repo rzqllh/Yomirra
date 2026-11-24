@@ -564,7 +564,7 @@ export function useSearchCatalog() {
   );
 
   const searchMangas = React.useMemo(() => {
-    const results = [...combinedResults];
+    const results = combinedResults.filter(row => !hideNsfw || classifyContent(row.manga) !== "NSFW");
 
     if (sort === "rating") {
       return results.sort((a, b) => {

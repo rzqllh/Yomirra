@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectMetadataCatalogRows, type MetadataWork } from "../metadata-catalog";
+import { projectMetadataCatalogRows, matchCanonicalMetadata, inheritCanonicalRating, type MetadataWork } from "../metadata-catalog";
 import type { CatalogSearchRow } from "../canonical-search";
 
 const work: MetadataWork = { provider: "mangabaka", externalId: 1, title: "Canonical title", aliases: ["Native title", "Translated title"], format: "manhwa", contentRating: "safe" };
@@ -25,6 +25,17 @@ describe("metadata-assisted discovery", () => {
     expect(projectMetadataCatalogRows([a,wrong], [linked])).toHaveLength(2);
   });
 
+  it("inherits an explicit rating only from strongly matched metadata and preserves restrictions", () => {
+    const item={...row("a","1","Native title").manga,externalWorkIds:{anilist:"100"}};
+    const canonical={...work,externalWorkIds:{anilist:"100"}};
+    expect(inheritCanonicalRating(item,matchCanonicalMetadata(item,[canonical])).contentRating).toBe("safe");
+    expect(inheritCanonicalRating({...item,contentRating:"erotica"},canonical).contentRating).toBe("erotica");
+    expect(inheritCanonicalRating(item,{...canonical,contentRating:"suggestive"})).toMatchObject({contentRating:"suggestive",isNsfw:true});
+    expect(matchCanonicalMetadata(row("a","1","Native title").manga,[canonical])).toBeUndefined();
+    expect(matchCanonicalMetadata(item,[canonical,{...canonical,externalId:2}])).toBeUndefined();
+    expect(matchCanonicalMetadata({...item,author:"A"},[{...canonical,authors:["B"]}])).toBeUndefined();
+    expect(matchCanonicalMetadata({...row("a","1","Native title").manga,author:"A"},[{...work,authors:["A"]}])?.externalId).toBe(1);
+  });
   it("does not group ambiguous aliases, mismatched formats, or same-provider editions", () => {
     const a = row("a", "1", "Native title");
     const b = row("b", "2", "Translated title");

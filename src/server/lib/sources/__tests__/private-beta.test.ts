@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { privateBetaSources, privateBetaAllowsSource, readPrivateBetaCatalog, readPrivateBetaDetail, readPrivateBetaChapter, verifyBetaPageTicket, fetchPrivateBetaPage, validBetaIdentity } from "../private-beta";
 import { getStagedKeiyoushiSource } from "../adapters/keiyoushi";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
+import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
+vi.mock("@/server/lib/metadata/mangabaka",()=>({matchMangaBakaWorks:vi.fn().mockResolvedValue([])}));
 vi.mock("@/env", () => ({env:{IMAGE_PROXY_SECRET:"fixture-secret-32-characters-only-for-tests"}}));
 vi.mock("@/server/lib/security/outbound-policy", () => ({safeFetch:vi.fn()}));
 
@@ -66,6 +68,19 @@ describe("private reader boundaries", () => {
     for(const invalid of ["https://other.example/a","../x","%2e%2e","//host","a\\b","",null]) expect(validBetaIdentity(invalid)).toBe(false);
     await expect(readPrivateBetaDetail("manhwa-list","https://other.example")).rejects.toThrow("PRIVATE_BETA_INVALID_ID");
     expect(getStagedKeiyoushiSource).not.toHaveBeenCalled();
+  });
+  it("inherits rating from a strong canonical identity, not a title-only guess", async () => {
+    vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");
+    const adapter=fixture();
+    adapter.getDetail.mockResolvedValue({id:"manga",title:"Fixture",contentRating:"unknown",format:"manhwa",externalWorkIds:{anilist:"100"}} as any);
+    vi.mocked(getStagedKeiyoushiSource).mockReturnValue(adapter as any);
+    const canonical={provider:"mangabaka" as const,externalId:1,title:"Fixture",aliases:["Fixture"],format:"manhwa" as const,contentRating:"safe" as const,externalWorkIds:{anilist:"100"}};
+    vi.mocked(matchMangaBakaWorks).mockResolvedValueOnce([canonical]);
+    expect((await readPrivateBetaDetail("manhwa-list","manga")).chapters[0].readable).toBe(true);
+    vi.mocked(matchMangaBakaWorks).mockResolvedValueOnce([{...canonical,externalWorkIds:{anilist:"101"}}]);
+    await expect(readPrivateBetaDetail("manhwa-list","manga")).rejects.toThrow("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+    vi.mocked(matchMangaBakaWorks).mockResolvedValueOnce([{...canonical,contentRating:"erotica"}]);
+    await expect(readPrivateBetaDetail("manhwa-list","manga")).rejects.toThrow("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   });
   it("rejects conflicting duplicate access evidence before requesting pages", async () => {
     vi.stubEnv("YOMIRRA_PRIVATE_BETA_SOURCE_IDS","manhwa-list");

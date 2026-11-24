@@ -110,7 +110,7 @@ export function PrivateBetaPanel({ user }: { user: User }) {
       {failed && <p role="alert" className="text-sm text-semantic-error">Pemeriksaan gagal. Coba lagi nanti.</p>}
       {selectedManga && selected && <PrivateBetaReader key={JSON.stringify([user.uid,selected,selectedManga])} user={user} source={selected} mangaId={selectedManga} onClose={() => setSelectedManga(null)} />}
       {catalog && <div aria-live="polite">
-        <p className="text-xs text-text-secondary">{catalog.items.length} judul dengan klasifikasi aman dari {catalog.received} hasil.</p>
+        <p className="text-xs text-text-secondary">{catalog.items.length} judul dengan klasifikasi aman dari {catalog.received} hasil. Rating yang belum terverifikasi tidak menandakan adapter rusak.</p>
         <ul className="mt-2 divide-y divide-border-subtle">
           {catalog.items.map((item, index) => <li key={JSON.stringify([item.id,index])} className="py-2 text-sm"><button type="button" className="text-left font-semibold hover:underline" onClick={() => setSelectedManga(item.id)}>{item.title}{item.format ? ` · ${item.format}` : ""}</button></li>)}
         </ul>

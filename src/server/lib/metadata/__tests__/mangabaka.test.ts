@@ -47,6 +47,12 @@ describe("MangaBaka v2 response boundary", () => {
     expect(work?.externalWorkIds).toEqual({my_anime_list:"126287",anilist:"118586"});
   });
 
+  it("preserves explicit canonical classification in internal rating mode only", () => {
+    for (const rating of ["safe","suggestive","erotica","pornographic"] as const) {
+      expect(parseMangaBakaWork({...fixture,content_rating:rating},true)?.contentRating).toBe(rating);
+    }
+    expect(parseMangaBakaWork({...fixture,content_rating:"unrecognized"},true)).toBeNull();
+  });
   it("rejects incomplete, merged, non-comic, and restricted records", () => {
     for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
       expect(parseMangaBakaWork(invalid)).toBeNull();
