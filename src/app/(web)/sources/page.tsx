@@ -95,6 +95,7 @@ export default function SourcesPage() {
             uptime: isFresh ? health.uptime : "-",
             lastChecked: Number.isFinite(observedAt) ? new Date(observedAt).toLocaleString("id-ID") : "Belum diperiksa",
             message: isFresh ? health.message : "Belum ada pemeriksaan terbaru. Status sumber belum dapat dipastikan.",
+            coverage: isFresh && health.status === "online" ? health.coverage : undefined,
           }
         };
       }

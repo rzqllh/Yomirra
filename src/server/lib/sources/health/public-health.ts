@@ -1,5 +1,7 @@
 import { getFriendlyErrorMessage, type SourceErrorCode } from "../error";
 import type { SourceHealthSnapshot, SourceRollingStats } from "./types";
+import { hasReaderPageEvidence } from "./probe-coverage";
+import type { SourceProbeCoverage } from "@/shared/sources/source-types";
 
 export interface PublicSourceHealth {
   id: string;
@@ -12,6 +14,7 @@ export interface PublicSourceHealth {
   sampleCount?: number;
   p95Latency?: string;
   hasSufficientData?: boolean;
+  coverage?: SourceProbeCoverage;
 }
 
 export interface LivenessSourceHealth {
@@ -40,6 +43,10 @@ export function toPublicSourceHealth(
         : "-",
       uptime: rollingStats?.hasSufficientData ? rollingStats.successRate : "-",
       message: "Server merespons dengan baik.",
+      coverage: hasReaderPageEvidence(snapshot) ? "page-references" :
+        snapshot.stage === "transport" ? "transport" :
+        snapshot.stage === "chapters" ? "chapters" :
+        snapshot.stage === "detail" || snapshot.stage === "search" ? "catalog" : "unknown",
       checkedAt: snapshot.lastCheckedAt,
       sampleCount: rollingStats?.totalSamples ?? 1,
       p95Latency: rollingStats?.hasSufficientData ? rollingStats.p95Latency : undefined,

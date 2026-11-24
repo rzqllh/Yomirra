@@ -78,6 +78,7 @@ class ApiClient {
       sampleCount?:number;
       p95Latency?:string;
       hasSufficientData?:boolean;
+      coverage?:import("@/shared/sources/source-types").SourceProbeCoverage;
     }>>("/api/sources/health").then(data=>{
       if(data&&typeof data==="object")useSourceQualityStore.getState().recordShared(data);
       return data;

@@ -62,7 +62,17 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const isUnavailable = Boolean(source.maintenance) || !source.isEnabled || ["in-fix", "in-dev"].includes(effectiveStatus)
   const hasHealthAlert = !isUnavailable && ["slow", "degraded", "offline", "unavailable"].includes(effectiveStatus)
   const initials = source.name.trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0)).join("").toUpperCase() || "?"
+  // Keep the fallback visible until the real icon has decoded. A new URL
+  // receives a new load attempt; stale load/error events cannot affect it.
+  const [loadedIconUrl, setLoadedIconUrl] = React.useState<string | undefined>()
   const showIcon = Boolean(source.icon) && source.icon !== failedIconUrl
+  const iconReady = showIcon && loadedIconUrl === source.icon
+  const coverage = effectiveStatus === "online" ? source.healthStats?.coverage : undefined
+  const coverageLabel = coverage === "page-references" ? "Referensi halaman tersedia; gambar belum diuji" :
+    coverage === "chapters" ? "Daftar chapter teruji; halaman belum diuji" :
+    coverage === "catalog" ? "Katalog teruji; reader belum diuji" :
+    coverage === "transport" ? "Koneksi teruji; fungsi baca belum diuji" :
+    effectiveStatus === "online" ? "Cakupan pemeriksaan belum diketahui" : undefined
   const isPreferenceEnabled = !isSourceDisabled(source.id)
   const discoveryEligible = isDiscoverySourceSystemEligible(source)
   const isCustom = Boolean(source.manifestUrl)
@@ -101,20 +111,21 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   return (
     <article className="overflow-hidden rounded-xl border border-border-subtle bg-surface-raised">
       <div className="flex items-start gap-3.5 p-4">
-        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border-subtle bg-surface-base" aria-hidden="true">
-          {showIcon ? (
+        <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border-subtle bg-surface-base" aria-hidden="true">
+          {!iconReady && <span className="flex size-full items-center justify-center bg-accent/10 text-base font-black tracking-tight text-accent">{initials}</span>}
+          {showIcon && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              key={source.icon}
               src={source.icon}
               alt=""
-              className="size-full object-contain p-1"
+              className={cn("absolute inset-0 size-full object-contain p-1", !iconReady && "opacity-0")}
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setLoadedIconUrl(source.icon)}
               onError={() => setFailedIconUrl(source.icon)}
             />
-          ) : (
-            <span className="flex size-full items-center justify-center bg-accent/10 text-base font-black tracking-tight text-accent">
-              {initials}
-            </span>
           )}
         </div>
 
@@ -175,6 +186,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               )}
             </div>
           ) : null}
+
+          {coverageLabel && <p className="mt-2 text-xs leading-relaxed text-text-secondary">{coverageLabel}</p>}
 
           {isUnavailable || hasHealthAlert ? (
             <div role="status" className="mt-2.5 flex items-start justify-between gap-2">
