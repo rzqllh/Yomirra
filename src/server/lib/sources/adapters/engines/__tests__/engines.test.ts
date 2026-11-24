@@ -205,7 +205,7 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
         <div class="tsinfo"><div class="imptdt">Status <i>Ongoing</i></div><div class="imptdt">Author <i>Kiyo</i></div></div>
         <div id="chapterlist">
           <ul>
-            <li data-num="1"><a href="https://example.com/ch-1/"><span class="chapternum">Chapter 1</span></a><span class="chapterdate">2026-11-10</span></li>
+            <li data-num="1" data-locked="false"><a href="https://example.com/ch-1/"><span class="chapternum">Chapter 1</span></a><span class="chapterdate">2026-11-10</span></li>
             <li data-num="2" class="locked"><a href="https://example.com/ch-2/"><span class="chapternum">Chapter 2</span><i class="fa-lock"></i></a><span class="chapterdate">2026-11-10</span></li>
           </ul>
         </div>

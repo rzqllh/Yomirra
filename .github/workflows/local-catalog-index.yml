@@ -7,6 +7,8 @@ on:
       - 'scripts/canonical-review.mjs'
       - 'scripts/__tests__/canonical-review.test.mjs'
       - 'scripts/prepare-mangabaka-refresh.py'
+      - 'scripts/prepare-turso-import.py'
+      - 'scripts/__tests__/prepare-turso-import.test.py'
       - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
       - 'scripts/__tests__/build-mangabaka-index.test.mjs'
       - 'src/server/lib/metadata/mangabaka-record.mjs'
@@ -29,3 +31,4 @@ jobs:
           node-version: 22
       - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs scripts/__tests__/canonical-review.test.mjs
       - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
+      - run: python3 scripts/__tests__/prepare-turso-import.test.py
