@@ -9,6 +9,10 @@ import type { MatchConfidence } from "@/shared/lib/title-matcher";
 import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
 import { cn } from "@/shared/utils/cn";
 import { AlternateChapterPreview } from "./alternate-chapter-preview";
+import {rankQualityRefs} from "@/shared/lib/source-quality";
+import {useSourceQualityStore} from "@/shared/store/source-quality-store";
+import {useSettingsStore} from "@/shared/store/settings-store";
+import {getSourceMetadata} from "@/shared/sources/source-registry";
 
 // Types
 
@@ -114,6 +118,11 @@ export function AlternateSourceModal({
   onConfirm,
   isLoading,
 }: AlternateSourceModalProps) {
+  const quality=useSourceQualityStore(state=>state.evidence);
+  const shared=useSourceQualityStore(state=>state.shared);
+  const languages=useSettingsStore(state=>state.preferredLanguages);
+  // Never let score displace stronger identity evidence.
+  const ranked=["CONFIRMED","HIGH_CONFIDENCE","AMBIGUOUS","NO_MATCH"].flatMap(confidence=>rankQualityRefs(candidates.filter(c=>c.confidence===confidence).map(c=>({...c,language:getSourceMetadata(c.sourceId)?.language})),quality,{languages,shared,chapterLabel:currentChapterTitle}));
   const [selection, setSelected] = useState<AlternateSourceCandidate | null>(null);
   const selected = candidates.find(c => c.sourceId === selection?.sourceId && c.mangaId === selection?.mangaId) ?? null;
   useEffect(() => { if (!isOpen) setSelected(null); }, [isOpen]);
@@ -164,7 +173,7 @@ export function AlternateSourceModal({
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5" role="listbox" aria-label="Kandidat sumber alternatif">
-              {candidates.map((c) => {
+              {ranked.map(({ref:c,quality:score,scope}) => {
                 const isSelected = selected?.sourceId === c.sourceId && selected?.mangaId === c.mangaId;
                 return (
                   <li key={`${c.sourceId}::${c.mangaId}`}>
@@ -201,6 +210,7 @@ export function AlternateSourceModal({
                             {c.sourceDisplayName}
                           </span>
                           <ConfidenceBadge confidence={c.confidence} />
+                          {score.score!==null&&<span className="text-2xs text-text-secondary">SQS {score.score}/100 · {score.coverage}% bukti · {scope==="monitor"?"monitor":"perangkat"}</span>}
                         </div>
                       </div>
                       {isSelected && (

@@ -18,7 +18,8 @@ import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSourceHealthStore, type SourceHealth } from "@/shared/store/source-health-store";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { rankQualityRefs } from "@/shared/lib/source-quality";
+import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
+import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
 
@@ -115,6 +116,8 @@ export function CanonicalSourceDialog({
   const healthBySource = useSourceHealthStore((state) => state.healthBySource);
   const historyItems = useHistoryStore((state) => state.items);
   const qualityEvidence=useSourceQualityStore(state=>state.evidence);
+  const shared=useSourceQualityStore(state=>state.shared);
+  const [qualitySort,setQualitySort]=React.useState<QualitySort>("quality");
   const preferences=useSettingsStore(state=>state.perTitleSourcePreferences);
   const languages=useSettingsStore(state=>state.preferredLanguages);
   const availableBindings = React.useMemo(
@@ -140,7 +143,7 @@ export function CanonicalSourceDialog({
 
   const choices=new Set(availableBindings.map(b=>preferences[b.sourceId+"::"+b.mangaId]).filter(Boolean));
   const preferred=choices.size===1?[...choices][0]:undefined;
-  const ranked=rankQualityRefs(sortedBindings,qualityEvidence,{preferred,languages});
+  const ranked=rankQualityRefs(sortedBindings,qualityEvidence,{preferred,languages,shared,sort:qualitySort});
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,6 +158,7 @@ export function CanonicalSourceDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <SourceQualitySort value={qualitySort} onChange={setQualitySort}/>
         <div className="flex flex-col gap-2">
           {sortedBindings.length === 0 && <p role="status" className="text-sm text-text-secondary">Belum ada sumber yang dapat dibuka. Periksa pilihan sumber atau cari judul lainnya.</p>}
           {ranked.map(({ref:binding,quality,scope}) => {
@@ -173,7 +177,7 @@ export function CanonicalSourceDialog({
                   <p className="mt-0.5 truncate text-xs text-text-muted">
                     {[binding.language, binding.latestChapter, getObservedHealthLabel(healthBySource[binding.sourceId], Date.now())].filter(Boolean).join(" · ")}
                   </p>
-                  <p className="mt-0.5 text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":"sumber"}`}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":scope==="monitor"?"monitor":"perangkat"}`}</p>
                   {binding.sourceId === preferred && <p className="mt-0.5 text-xs text-text-muted">Sumber utama</p>}
                   {binding.sourceId === lastUsedSourceId && (
                     <p className="mt-0.5 text-xs text-text-muted">Terakhir dibaca</p>

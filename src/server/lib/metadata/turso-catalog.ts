@@ -21,7 +21,7 @@ function config():Config|null{
   if(!token||!snapshot||!/^[a-f0-9]{64}$/.test(snapshot))return null;
   try{
     const raw=process.env.YOMIRRA_TURSO_URL??"";
-    const u=new URL(raw.replace(/^libsql:\/\//,"https://"));
+    const u=new URL(raw.replace(/^(?:libsql|turso):\/\//,"https://"));
     if(u.protocol!=="https:"||u.username||u.password||u.port||u.search||u.hash||u.pathname!=="/"||
        !/^[a-z0-9-]+\.turso\.io$/.test(u.hostname))return null;
     return {origin:u.origin,token,snapshot};
@@ -75,16 +75,20 @@ function validateManifest(rows:PipelineValue[][],snapshot:string){
   const at=Date.parse(created),now=Date.now();
   if(version!=="2"||license!=="CC-BY-NC-SA-4.0"||provider!=="mangabaka"||sha!==snapshot||
      !Number.isFinite(at)||at>now||now-at>MAX_AGE)throw Error("Catalog snapshot invalid or expired");
+  return at;
 }
 type CatalogResult={works:MetadataWork[];discovery:MetadataWork[]};
 async function cachedQuery(c:Config,queries:Query[],parse:(rows:PipelineValue[][][])=>CatalogResult):Promise<CatalogResult>{
   const key="metadata:turso:v1:"+createHash("sha256").update(JSON.stringify([c.origin,c.snapshot,queries])).digest("hex");
   // Strict cache TTL for classification. No stale safety rating on errors.
-  return withCache(key,async()=>{
+  const cached=await withCache(key+":manifest-v2",async()=>{
     const [m,...rows]=await request(c,[manifest,...queries]);
-    validateManifest(m,c.snapshot);
-    return parse(rows);
+    const createdAt=validateManifest(m,c.snapshot);
+    return {createdAt,result:parse(rows)};
   },1800,{allowStaleOnError:false,shouldPersist:data=>JSON.stringify(data).length<=64*1024});
+  const now=Date.now();
+  if(!Number.isFinite(cached?.createdAt)||cached.createdAt>now||now-cached.createdAt>MAX_AGE)throw Error("Catalog snapshot expired");
+  return cached.result;
 }
 /** Explicit search/detail only; one bounded pipeline, no per-cover fan-out.
  * Returns null for unavailable; empty results remain distinct from an outage. */

@@ -6,6 +6,9 @@ export type QualitySample = {at:number;ok:boolean;ms:number;kind:"api"|"image";k
 export type QualityChapters = {at:number;labels:string[]};
 export type QualityEvidence = {samples:QualitySample[];chapters?:QualityChapters};
 export type QualitySnapshot = Record<string,QualityEvidence>;
+export type SharedHealthEvidence={checkedAt?:string;uptime:string;p95Latency?:string;sampleCount?:number;hasSufficientData?:boolean};
+export type SharedQualityEvidence=Record<string,SharedHealthEvidence>;
+export type QualitySort="quality"|"speed"|"completeness"|"freshness";
 export type QualityMetric = "reliability"|"reader"|"speed"|"completeness"|"freshness";
 export const QUALITY_WEIGHTS:Record<QualityMetric,number>={reliability:30,reader:25,speed:20,completeness:15,freshness:10};
 const MAX_AGE=24*60*60*1000;
@@ -55,8 +58,20 @@ export function calculateSourceQuality(evidence:QualityEvidence|undefined,peers:
   const weighted=Object.entries(metrics).reduce((sum,[key,value])=>sum+value*QUALITY_WEIGHTS[key as QualityMetric],0);
   return {metrics,coverage,score:coverage?Math.round(weighted/coverage):null,samples:samples.length};
 }
+export function sharedProbeQuality(evidence:SharedHealthEvidence|undefined,now=Date.now()){
+  const metrics:Partial<Record<QualityMetric,number>>={};
+  const checked=Date.parse(evidence?.checkedAt??"");
+  if(!evidence?.hasSufficientData||!recent(checked,now)||!Number.isInteger(evidence.sampleCount)||evidence.sampleCount!<MIN_SAMPLES)return {metrics,coverage:0,score:null,samples:0};
+  const uptime=/^(\\d+(?:\\.\\d+)?)%$/.exec(evidence.uptime);
+  const latency=/^(\\d+(?:\\.\\d+)?)ms$/.exec(evidence.p95Latency??"");
+  const percent=uptime?Number(uptime[1]):-1;
+  if(percent>=0&&percent<=100)metrics.reliability=Math.round(percent);
+  if(latency&&Number(latency[1])>0)metrics.speed=Math.round(100*Math.min(1,500/Math.max(500,Number(latency[1]))));
+  const coverage=Object.keys(metrics).reduce((n,key)=>n+QUALITY_WEIGHTS[key as QualityMetric],0);
+  return {metrics,coverage,score:coverage?Math.round(Object.entries(metrics).reduce((n,[k,v])=>n+v*QUALITY_WEIGHTS[k as QualityMetric],0)/coverage):null,samples:evidence.sampleCount!};
+}
 export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot:QualitySnapshot,options:{
-  preferred?:string|null;languages?:readonly string[];chapterLabel?:string;verifiedGroup?:boolean;now?:number
+  preferred?:string|null;languages?:readonly string[];chapterLabel?:string;verifiedGroup?:boolean;now?:number;shared?:SharedQualityEvidence;sort?:QualitySort
 }={}){
   const now=options.now??Date.now();
   const peerEvidence=options.verifiedGroup?refs.flatMap(ref=>{
@@ -70,14 +85,17 @@ export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot
     // evidence is explicitly identified as the fallback, not title proof.
     const titleQuality=calculateSourceQuality(title,peerEvidence,now);
     const providerQuality=calculateSourceQuality(source,[],now);
-    const quality=titleQuality.score!==null?titleQuality:providerQuality;
+    const shared=sharedProbeQuality(options.shared?.[ref.sourceId],now);
+    const quality=titleQuality.score!==null?titleQuality:providerQuality.score!==null?providerQuality:shared;
     const language=(options.languages??[]).indexOf(ref.language??"");
     const chapterMatch=Boolean(options.chapterLabel && title?.chapters && recent(title.chapters.at,now) && title.chapters.labels.includes(options.chapterLabel));
-    return {ref,index,quality,scope:titleQuality.score!==null?"title" as const:"source" as const,language:language<0?999:language,chapterMatch};
+    return {ref,index,quality,scope:titleQuality.score!==null?"title" as const:providerQuality.score!==null?"source" as const:"monitor" as const,language:language<0?999:language,chapterMatch};
   });
+  const metric=options.sort&&options.sort!=="quality"?options.sort:undefined;
   return ranked.sort((a,b)=>
     Number(b.ref.sourceId===options.preferred)-Number(a.ref.sourceId===options.preferred) ||
     Number(b.chapterMatch)-Number(a.chapterMatch) || a.language-b.language ||
+    (metric?((b.quality.metrics[metric]??-1)-(a.quality.metrics[metric]??-1)):0) ||
     // Scores with different coverage are not directly interchangeable.
     (b.quality.coverage-a.quality.coverage) ||
     (b.quality.score??-1)-(a.quality.score??-1) || a.index-b.index);

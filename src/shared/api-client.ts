@@ -75,7 +75,13 @@ class ApiClient {
       uptime: string;
       message: string;
       checkedAt?: string;
-    }>>("/api/sources/health");
+      sampleCount?:number;
+      p95Latency?:string;
+      hasSufficientData?:boolean;
+    }>>("/api/sources/health").then(data=>{
+      if(data&&typeof data==="object")useSourceQualityStore.getState().recordShared(data);
+      return data;
+    });
   }
 
   private appendManifest(url: string, sourceId: string): string {

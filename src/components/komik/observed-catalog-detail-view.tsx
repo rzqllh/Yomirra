@@ -15,7 +15,8 @@ import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
-import { rankQualityRefs } from "@/shared/lib/source-quality";
+import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
+import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
 import { MangaCover } from "./manga-cover";
@@ -26,6 +27,8 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
   const scope=useSettingsStore(sourceReadScope);
   const preferences=useSettingsStore(s=>s.perTitleSourcePreferences);
   const qualityEvidence=useSourceQualityStore(s=>s.evidence);
+  const shared=useSourceQualityStore(state=>state.shared);
+  const [qualitySort,setQualitySort]=useState<QualitySort>("quality");
   const languages=useSettingsStore(s=>s.preferredLanguages);
   const history=useHistoryStore(s=>s.items);
   const disabled=useSourcePreferencesStore(s=>s.disabledSources);
@@ -96,11 +99,12 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
       <section aria-label="Sumber katalog" className="space-y-3">
         <h2 className="text-lg font-bold">Sumber bacaan</h2>
         {showPicker && <p role="status" className="text-sm text-text-secondary">Pilih sumber untuk membaca. Pilihan ini tidak mengganti sumber utama.</p>}
-        {rankQualityRefs(result.visible.map(row=>({...row,language:row.detail.language??getSourceMetadata(row.sourceId)?.language})),qualityEvidence,{preferred,languages,verifiedGroup:result.verified}).map(({ref:row,quality,scope})=><Link key={canonicalSourceKey(row.sourceId,row.mangaId)} prefetch={false} href={getMangaDetailHref(row.sourceId,row.mangaId,returnTo)}
+        {result.visible.length>1&&<SourceQualitySort value={qualitySort} onChange={setQualitySort}/>}
+        {rankQualityRefs(result.visible.map(row=>({...row,language:row.detail.language??getSourceMetadata(row.sourceId)?.language})),qualityEvidence,{preferred,languages,verifiedGroup:result.verified,shared,sort:qualitySort}).map(({ref:row,quality,scope})=><Link key={canonicalSourceKey(row.sourceId,row.mangaId)} prefetch={false} href={getMangaDetailHref(row.sourceId,row.mangaId,returnTo)}
           className="block rounded-lg border border-border-subtle p-3 text-text-primary hover:bg-surface-hover">
           {getSourceMetadata(row.sourceId)?.name??row.sourceId}
           <span className="block text-sm text-text-secondary">{row.detail.title}</span>
-          <span className="block text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":"sumber"}`}</span>
+          <span className="block text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":scope==="monitor"?"monitor":"perangkat"}`}</span>
         </Link>)}
         {result.visible.length<refs.length && <p className="text-xs text-text-muted">Sebagian sumber belum dapat diverifikasi atau dinonaktifkan.</p>}
       </section>

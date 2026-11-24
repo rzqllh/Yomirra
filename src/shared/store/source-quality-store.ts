@@ -1,17 +1,20 @@
 import {create} from "zustand";
 import type { Chapter } from "@/shared/sources/source-types";
-import {chapterQualityEvidence,qualityKey,type QualitySnapshot,type QualitySample} from "@/shared/lib/source-quality";
+import {chapterQualityEvidence,qualityKey,type QualitySnapshot,type QualitySample,type SharedQualityEvidence} from "@/shared/lib/source-quality";
 
 const MAX_KEYS=180,MAX_SAMPLES=32;
 interface QualityState{
   evidence:QualitySnapshot;
+  shared:SharedQualityEvidence;
+  recordShared:(evidence:SharedQualityEvidence)=>void;
   record:(sourceId:string,mangaId:string|undefined,sample:QualitySample)=>void;
   recordChapters:(sourceId:string,mangaId:string,chapters:Chapter[])=>void;
 }
 /** Session-local and bounded; no telemetry upload, polling or extra API calls.
  * Do not store raw image URLs, auth tokens or private beta history. */
 export const useSourceQualityStore=create<QualityState>((set)=>({
-  evidence:{},
+  evidence:{},shared:{},
+  recordShared:(shared)=>set({shared:Object.fromEntries(Object.entries(shared).slice(0,80))}),
   record:(sourceId,mangaId,sample)=>set(state=>{
     if(!sourceId || !Number.isFinite(sample.ms) || sample.ms<0 || !sample.key ||
        (typeof navigator!=="undefined"&&navigator.onLine===false))return state;
