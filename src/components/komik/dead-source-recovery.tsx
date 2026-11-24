@@ -86,7 +86,6 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
           s.isEnabled &&
           s.isInstalled &&
           !disabledSources.includes(s.id) &&
-          s.status !== "unavailable" &&
           s.status !== "in-fix" && s.status !== "in-dev" && !s.maintenance &&
           isSourceContentVisible(s, hideNsfw)
       );

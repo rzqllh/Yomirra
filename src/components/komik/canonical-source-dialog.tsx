@@ -75,7 +75,6 @@ export function isCanonicalBindingAvailable(binding: SourceBinding, disabledSour
     source.isInstalled === true &&
     source.capabilities?.detail === true &&
     !source.maintenance &&
-    source.status !== "unavailable" &&
     source.status !== "in-fix" &&
     source.status !== "in-dev"
   );

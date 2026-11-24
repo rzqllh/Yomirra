@@ -42,6 +42,11 @@ describe("MangaBaka v2 response boundary", () => {
       aliases: ["Sousou no Frieren", "Frieren: Beyond Journey's End"], format: "manga", contentRating: "safe",
     });
   });
+  it("retains only normalized documented external identifiers", () => {
+    const work = parseMangaBakaWork({...fixture,source_ids:{my_anime_list:126287,anilist:"118586",manga_updates:"https://example.com/untrusted"}});
+    expect(work?.externalWorkIds).toEqual({my_anime_list:"126287",anilist:"118586"});
+  });
+
   it("rejects incomplete, merged, non-comic, and restricted records", () => {
     for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
       expect(parseMangaBakaWork(invalid)).toBeNull();

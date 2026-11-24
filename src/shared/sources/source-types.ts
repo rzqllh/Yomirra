@@ -34,6 +34,9 @@ export interface MangaPageResult {
   hasNextPage: boolean;
 }
 
+/** External catalog identifiers, never a reading provider or chapter ID. */
+export type ExternalWorkIds = Partial<Record<"anilist" | "my_anime_list" | "manga_updates", string>>;
+
 export interface MangaItem {
   id: string;
   title: string;
@@ -48,6 +51,7 @@ export interface MangaItem {
   originalTitle?: string;
   author?: string;
   alternativeTitles?: string[];
+  externalWorkIds?: ExternalWorkIds;
   language?: string;
   contentRating?: "safe" | "suggestive" | "erotica" | "pornographic" | "unknown";
   isNsfw?: boolean;

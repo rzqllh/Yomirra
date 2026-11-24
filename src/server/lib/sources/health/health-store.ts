@@ -39,6 +39,7 @@ export class SourceHealthStore {
     const sourceId = newSnapshot.sourceId.toLowerCase().trim();
     const prev = await this.getSnapshot(sourceId);
 
+    if (prev && newSnapshot.lastCheckedAt < prev.lastCheckedAt) return null;
     const now = new Date().toISOString();
     let consecutiveFailures = 0;
     let lastSuccessAt = prev?.lastSuccessAt ?? null;
@@ -50,6 +51,10 @@ export class SourceHealthStore {
     if (isSuccessfulProbe) {
       consecutiveFailures = 0;
       lastSuccessAt = now;
+    } else if (newSnapshot.status === "UNKNOWN" || newSnapshot.status === "RATE_LIMITED") {
+      // Neither an inconclusive sample nor a throttle proves an outage.
+      consecutiveFailures = 0;
+      lastFailureAt = now;
     } else {
       consecutiveFailures = (prev?.consecutiveFailures ?? 0) + 1;
       lastFailureAt = now;
@@ -149,7 +154,9 @@ export class SourceHealthStore {
       try {
         const raw = await redis.get(`${SNAPSHOT_KEY_PREFIX}${normalizedId}`);
         if (raw) {
-          return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as SourceHealthSnapshot);
+          const persisted = (typeof raw === "string" ? JSON.parse(raw) : raw) as SourceHealthSnapshot;
+          const memory = this.memorySnapshots.get(normalizedId);
+          return memory && memory.lastCheckedAt > persisted.lastCheckedAt ? memory : persisted;
         }
       } catch {
         // fallback to memory
@@ -212,7 +219,7 @@ export class SourceHealthStore {
     }
 
     const windowStart = Date.now() - windowHours * 60 * 60 * 1000;
-    const validSamples = samples.filter((s) => s.timestamp >= windowStart);
+    const validSamples = samples.filter((s) => s.timestamp >= windowStart && s.timestamp <= Date.now() && s.status !== "UNKNOWN");
 
     const totalSamples = validSamples.length;
     const hasSufficientData = totalSamples >= 3;

@@ -41,18 +41,18 @@ function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
   if (status === "degraded") return { label: "Pemeriksaan tidak stabil", variant: "warning" }
-  if (status === "in-fix") return { label: "Maintenance", variant: "warning" }
+  if (status === "in-fix") return { label: "Dalam perbaikan", variant: "warning" }
   if (status === "in-dev") return { label: "Dalam pengembangan", variant: "muted" }
   if (status === "disabled") return { label: "Nonaktif oleh pengelola", variant: "warning" }
   if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
-  return { label: "Pemeriksaan belum berhasil", variant: "error" }
+  return { label: "Pemeriksaan belum berhasil", variant: "warning" }
 }
 
 export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const router = useRouter()
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore()
   const [reportOpen, setReportOpen] = React.useState(false)
-  const [iconFailed, setIconFailed] = React.useState(false)
+  const [failedIconUrl, setFailedIconUrl] = React.useState<string | undefined>()
 
   // Trust functional server health, not old browser-local request failures.
   const effectiveStatus = !source.isEnabled
@@ -62,7 +62,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const isUnavailable = Boolean(source.maintenance) || !source.isEnabled || ["in-fix", "in-dev"].includes(effectiveStatus)
   const hasHealthAlert = !isUnavailable && ["slow", "degraded", "offline", "unavailable"].includes(effectiveStatus)
   const initials = source.name.trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0)).join("").toUpperCase() || "?"
-  const showIcon = Boolean(source.icon) && !iconFailed
+  const showIcon = Boolean(source.icon) && source.icon !== failedIconUrl
   const isPreferenceEnabled = !isSourceDisabled(source.id)
   const discoveryEligible = isDiscoverySourceSystemEligible(source)
   const isCustom = Boolean(source.manifestUrl)
@@ -109,7 +109,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               alt=""
               className="size-full object-contain p-1"
               referrerPolicy="no-referrer"
-              onError={() => setIconFailed(true)}
+              onError={() => setFailedIconUrl(source.icon)}
             />
           ) : (
             <span className="flex size-full items-center justify-center bg-accent/10 text-base font-black tracking-tight text-accent">

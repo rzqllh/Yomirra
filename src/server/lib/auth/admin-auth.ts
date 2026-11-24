@@ -371,3 +371,31 @@ export async function verifyVerifiedAdultSession(session: string | null | undefi
     return false;
   }
 }
+
+/** Private beta is not admin access. No admin key, client email, cookie or
+ * custom claim alone is sufficient. Resolve the configured owner to the
+ * current Firebase UID and verify revocation on each request.
+ */
+export async function verifyPrivateBetaOwner(req: Request): Promise<string | null> {
+  const configuredEmail = process.env.YOMIRRA_PRIVATE_BETA_EMAIL?.trim().toLowerCase();
+  const header = req.headers.get("authorization");
+  if (!configuredEmail || !header?.startsWith("Bearer ")) return null;
+  const token = header.slice(7).trim();
+  if (!token || token.length > 8192) return null;
+  if (!isFirebaseAdminConfigured()) {
+    const { verifyPrivateBetaRestIdentity } = await import("./private-beta-rest");
+    return verifyPrivateBetaRestIdentity(token, configuredEmail);
+  }
+  try {
+    const auth = await getAdminAuth();
+    if (!auth) return null;
+    const decoded = await auth.verifyIdToken(token, true);
+    if (!decoded.uid || decoded.email_verified !== true || decoded.email?.toLowerCase() !== configuredEmail) return null;
+    const owner = await auth.getUserByEmail(configuredEmail);
+    if (owner.disabled || !owner.emailVerified || owner.uid !== decoded.uid ||
+        owner.email?.toLowerCase() !== configuredEmail) return null;
+    return owner.uid;
+  } catch {
+    return null;
+  }
+}

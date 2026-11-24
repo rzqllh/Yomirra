@@ -16,6 +16,15 @@ describe("metadata-assisted discovery", () => {
     expect(result[0].sourceBindings?.map(binding => [binding.sourceId, binding.mangaId])).toEqual([["a", "1"], ["b", "2"]]);
     expect(input[0].manga.title).toBe("Native title");
   });
+  it("bridges a matching tracker ID and rejects contradictory identity despite matching titles", () => {
+    const linked = {...work, externalWorkIds: {my_anime_list: "100"}};
+    const a = row("a", "1", "Native title");
+    const b = {...row("mangadex","2","Unlisted title"),manga:{...row("mangadex","2","Unlisted title").manga,externalWorkIds:{my_anime_list:"100"}}};
+    expect(projectMetadataCatalogRows([a,b], [linked])).toHaveLength(1);
+    const wrong = {...b, manga:{...b.manga,title:"Translated title",externalWorkIds:{my_anime_list:"101"}}};
+    expect(projectMetadataCatalogRows([a,wrong], [linked])).toHaveLength(2);
+  });
+
   it("does not group ambiguous aliases, mismatched formats, or same-provider editions", () => {
     const a = row("a", "1", "Native title");
     const b = row("b", "2", "Translated title");

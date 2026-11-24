@@ -1,4 +1,5 @@
 import { normalizeSynopsis } from "@/shared/utils/normalize";
+import { normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
 import type {
   MangaItem,
   MangaDetail,
@@ -64,6 +65,23 @@ function getFormat(manga: MangaDexManga): string | undefined {
   }
 }
 
+function identityMetadata(manga: MangaDexManga): Pick<MangaItem, "originalTitle" | "alternativeTitles" | "externalWorkIds"> {
+  const attrs = manga.attributes;
+  const values = [attrs.title, ...(Array.isArray(attrs.altTitles) ? attrs.altTitles : [])]
+    .flatMap(value => value && typeof value === "object" ? Object.values(value) : [])
+    .filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    .map(value => value.trim());
+  const alternativeTitles = [...new Set(values)].filter(title => title !== pickTitle(attrs.title)).slice(0, 100);
+  const originalTitle = attrs.title[attrs.originalLanguage] ??
+    attrs.altTitles?.find(value => value?.[attrs.originalLanguage])?.[attrs.originalLanguage];
+  const externalWorkIds = normalizeExternalWorkIds({ anilist: attrs.links?.al, my_anime_list: attrs.links?.mal, manga_updates: attrs.links?.mu });
+  return {
+    ...(originalTitle ? { originalTitle } : {}),
+    ...(alternativeTitles.length ? { alternativeTitles } : {}),
+    ...(externalWorkIds ? { externalWorkIds } : {}),
+  };
+}
+
 export function normalizeMangaItem(manga: MangaDexManga): MangaItem {
   const desc = normalizeSynopsis(pickDescription(manga.attributes.description));
   const lastCh = manga.attributes.lastChapter ? `Chapter ${manga.attributes.lastChapter}` : undefined;
@@ -71,6 +89,7 @@ export function normalizeMangaItem(manga: MangaDexManga): MangaItem {
   return {
     id: manga.id,
     title: pickTitle(manga.attributes.title),
+    ...identityMetadata(manga),
     coverUrl: buildCoverUrl(manga.id, manga.relationships),
     status: normalizeMangaDexStatus(manga.attributes.status),
     format: getFormat(manga),
@@ -89,6 +108,7 @@ export function normalizeMangaDetail(manga: MangaDexManga): MangaDetail {
   return {
     id: manga.id,
     title: pickTitle(manga.attributes.title),
+    ...identityMetadata(manga),
     coverUrl: buildCoverUrl(manga.id, manga.relationships),
     description: normalizeSynopsis(pickDescription(manga.attributes.description)),
     author: getCreator(manga.relationships, "author"),

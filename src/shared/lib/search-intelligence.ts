@@ -47,6 +47,7 @@ export interface SearchCatalogCandidate {
   coverUrl?: string;
   originalTitle?: string;
   alternativeTitles?: string[];
+  externalWorkIds?: import("@/shared/sources/source-types").ExternalWorkIds;
   author?: string;
   description?: string;
   genres?: string[];

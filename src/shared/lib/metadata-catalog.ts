@@ -1,6 +1,8 @@
 import { normalizeTitle } from "./title-matcher";
 import { reconcileCatalogRows, type CatalogSearchRow } from "./canonical-search";
 import { classifyContent } from "@/shared/sources/content-policy";
+import type { ExternalWorkIds } from "@/shared/sources/source-types";
+import { compareExternalWorkIds } from "./external-work-ids";
 
 export type ComicFormat = "manga" | "manhwa" | "manhua";
 export interface MetadataWork {
@@ -10,6 +12,7 @@ export interface MetadataWork {
   aliases: string[];
   format: ComicFormat;
   contentRating: "safe";
+  externalWorkIds?: ExternalWorkIds;
 }
 
 export function comicFormat(value?: string): ComicFormat | undefined {
@@ -38,8 +41,14 @@ export function projectMetadataCatalogRows(
     const format = comicFormat(row.manga.format);
     if (!format || classifyContent(row.manga) === "NSFW") continue;
     const names = aliases([row.manga.title, row.manga.originalTitle, ...(row.manga.alternativeTitles ?? [])]);
-    const candidates = works.filter(work => work.format === format && work.contentRating === "safe" &&
-      [...aliases([work.title, ...work.aliases])].some(name => names.has(name)));
+    const candidates = works.filter(work => {
+      if (work.format !== format || work.contentRating !== "safe") return false;
+      const evidence = compareExternalWorkIds(row.manga.externalWorkIds, work.externalWorkIds);
+      // Contradictory tracker identities veto alias matches. A matching
+      // external ID may bridge a title omitted from the alias list.
+      return evidence !== "conflict" && (evidence === "match" ||
+        [...aliases([work.title, ...work.aliases])].some(name => names.has(name)));
+    });
     if (candidates.length !== 1) continue;
     const work = candidates[0];
     const ref = JSON.stringify([row.sourceId, row.manga.id]);
@@ -62,6 +71,7 @@ export function projectMetadataCatalogRows(
     // Known provider author disagreements are a veto, even with a shared alias.
     const authors = aliases(group.map(row => row.manga.author));
     if (authors.size > 1) continue;
+    if (group.some((row, i) => group.slice(i + 1).some(other => compareExternalWorkIds(row.manga.externalWorkIds, other.manga.externalWorkIds) === "conflict"))) continue;
     for (const row of group) index.set(JSON.stringify([row.sourceId, row.manga.id]), identity);
   }
   const projected = reconcileCatalogRows(rows, [], index);

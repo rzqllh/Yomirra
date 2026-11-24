@@ -217,6 +217,39 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1");
   });
 
+  it("does not request locked chapter pages or mark a valid empty chapter list broken", async () => {
+    const getPages = vi.fn();
+    const getChapters = vi.fn().mockResolvedValueOnce([{ id: "locked", isLocked: true }]).mockResolvedValueOnce([]);
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "asurascans", getPopular: vi.fn().mockResolvedValue({ mangas: [{id:"sample",title:"Sample"}] }),
+      getDetail: vi.fn().mockResolvedValue({id:"sample",title:"Sample"}), getChapters, getPages,
+    } as any);
+    const locked = await probeSourceHealth("asurascans", { deep: true });
+    expect(locked.stage).toBe("chapters");
+    expect(locked.metadata?.pagesSkipped).toBe("locked");
+    expect((await probeSourceHealth("asurascans", { deep: true })).metadata?.pagesSkipped).toBe("no-chapters");
+    expect(getPages).not.toHaveBeenCalled();
+  });
+
+  it("does not turn rate limits into an outage streak", async () => {
+    const getPopular = vi.fn().mockRejectedValueOnce({statusCode:429}).mockRejectedValueOnce({statusCode:429}).mockRejectedValueOnce(new Error("HTTP 502"));
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({id:"shinigami", getPopular} as any);
+    expect((await probeSourceHealth("shinigami")).consecutiveFailures).toBe(0);
+    expect((await probeSourceHealth("shinigami")).status).toBe("RATE_LIMITED");
+    expect((await probeSourceHealth("shinigami")).status).toBe("DEGRADED");
+  });
+
+  it("does not persist late results after the batch watchdog expires", async () => {
+    const controller = new AbortController();
+    const getPopular = vi.fn().mockImplementation(async () => {
+      controller.abort(new Error("Probe deadline"));
+      return {mangas:[{id:"sample", title:"Sample"}]};
+    });
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({id:"shinigami", getPopular} as any);
+    await expect(probeSourceHealth("shinigami", { signal: controller.signal })).rejects.toThrow("Probe deadline");
+    expect(await sourceHealthStore.getSnapshot("shinigami")).toBeNull();
+  });
+
   it("does not mutate domain routing from an isolated transport probe failure", async () => {
     const mockAdapter: any = {
       id: "komikindo",

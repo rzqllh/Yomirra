@@ -43,6 +43,7 @@ export interface MangaDexTag {
 export interface MangaDexMangaAttributes {
   title: MangaDexLocalizedString;
   altTitles: MangaDexLocalizedString[];
+  links?: Record<string, string | null> | null;
   description: MangaDexLocalizedString;
   status: "ongoing" | "completed" | "hiatus" | "cancelled";
   year: number | null;

@@ -4,6 +4,7 @@ import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
 import { AlertSeverity } from "./severity";
 import { sendTelegramMessage } from "./telegram-notifier";
 import { logger } from "@/shared/logger";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import {
   failureGuidance,
   formatLatency,
@@ -121,7 +122,7 @@ export async function sendDailyDigest(): Promise<boolean> {
     // Use the same runtime source registry as the six-hour Health Digest.
     // It includes core overrides and installed custom sources.
     const activeSources = (await getRuntimeSources()).filter(
-      (source) => source.isEnabled && source.isInstalled
+      isDiscoverySourceSystemEligible
     );
     const sourceIds = activeSources.map((source) => source.id);
     const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);

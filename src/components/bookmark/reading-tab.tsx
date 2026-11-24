@@ -180,7 +180,7 @@ export function ReadingTab({
             const staleSources = bindings.filter(ref => {
               const source = dynamicSourceRegistry.get(ref.sourceId) ?? getSourceMetadata(ref.sourceId);
               return !source || source.isEnabled === false || source.isInstalled === false ||
-                source.status === "unavailable" || source.status === "in-fix";
+                Boolean(source.maintenance) || source.status === "in-dev" || source.status === "in-fix";
             }).map(ref => ref.sourceId);
             const decision = hasPreferenceConflict
               ? { action: "pick-source" as const, reason: "preference-conflict" as const }
