@@ -20,6 +20,7 @@ import type { MangaKey } from "@/shared/types/collection";
 import { ContinueReadingList } from "./continue-reading-list";
 import { EditorialSpotlight } from "./editorial-spotlight";
 import { HomeLeaderboardPanel } from "./home-leaderboard-panel";
+import { extendCatalogEvidence } from "@/shared/lib/catalog-evidence";
 import { SectionStack } from "@/components/ui/section-stack";
 import { HomeHero } from "./home-hero";
 import {
@@ -229,10 +230,10 @@ export function HomeFeedClient({
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
   const verifiedDiscoveryIndex = React.useMemo(
-    () => indexDiscoveryCatalog(groupVerifiedCatalogEntries(
+    () => extendCatalogEvidence([...filteredLatest,...filteredPopular].map(manga=>({sourceId:manga.sourceId,manga})), indexDiscoveryCatalog(groupVerifiedCatalogEntries(
       Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
-    )),
-    [savedLibraryMap],
+    ))),
+    [savedLibraryMap,filteredLatest,filteredPopular],
   );
 
   const personalizedKeys = React.useMemo(() => new Set(
