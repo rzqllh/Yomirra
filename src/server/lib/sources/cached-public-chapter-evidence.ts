@@ -20,9 +20,9 @@ export function cachedPublicChapterEvidence(mangaId:string,detailRaw:string|null
   if(!detail||!chapters||!detail.data||typeof detail.data!=="object"||
      (detail.data as MangaItem).id!==mangaId||classifyContent(detail.data as MangaItem)!=="SAFE"||
      !Array.isArray(chapters.data))return;
-  const evidence=chapterQualityEvidence(chapters.data as Chapter[],mangaId,chapters.at);
+  const evidence=chapterQualityEvidence(chapters.data as Chapter[],mangaId,Math.floor(chapters.at/300000)*300000);
   // Return only bounded public chapter numbering. Do not infer anything
   // from empty, oversized or unclassified cache entries.
-  if(!evidence||evidence.labels.some(label=>label.length>100))return;
+  if(!evidence||evidence.labels.length>2000||evidence.labels.some(label=>label.length>100)||JSON.stringify(evidence).length>48*1024)return;
   return evidence;
 }

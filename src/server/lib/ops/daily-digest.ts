@@ -131,7 +131,7 @@ export async function sendDailyDigest(): Promise<boolean> {
     );
     const sourceIds = activeSources.map((source) => source.id);
     const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);
-    const budgets=await Promise.all([catalogBudgetSummary(),optionalServiceSummary("mangabaka"),optionalServiceSummary("gemini"),optionalServiceSummary("mangaupdates")]);
+    const budgets=await Promise.all([catalogBudgetSummary(),optionalServiceSummary("mangabaka"),optionalServiceSummary("gemini"),optionalServiceSummary("mangaupdates"),optionalServiceSummary("sqs")]);
     const message = formatDailyDigest(sourceIds, snapshots)+"\n\n*Batas layanan opsional*\n"+budgets.join("\n")+"\nMeter billing Vercel/Redis/Firebase/Turso/Gemini: cek dashboard resmi; hitungan ini bukan pemakaian akun.";
 
     return await sendTelegramMessage(message, {

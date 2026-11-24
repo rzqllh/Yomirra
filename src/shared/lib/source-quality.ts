@@ -12,12 +12,15 @@ export type SharedChapterEvidence = Record<string,QualityChapters>;
  * into global state or compare providers without a verified work group. */
 export function mergeSharedChapterEvidence(local:QualitySnapshot,shared:SharedChapterEvidence,now=Date.now()):QualitySnapshot{
   const merged={...local};
-  for(const [key,chapters] of Object.entries(shared)){
+  for(const [key,chapters] of Object.entries(shared).slice(0,8)){
+    let identity:unknown;
+    try{identity=JSON.parse(key);}catch{continue;}
+    if(!Array.isArray(identity)||identity.length!==2||!identity.every(v=>typeof v==="string"&&v.length>0&&v.length<=300))continue;
     if(!chapters||!recent(chapters.at,now)||!Array.isArray(chapters.labels)||!chapters.labels.length||
-       chapters.labels.length>10000||!chapters.labels.every(label=>typeof label==="string"&&label.length<=100&&readChapterNumberEvidence(label)))continue;
+       chapters.labels.length>2000||!chapters.labels.every(label=>typeof label==="string"&&label.length<=100&&readChapterNumberEvidence(label)))continue;
     const previous=local[key];
     if(previous?.chapters&&recent(previous.chapters.at,now)&&previous.chapters.at>=chapters.at)continue;
-    merged[key]={samples:previous?.samples??[],chapters};
+    merged[key]={samples:previous?.samples??[],chapters:{at:chapters.at,labels:[...new Set(chapters.labels)]}};
   }
   return merged;
 }

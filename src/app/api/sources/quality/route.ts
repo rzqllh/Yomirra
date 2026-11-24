@@ -3,6 +3,7 @@ import { z } from "zod";
 import { checkRateLimitPolicy, createRateLimitRejection, applyRateLimitHeaders } from "@/server/lib/security/rate-limit";
 import { isRedisConfigured,isRedisCommandAllowed,redis } from "@/server/lib/cache/redis";
 import { CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { reserveOptionalService } from "@/server/lib/cache/optional-service-budget";
 import { getRequestReadOptions,contentCacheKey,assertSourceAccess } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { getDurableCoreSourceOverrides } from "@/server/lib/sources/admin-source-service";
@@ -36,7 +37,7 @@ export async function POST(request:NextRequest){
   try{raw=await boundedBody(request);}catch{return respond({},400);}
   const parsed=schema.safeParse(raw);
   if(!parsed.success)return respond({},400);
-  if(!isRedisConfigured||!isRedisCommandAllowed())return respond({});
+  if(!isRedisConfigured||!isRedisCommandAllowed()||!await reserveOptionalService("sqs"))return respond({});
   try{
     // Static built-ins only. No user manifests, arbitrary URLs, private beta,
     // or adult-scope caches. Honor the authoritative admin disable switch.
@@ -50,14 +51,19 @@ export async function POST(request:NextRequest){
       try{assertSourceAccess(source,options);}catch{return [];}
       return [{ref,keys:[contentCacheKey(source,"manga",ref.mangaId,options),contentCacheKey(source,"chapters",ref.mangaId,options)]}];
     });
-    if(requests.length<2)return respond({});
+    if(new Set(requests.map(r=>r.ref.sourceId)).size<2)return respond({});
     // One bounded MGET for all existing cache entries; no writes, probes,
     // upstream fan-out or per-user telemetry.
     const rows=await redis.mget(...requests.flatMap(r=>r.keys));
     const result:SharedChapterEvidence={};
+    let bytes=0;
     requests.forEach(({ref},i)=>{
       const evidence=cachedPublicChapterEvidence(ref.mangaId,rows[i*2],rows[i*2+1],Date.now(),CACHE_TTL.DETAIL,CACHE_TTL.CHAPTERS);
-      if(evidence)result[qualityKey(ref.sourceId,ref.mangaId)]=evidence;
+      if(evidence){
+        const key=qualityKey(ref.sourceId,ref.mangaId);
+        bytes+=JSON.stringify([key,evidence]).length;
+        if(bytes<=128*1024)result[key]=evidence;
+      }
     });
     return respond(result);
   }catch{return respond({});}

@@ -40,3 +40,9 @@ it("limits MangaUpdates independently and fails closed before network admission"
   state.eval.mockResolvedValueOnce(0);
   expect(await reserveOptionalService("mangaupdates")).toBe(false);
 });
+
+it("bounds shared chapter evidence independently of metadata APIs",async()=>{
+  expect(await reserveOptionalService("sqs")).toBe(true);
+  expect(state.eval).toHaveBeenLastCalledWith(expect.any(String),1,expect.stringContaining(":sqs:"),200);
+  state.eval.mockResolvedValueOnce(0);expect(await reserveOptionalService("sqs")).toBe(false);
+});
