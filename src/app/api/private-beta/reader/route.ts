@@ -17,9 +17,23 @@ export async function POST(req: NextRequest) {
   const uid = await verifyPrivateBetaOwner(req);
   if (!uid) return json({error:"Tidak ditemukan."},404);
   try {
-    const text = await req.text();
-    if (text.length > 8192) return json({error:"Permintaan tidak valid."},400);
-    const body = JSON.parse(text);
+    if (!req.body) return json({error:"Permintaan tidak valid."},400);
+    const reader = req.body.getReader();
+    const decoder = new TextDecoder();
+    let size = 0;
+    let text = "";
+    try {
+      for (;;) {
+        const {done,value} = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > 8192) { await reader.cancel(); return json({error:"Permintaan terlalu besar."},413); }
+        text += decoder.decode(value,{stream:true});
+      }
+      text += decoder.decode();
+    } finally { reader.releaseLock(); }
+    let body;
+    try { body = JSON.parse(text); } catch { return json({error:"Permintaan tidak valid."},400); }
     if (!body || typeof body !== "object") return json({error:"Permintaan tidak valid."},400);
     if (body.operation === "image") {
       if (typeof body.ticket !== "string") return json({error:"Permintaan tidak valid."},400);

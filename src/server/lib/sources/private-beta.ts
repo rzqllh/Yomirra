@@ -47,7 +47,7 @@ export async function readPrivateBetaCatalog(id: string, query: string) {
   if (!Array.isArray(result?.mangas)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
   const rows = result.mangas.filter((m: MangaItem) =>
     m && typeof m.id === "string" && typeof m.title === "string" &&
-    validBetaIdentity(m.id) && m.title.trim() && classifyContent(m) === "SAFE"
+    validBetaIdentity(m.id) && !m.id.includes("/") && m.title.trim() && classifyContent(m) === "SAFE"
   ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
   return { items: rows, received: result.mangas.length };
 }
@@ -108,6 +108,7 @@ export async function readPrivateBetaChapter(uid: string, id: string, mangaId: s
   const chapter = detail.chapters.find(ch => ch.id === chapterId);
   if (!chapter?.readable) throw new Error("PRIVATE_BETA_CHAPTER_UNAVAILABLE");
   const adapter = authorizedAdapter(id);
+  if (!env.IMAGE_PROXY_SECRET) throw new Error("PRIVATE_BETA_IMAGE_UNCONFIGURED");
   const result = await adapter.getPages(chapterId,{...options,mangaId});
   if (!result || result.chapterId !== chapterId || !Array.isArray(result.pages) ||
       result.pages.length === 0 || result.pages.length > 300 ||

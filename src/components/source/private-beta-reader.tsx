@@ -71,7 +71,10 @@ export function PrivateBetaReader({user,source,mangaId,onClose}:{user:User;sourc
     {chapter&&<div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2"><Button variant="outline" onClick={()=>{setChapter(null);setImage(null);setFailed(false);}}>Daftar chapter</Button><span className="text-sm font-semibold">{chapter.title}</span><span className="text-sm">{index+1} / {chapter.pages.length}</span></div>
       {imageBusy&&<p role="status" className="text-sm text-text-secondary">Memuat halaman…</p>}
-      {image&&!imageBusy&&/* eslint-disable-next-line @next/next/no-img-element */ <img src={image} alt={`Halaman ${index+1}`} className="mx-auto max-w-full rounded-sm" />}
+      {image&&!imageBusy&&(
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt={`Halaman ${index+1}`} className="mx-auto max-w-full rounded-sm" />
+      )}
       {failed&&<Button variant="outline" onClick={()=>setRetry(v=>v+1)}>Coba lagi</Button>}
       <div className="flex justify-between gap-2"><Button disabled={index===0||imageBusy} onClick={()=>setIndex(v=>v-1)}>Sebelumnya</Button><Button disabled={index===chapter.pages.length-1||imageBusy} onClick={()=>setIndex(v=>v+1)}>Berikutnya</Button></div>
     </div>}
