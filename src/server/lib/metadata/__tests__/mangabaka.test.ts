@@ -69,6 +69,11 @@ describe("MangaBaka v2 response boundary", () => {
     expect(work?.externalWorkIds).toEqual({my_anime_list:"126287",anilist:"118586"});
   });
 
+  it("accepts only known top-level tracker links and vetoes conflicting IDs",()=>{
+    const work=parseMangaBakaWork({...fixture,source_ids:{anilist:"118586"},links:["https://anilist.co/manga/118586/Sousou-no-Frieren/","https://myanimelist.net/manga/126287/Frieren","https://fake.example/manga/100"],links_v2:[{url:"https://www.mangaupdates.com/series/ab12c/fixture"}]});
+    expect(work?.externalWorkIds).toEqual({anilist:"118586",my_anime_list:"126287",manga_updates:"ab12c"});
+    expect(parseMangaBakaWork({...fixture,source_ids:{anilist:"100"},links:[{url:"https://anilist.co/manga/200/"}]})?.externalWorkIds).toBeUndefined();
+  });
   it("preserves explicit canonical classification in internal rating mode only", () => {
     for (const rating of ["safe","suggestive","erotica","pornographic"] as const) {
       expect(parseMangaBakaWork({...fixture,content_rating:rating},true)?.contentRating).toBe(rating);

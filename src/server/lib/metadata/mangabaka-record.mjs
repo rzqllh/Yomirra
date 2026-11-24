@@ -24,11 +24,26 @@ export function parseCatalogRecord(value,allRatings=false){
   const authors=Array.isArray(row.authors)?[...new Set(row.authors.map(clean).filter(Boolean))].slice(0,40):[];
   const description=typeof row.description==="string"&&row.description.length<=12000?row.description.trim():undefined;
   const ids={};
+  const conflicts=new Set();
+  const addId=(key,id)=>{if(conflicts.has(key))return;if(ids[key]&&ids[key]!==id){delete ids[key];conflicts.add(key);}else ids[key]=id;};
   for(const key of ["anilist","my_anime_list","manga_updates"]){
     const raw=row.source_ids?.[key];
     if(typeof raw!=="string"&&!(typeof raw==="number"&&Number.isSafeInteger(raw)))continue;
     const id=String(raw).trim().toLowerCase();
-    if(key==="manga_updates"?/^(?=[a-z0-9]{1,32}$)(?=.*[a-z])[a-z0-9]+$/.test(id):/^[1-9][0-9]{0,14}$/.test(id))ids[key]=id;
+    if(key==="manga_updates"?/^(?=[a-z0-9]{1,32}$)(?=.*[a-z])[a-z0-9]+$/.test(id):/^[1-9][0-9]{0,14}$/.test(id))addId(key,id);
+  }
+  for(const link of [...(Array.isArray(row.links)?row.links:[]),...(Array.isArray(row.links_v2)?row.links_v2:[])].slice(0,200)){
+    const raw=typeof link==="string"?link:obj(link)?.url;
+    if(typeof raw!=="string"||raw.length>2048)continue;
+    try{
+      const url=new URL(raw);if(url.protocol!=="https:"||url.username||url.password||url.port)continue;
+      const host=url.hostname.replace(/^www\./,"");
+      let key,match;
+      if(host==="anilist.co"){key="anilist";match=/^\/manga\/([1-9]\d{0,14})(?:\/[^/]+)?\/?$/.exec(url.pathname);}
+      else if(host==="myanimelist.net"){key="my_anime_list";match=/^\/manga\/([1-9]\d{0,14})(?:\/[^/]+)?\/?$/.exec(url.pathname);}
+      else if(host==="mangaupdates.com"){key="manga_updates";match=/^\/series\/((?=[a-z0-9]{1,32}(?:\/|$))(?=[a-z0-9]*[a-z])[a-z0-9]+)(?:\/[^/]+)?\/?$/i.exec(url.pathname);}
+      if(key&&match)addId(key,match[1].toLowerCase());
+    }catch{/* Ignore untrusted URL shape; never fetch links. */}
   }
   return {provider:"mangabaka",externalId:row.id,title,aliases,format,contentRating:rating,
     ...(description?{description}:{}),...(authors.length?{authors}:{}),...(Object.keys(ids).length?{externalWorkIds:ids}:{})};

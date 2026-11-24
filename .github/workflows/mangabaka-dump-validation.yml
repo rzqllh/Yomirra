@@ -4,11 +4,15 @@ on:
     branches: [main]
     paths:
       - 'scripts/validate-mangabaka-dump.py'
+      - 'scripts/check-catalog-overlap.mjs'
+      - 'scripts/build-mangabaka-index.mjs'
+      - 'src/server/lib/metadata/catalog-payload.mjs'
       - 'scripts/__tests__/validate-mangabaka-dump.test.py'
       - '.github/workflows/mangabaka-dump-validation.yml'
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: mangabaka-dump-validation-${{ github.ref }}
   cancel-in-progress: false
@@ -38,8 +42,17 @@ jobs:
       - name: Test exact dump selection and checksum boundary
         if: steps.scope.outputs.run == 'true'
         run: python3 scripts/__tests__/validate-mangabaka-dump.test.py
+      - uses: actions/download-artifact@v4
+        if: steps.scope.outputs.run == 'true'
+        with:
+          name: catalog-live-observations
+          run-id: 45379955951
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/catalog-observations
       - name: Build and measure isolated permitted-use index
         if: steps.scope.outputs.run == 'true'
+        env:
+          YOMIRRA_OBSERVATIONS_PATH: ${{ runner.temp }}/catalog-observations/catalog-live-observations.json
         run: |
           command -v zstd
           python3 scripts/validate-mangabaka-dump.py

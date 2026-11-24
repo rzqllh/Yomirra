@@ -1,4 +1,5 @@
 import { statSync } from "node:fs";
+import { decodeCatalogPayload } from "./catalog-payload.mjs";
 import { resolve } from "node:path";
 import type { MetadataWork } from "@/shared/lib/metadata-catalog";
 import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
@@ -40,7 +41,7 @@ function dbForLookup():ReadOnlyIndex|null{
     try{
       const manifest=candidate.prepare("SELECT schema_version, created_at, license, provider FROM manifest LIMIT 1").get() as {schema_version?:number;created_at?:string;license?:string;provider?:string}|undefined;
       const created=Date.parse(manifest?.created_at??"");
-      if(manifest?.schema_version!==1||manifest.provider!=="mangabaka"||manifest.license!=="CC-BY-NC-SA-4.0"||
+      if((manifest?.schema_version!==1&&manifest?.schema_version!==2)||manifest.provider!=="mangabaka"||manifest.license!=="CC-BY-NC-SA-4.0"||
          !Number.isFinite(created)||created>now||now-created>MAX_AGE){candidate.close();return null;}
       current?.db.close();
       current={path,mtime:stat.mtimeMs,db:candidate,createdAt:created};
@@ -66,9 +67,7 @@ export function findLocalMetadataWorks(input:{titles?:readonly string[];external
       const rows=query.all(key);
       if(rows.length>MAX_MATCHES)return [];
       for(const row of rows){
-        const raw=(row as {payload?:unknown}).payload;
-        if(typeof raw!=="string"||raw.length>64*1024)return null;
-        const work=JSON.parse(raw) as MetadataWork;
+        const work=decodeCatalogPayload((row as {payload?:unknown}).payload);
         if(work.provider!=="mangabaka"||!Number.isSafeInteger(work.externalId)||
            !Array.isArray(work.aliases)||typeof work.title!=="string"||!["safe","suggestive","erotica","pornographic"].includes(work.contentRating))return null;
         records.set(work.externalId,work);
@@ -91,9 +90,9 @@ export function applyLocalCanonicalMetadata<T extends MangaItem>(item:T):T{
 export function getLocalMetadataWork(id:number):MetadataWork|null{
   if(!Number.isSafeInteger(id)||id<=0)return null;
   try{
-    const row=dbForLookup()?.prepare("SELECT payload FROM works WHERE id=?").get(String(id)) as {payload?:string}|undefined;
-    if(!row?.payload||row.payload.length>64*1024)return null;
-    const work=JSON.parse(row.payload) as MetadataWork;
+    const row=dbForLookup()?.prepare("SELECT payload FROM works WHERE id=?").get(String(id)) as {payload?:unknown}|undefined;
+    if(!row)return null;
+    const work=decodeCatalogPayload(row.payload);
     return work.provider==="mangabaka"&&work.externalId===id&&work.contentRating==="safe"&&typeof work.title==="string"&&Array.isArray(work.aliases)?work:null;
   }catch{return null;}
 }
@@ -104,9 +103,7 @@ export function discoverLocalMetadataWorks(query:string):MetadataWork[]{
   try{
     const rows=dbForLookup()?.prepare("SELECT DISTINCT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key>=? AND l.key<? ORDER BY l.key LIMIT 20").all("title:"+key,"title:"+key+"\uffff")??[];
     return rows.flatMap(row=>{
-      const raw=(row as {payload?:string}).payload;
-      if(!raw||raw.length>64*1024)return [];
-      const work=JSON.parse(raw) as MetadataWork;
+      const work=decodeCatalogPayload((row as {payload?:unknown}).payload);
       return work.provider==="mangabaka"&&work.contentRating==="safe"&&Number.isSafeInteger(work.externalId)&&typeof work.title==="string"&&Array.isArray(work.aliases)?[work]:[];
     });
   }catch{return [];}

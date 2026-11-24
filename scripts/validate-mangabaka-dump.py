@@ -14,7 +14,7 @@ import subprocess
 DOCUMENT = "https://mangabaka.org/developers/dumps"
 FILENAME = "series.jsonl.zst"
 MAX_COMPRESSED = 512 * 1024 * 1024
-MAX_DECOMPRESSED = 4 * 1024 * 1024 * 1024
+MAX_DECOMPRESSED = 6 * 1024 * 1024 * 1024
 
 def official(url):
     p = urlsplit(url)
@@ -158,6 +158,9 @@ def main():
                        "indexBytes":size,"fitsCurrentRuntimeLimit":size<=200*1024*1024,
                        "productionActivated":False,"benchmarkPass":False})
         print(json.dumps(report), flush=True)
+        observations = os.environ.get("YOMIRRA_OBSERVATIONS_PATH")
+        if observations:
+            subprocess.run(["node", "scripts/check-catalog-overlap.mjs", str(index), observations], check=True, timeout=120)
 
 if __name__ == "__main__":
     main()
