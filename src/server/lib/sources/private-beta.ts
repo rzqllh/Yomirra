@@ -8,6 +8,7 @@ import type { MangaItem } from "@/shared/sources/source-types";
 import { getStagedKeiyoushiSource } from "./adapters/keiyoushi";
 import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
 import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
+import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
 
 /** Only non-restricted, implemented candidates may be considered for private
  * metadata testing. No duplicate, DRM, login/paywall prototype or explicit
@@ -69,7 +70,7 @@ export async function readPrivateBetaCatalog(
   // No request per listing item. Only an explicit title search may supply
   // canonical evidence, and only strong identity can inherit its rating.
   const works = mode === "search" ? await matchMangaBakaWorks(query.trim(),true) : [];
-  const normalized = result.mangas.map(m => m && inheritCanonicalRating(m,matchCanonicalMetadata(m,works)));
+  const normalized = result.mangas.map(m => m && applyLocalCanonicalMetadata(inheritCanonicalRating(m,matchCanonicalMetadata(m,works))));
   const rows = normalized.filter((m: MangaItem) =>
     m && typeof m.id === "string" && typeof m.title === "string" &&
     validBetaMangaId(id, m.id) && m.title.trim() && classifyContent(m) === "SAFE"
@@ -85,8 +86,9 @@ export async function readPrivateBetaDetail(id: string, mangaId: string) {
   const rawDetail = await adapter.getDetail(mangaId, options);
   if (!rawDetail || rawDetail.id !== mangaId || typeof rawDetail.title !== "string" ||
       !rawDetail.title.trim() || classifyContent(rawDetail) === "NSFW") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
-  const works = await matchMangaBakaWorks(rawDetail.title,true);
-  const detail = inheritCanonicalRating(rawDetail,matchCanonicalMetadata(rawDetail,works));
+  const local=applyLocalCanonicalMetadata(rawDetail);
+  const works = classifyContent(local)==="UNKNOWN" ? await matchMangaBakaWorks(rawDetail.title,true) : [];
+  const detail = inheritCanonicalRating(local,matchCanonicalMetadata(local,works));
   if (classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const chapters = await adapter.getChapters(mangaId, options);
   if (!Array.isArray(chapters)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");

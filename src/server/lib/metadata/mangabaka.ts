@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { comicFormat, type MetadataWork } from "@/shared/lib/metadata-catalog";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
-import { normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
+import { compareExternalWorkIds, normalizeExternalWorkIds } from "@/shared/lib/external-work-ids";
+import { parseCatalogRecord } from "./mangabaka-record.mjs";
+import { findLocalMetadataWorks } from "./local-catalog-index";
 
 const ORIGIN = "https://api.mangabaka.org";
 const CACHE_TTL_SECONDS = 24 * 60 * 60;
@@ -25,31 +27,10 @@ function record(value: unknown): JsonRecord | undefined {
 }
 
 export function parseMangaBakaWork(value: unknown, allRatings = false): MetadataWork | null {
-  const row = record(value);
-  if (!row || typeof row.id !== "number" || !Number.isSafeInteger(row.id) || row.id <= 0 ||
-      row.state !== "active" || !Array.isArray(row.titles)) return null;
-  const rating = row.content_rating;
-  if (rating !== "safe" && (!allRatings || (rating !== "suggestive" && rating !== "erotica" && rating !== "pornographic"))) return null;
-  const format = comicFormat(typeof row.type === "string" ? row.type : undefined);
-  if (!format) return null;
-  const titles = row.titles.flatMap(value => {
-    const t = record(value);
-    return t && typeof t.title === "string" && t.title.trim() && t.title.length <= 1000
-      ? [{ title: t.title.trim(), language: t.language, primary: t.is_primary === true }] : [];
-  });
-  if (!titles.length) return null;
-  const preferred = titles.find(t => t.primary && t.language === "en") ??
-    titles.find(t => t.primary) ?? titles[0];
-  const externalWorkIds = normalizeExternalWorkIds(row.source_ids);
-  return {
-    ...(externalWorkIds ? { externalWorkIds } : {}),
-    provider: "mangabaka",
-    externalId: row.id,
-    format,
-    contentRating: rating,
-    title: preferred.title,
-    aliases: [...new Set(titles.map(t => t.title))],
-  };
+  // Live v2 full records provide titles and authors. Keep API parsing strict;
+  // the v1 title fallback is only for the offline dump importer.
+  if (!Array.isArray(record(value)?.titles)) return null;
+  return parseCatalogRecord(value,allRatings);
 }
 
 async function request(path: string, followup = false): Promise<unknown> {
@@ -105,7 +86,12 @@ export async function matchMangaBakaWorks(query: string, allRatings = false): Pr
   if (!isMangaBakaEnabled()) return [];
   const q = query.trim().normalize("NFKC");
   if (q.length < 3 || q.length > 160 || !normalizeTitle(q)) return [];
-  const key = "metadata:mangabaka:v4:" + (allRatings ? "classification:" : "match:") + createHash("sha256").update(q).digest("hex");
+  const local=findLocalMetadataWorks({titles:[q]});
+  if(local!==null && local.length) {
+    if(local.length>MAX_MATCHES || (!allRatings && local.some(work=>work.contentRating!=="safe")))return [];
+    return local;
+  }
+  const key = "metadata:mangabaka:v5:" + (allRatings ? "classification:" : "match:") + createHash("sha256").update(q).digest("hex");
   try {
     return await withCache(key, async () => {
       const data = await request("/v2/series/match?" + new URLSearchParams({ q }).toString());
@@ -130,6 +116,9 @@ export async function matchMangaBakaWorks(query: string, allRatings = false): Pr
           work = parseMangaBakaWork(detail, allRatings);
         }
         if (!work || work.externalId !== row.id || work.format !== comicFormat(row.type) || work.contentRating !== row.content_rating) return [];
+        const ids=normalizeExternalWorkIds(row.source_ids);
+        if(compareExternalWorkIds(ids,work.externalWorkIds)==="conflict")return [];
+        if(ids)work={...work,externalWorkIds:{...ids,...work.externalWorkIds}};
         // /match accepts phrase fragments; require the user's complete title
         // to be present as an alias before any automatic projection.
         if (work.aliases.some(title => normalizeTitle(title) === normalizeTitle(q))) {

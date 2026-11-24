@@ -1,0 +1,26 @@
+name: Local canonical index verification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/build-mangabaka-index.mjs'
+      - 'scripts/__tests__/build-mangabaka-index.test.mjs'
+      - 'src/server/lib/metadata/mangabaka-record.mjs'
+      - 'src/server/lib/metadata/local-catalog-index.ts'
+      - 'src/shared/lib/normalize-title.mjs'
+      - '.github/workflows/local-catalog-index.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs

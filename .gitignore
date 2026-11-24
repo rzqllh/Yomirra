@@ -125,6 +125,7 @@ component-reuse-audit-*.md
 /src/server/lib/sources/adapters/manhwadesu/
 
 # Generated/cache data
+/data/canonical/
 /public/sw.js
 /ext/index.min.json
 
