@@ -80,7 +80,9 @@ export const useSourceHealthStore = create<SourceHealthState>()(
 
       getHealth: (sourceId) => {
         const health = get().healthBySource[sourceId];
-        if (!health || Date.now() - Math.max(health.lastSuccessAt, health.lastErrorAt ?? 0) > 5 * 60 * 1000) return DEFAULT_HEALTH;
+        const at=Math.max(health?.lastSuccessAt??0,health?.lastErrorAt??0);
+        const now=Date.now();
+        if (!health || !Number.isFinite(at)||at<=0||at>now||now-at>5*60*1000) return DEFAULT_HEALTH;
         return health;
       }
     }),

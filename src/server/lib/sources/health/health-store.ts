@@ -179,7 +179,7 @@ export class SourceHealthStore {
         for (const [index, value] of raw.entries()) {
           if (!value) continue;
           try {
-            const snapshot = JSON.parse(value) as SourceHealthSnapshot;
+            const snapshot = (typeof value==="string"?JSON.parse(value):value) as SourceHealthSnapshot;
             const id = sourceIds[index];
             if (!result[id] || snapshot.lastCheckedAt > result[id].lastCheckedAt) {
               result[id] = snapshot;
@@ -219,7 +219,7 @@ export class SourceHealthStore {
     }
 
     const windowStart = Date.now() - windowHours * 60 * 60 * 1000;
-    const validSamples = samples.filter((s) => s.timestamp >= windowStart && s.timestamp <= Date.now() && s.status !== "UNKNOWN");
+    const validSamples = samples.filter((s) => s.timestamp >= windowStart && s.timestamp <= Date.now() && s.status !== "UNKNOWN" && s.status !== "RATE_LIMITED");
 
     const totalSamples = validSamples.length;
     const hasSufficientData = totalSamples >= 3;

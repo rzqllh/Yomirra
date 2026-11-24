@@ -1,0 +1,123 @@
+import {createHash} from "node:crypto";
+import {withCache} from "@/server/lib/cache/redis-cache";
+import {normalizeTitle} from "@/shared/lib/title-matcher";
+import {normalizeExternalWorkIds} from "@/shared/lib/external-work-ids";
+import type {ExternalWorkIds} from "@/shared/sources/source-types";
+import type {MetadataWork} from "@/shared/lib/metadata-catalog";
+import {decodeCatalogPayload} from "./catalog-payload.mjs";
+import {reserveCatalogRequest} from "./catalog-budget";
+
+const MAX_RESPONSE=2*1024*1024;
+const MAX_AGE=7*86400000;
+let pausedUntil=0;
+type Query={sql:string;args:string[];maxRows:number};
+type PipelineValue={type:string;value?:string;base64?:string};
+type Config={origin:string;token:string;snapshot:string};
+function config():Config|null{
+  if(process.env.YOMIRRA_MANGABAKA_METADATA!=="permitted"||
+     process.env.YOMIRRA_TURSO_FREE_CONFIRMED!=="yes")return null;
+  const token=process.env.YOMIRRA_TURSO_READ_TOKEN;
+  const snapshot=process.env.YOMIRRA_TURSO_SNAPSHOT;
+  if(!token||!snapshot||!/^[a-f0-9]{64}$/.test(snapshot))return null;
+  try{
+    const raw=process.env.YOMIRRA_TURSO_URL??"";
+    const u=new URL(raw.replace(/^libsql:\/\//,"https://"));
+    if(u.protocol!=="https:"||u.username||u.password||u.port||u.search||u.hash||u.pathname!=="/"||
+       !/^[a-z0-9-]+\.turso\.io$/.test(u.hostname))return null;
+    return {origin:u.origin,token,snapshot};
+  }catch{return null;}
+}
+export function isTursoCatalogEnabled(){return config()!==null;}
+function textCell(cell:PipelineValue):string{
+  if(cell?.type!=="text"||typeof cell.value!=="string")throw Error("Invalid catalog cell");
+  return cell.value;
+}
+function payload(cell:PipelineValue):MetadataWork{
+  if(cell?.type==="text")return decodeCatalogPayload(textCell(cell));
+  if(cell?.type!=="blob"||typeof cell.base64!=="string"||cell.base64.length>90000)throw Error("Invalid catalog payload");
+  return decodeCatalogPayload(Buffer.from(cell.base64,"base64"));
+}
+async function request(c:Config,queries:Query[]):Promise<PipelineValue[][][]>{
+  if(Date.now()<pausedUntil)throw Error("Catalog temporarily paused");
+  if(!await reserveCatalogRequest())throw Error("Catalog admission unavailable");
+  const response=await fetch(c.origin+"/v2/pipeline",{
+    method:"POST",redirect:"error",cache:"no-store",signal:AbortSignal.timeout(2500),
+    headers:{Authorization:"Bearer "+c.token,"Content-Type":"application/json",Accept:"application/json"},
+    body:JSON.stringify({requests:[...queries.map(q=>({type:"execute",stmt:{sql:q.sql,args:q.args.map(value=>({type:"text",value}))}})),{type:"close"}]}),
+  });
+  if(!response.ok||!response.body){
+    pausedUntil=Date.now()+(response.status===429?60000:15000);
+    await response.body?.cancel();
+    throw Error("Catalog service unavailable");
+  }
+  const reader=response.body.getReader(),decoder=new TextDecoder();
+  let size=0,body="";
+  try{
+    for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;
+      if(size>MAX_RESPONSE)throw Error("Catalog response exceeds limit");
+      body+=decoder.decode(value,{stream:true});}
+    body+=decoder.decode();
+  }finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+  const value=JSON.parse(body);
+  if(!Array.isArray(value?.results)||value.results.length!==queries.length+1||
+     value.results.at(-1)?.type!=="ok"||value.results.at(-1)?.response?.type!=="close")throw Error("Catalog protocol mismatch");
+  return queries.map((q,i)=>{
+    const entry=value.results[i],rows=entry?.response?.result?.rows;
+    if(entry?.type!=="ok"||entry.response.type!=="execute"||!Array.isArray(rows)||rows.length>q.maxRows||
+       rows.some((row:unknown)=>!Array.isArray(row)))throw Error("Catalog query failed");
+    return rows as PipelineValue[][];
+  });
+}
+const manifest:Query={sql:"SELECT CAST(schema_version AS TEXT), created_at, license, provider, source_sha256 FROM manifest LIMIT 2",args:[],maxRows:2};
+function validateManifest(rows:PipelineValue[][],snapshot:string){
+  if(rows.length!==1||rows[0].length!==5)throw Error("Catalog manifest missing");
+  const [version,created,license,provider,sha]=rows[0].map(textCell);
+  const at=Date.parse(created),now=Date.now();
+  if(version!=="2"||license!=="CC-BY-NC-SA-4.0"||provider!=="mangabaka"||sha!==snapshot||
+     !Number.isFinite(at)||at>now||now-at>MAX_AGE)throw Error("Catalog snapshot invalid or expired");
+}
+type CatalogResult={works:MetadataWork[];discovery:MetadataWork[]};
+async function cachedQuery(c:Config,queries:Query[],parse:(rows:PipelineValue[][][])=>CatalogResult):Promise<CatalogResult>{
+  const key="metadata:turso:v1:"+createHash("sha256").update(JSON.stringify([c.origin,c.snapshot,queries])).digest("hex");
+  // Strict cache TTL for classification. No stale safety rating on errors.
+  return withCache(key,async()=>{
+    const [m,...rows]=await request(c,[manifest,...queries]);
+    validateManifest(m,c.snapshot);
+    return parse(rows);
+  },1800,{allowStaleOnError:false,shouldPersist:data=>JSON.stringify(data).length<=64*1024});
+}
+/** Explicit search/detail only; one bounded pipeline, no per-cover fan-out.
+ * Returns null for unavailable; empty results remain distinct from an outage. */
+export async function lookupTursoCatalog(query:string,externalIds?:ExternalWorkIds,includeDiscovery=false):Promise<CatalogResult|null>{
+  const c=config(),title=normalizeTitle(query);
+  if(!c||title.length<3||title.length>160)return null;
+  const keys=["title:"+title,...Object.entries(normalizeExternalWorkIds(externalIds)??{}).map(([ns,id])=>"id:"+ns+":"+id)];
+  const queries:Query[]=keys.map(key=>({sql:"SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key=? LIMIT 17",args:[key],maxRows:17}));
+  if(includeDiscovery)queries.push({sql:"SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key>=? AND l.key<? ORDER BY l.key LIMIT 20",args:["title:"+title,"title:"+title+"\uffff"],maxRows:20});
+  try{
+    return await cachedQuery(c,queries,rows=>{
+      const exact=new Map<number,MetadataWork>();
+      let ambiguous=false;
+      for(const bucket of rows.slice(0,keys.length)){
+        if(bucket.length===17){ambiguous=true;continue;}
+        for(const row of bucket){const work=payload(row[0]);exact.set(work.externalId,work);}
+      }
+      const discovery=new Map<number,MetadataWork>();
+      if(includeDiscovery)for(const row of rows[keys.length]){
+        const work=payload(row[0]);if(work.contentRating==="safe")discovery.set(work.externalId,work);
+      }
+      return {works:ambiguous||exact.size>16?[]:[...exact.values()],discovery:[...discovery.values()]};
+    });
+  }catch{return null;}
+}
+export async function getTursoMetadataWork(id:number):Promise<MetadataWork|null>{
+  const c=config();
+  if(!c||!Number.isSafeInteger(id)||id<=0)return null;
+  try{
+    const result=await cachedQuery(c,[{sql:"SELECT payload FROM works WHERE id=? LIMIT 1",args:[String(id)],maxRows:1}],rows=>{
+      const work=rows[0][0]?payload(rows[0][0][0]):null;
+      return {works:work?.externalId===id&&work.contentRating==="safe"?[work]:[],discovery:[]};
+    });
+    return result.works[0]??null;
+  }catch{return null;}
+}

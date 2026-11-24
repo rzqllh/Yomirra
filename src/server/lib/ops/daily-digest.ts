@@ -5,6 +5,7 @@ import { hasReaderPageEvidence } from "@/server/lib/sources/health/probe-coverag
 import { AlertSeverity } from "./severity";
 import { sendTelegramMessage } from "./telegram-notifier";
 import { logger } from "@/shared/logger";
+import { catalogBudgetSummary } from "@/server/lib/metadata/catalog-budget";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import {
   failureGuidance,
@@ -129,7 +130,7 @@ export async function sendDailyDigest(): Promise<boolean> {
     );
     const sourceIds = activeSources.map((source) => source.id);
     const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);
-    const message = formatDailyDigest(sourceIds, snapshots);
+    const message = formatDailyDigest(sourceIds, snapshots)+"\n\n*Penggunaan katalog*\n"+await catalogBudgetSummary()+"\nMeter billing Vercel/Redis/Firebase/Turso: cek dashboard resmi; hitungan ini bukan pemakaian akun.";
 
     return await sendTelegramMessage(message, {
       severity: AlertSeverity.INFO,

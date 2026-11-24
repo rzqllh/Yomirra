@@ -54,11 +54,10 @@ class ApiClient {
           (typeof navigator !== "undefined" && navigator.onLine === false) ||
           (error instanceof ApiRequestError && error.status >= 400 && error.status < 500) ||
           ["CONTENT_RESTRICTED", "MAPPING_UNAVAILABLE", "CHAPTER_UNAVAILABLE", "CONTENT_NOT_FOUND", "SOURCE_DISABLED"].includes(error?.code)) throw error;
-      const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
-      useSourceHealthStore.getState().recordError(sourceId, error);
-      // Only classified upstream errors count; unknown application errors
-      // (including Redis failures) are not attributed to provider quality.
+      // Unknown application errors and Redis failures are not upstream evidence.
       if (error instanceof ApiRequestError && ["SOURCE_DOWN","DOMAIN_CHANGED","ROUTE_CHANGED","PARSER_BROKEN","SCHEMA_CHANGED","UPSTREAM_TIMEOUT","UPSTREAM_BLOCKED","IMAGE_CDN_FAILURE"].includes(error.code)) {
+        const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
+        useSourceHealthStore.getState().recordError(sourceId, error);
         useSourceQualityStore.getState().record(sourceId,mangaId,{kind:"api",ok:false,ms:performance.now()-start,at:Date.now(),key:String(start)+":"+String(Math.random())});
       }
       throw error;
