@@ -14,6 +14,22 @@ describe("evidence-based source quality",()=>{
     expect(calculateSourceQuality(evidence,[own,peer],now)).toMatchObject({coverage:100,score:88,metrics:{reliability:100,reader:100,speed:100,completeness:50,freshness:50}});
     expect(calculateSourceQuality(evidence,[],now)).toMatchObject({coverage:75,score:100});
   });
+  it("uses the arithmetic median for an even number of successful samples",()=>{
+    const times=[100,100,500,1500,2000,2000];
+    const evidence:QualityEvidence={samples:times.map((ms,i)=>({at:now-100,ok:true,kind:"api",ms,key:String(i)}))};
+    expect(calculateSourceQuality(evidence,[],now).metrics.speed).toBe(50);
+  });
+  it("requires distinct providers for chapter comparison and excludes ambiguous provider identities",()=>{
+    const a={sourceId:"a",mangaId:"1",language:"id"},duplicate={...a,language:"en"},b={sourceId:"b",mangaId:"2"};
+    const snapshot={
+      [qualityKey("a","1")]:{samples:[],chapters:{at:now,labels:["Chapter 1"]}},
+      [qualityKey("a","3")]:{samples:[],chapters:{at:now,labels:["Chapter 1","Chapter 2"]}},
+      [qualityKey("b","2")]:{samples:[],chapters:{at:now,labels:["Chapter 1","Chapter 2"]}}
+    };
+    expect(rankQualityRefs([a,duplicate],snapshot,{verifiedGroup:true,now}).every(row=>row.quality.score===null)).toBe(true);
+    expect(rankQualityRefs([a,duplicate,b],snapshot,{verifiedGroup:true,now}).find(row=>row.ref===a)?.quality.metrics).toMatchObject({completeness:50,freshness:50});
+    expect(rankQualityRefs([a,{sourceId:"a",mangaId:"3"},b],snapshot,{verifiedGroup:true,now}).every(row=>row.quality.score===null)).toBe(true);
+  });
   it("never counts locked or invented chapter indices",()=>{
     expect(chapterQualityEvidence([{id:"x",mangaId:"a",title:"Special",number:10,date:"",isLocked:false},{id:"y",mangaId:"a",title:"Chapter 2",number:2,date:"",isLocked:true}],"a",now)).toBeUndefined();
   });

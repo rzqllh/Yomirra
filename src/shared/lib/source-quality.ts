@@ -36,7 +36,8 @@ export function calculateSourceQuality(evidence:QualityEvidence|undefined,peers:
   const successful=samples.filter(s=>s.ok).map(s=>s.ms).sort((a,b)=>a-b);
   if(successful.length>=MIN_SAMPLES){
     // Device-observed median response/decode time, not a CDN benchmark.
-    const median=successful[Math.floor(successful.length/2)];
+    const middle=Math.floor(successful.length/2);
+    const median=successful.length%2?successful[middle]:successful[middle-1]+(successful[middle]-successful[middle-1])/2;
     metrics.speed=Math.round(100*Math.min(1,500/Math.max(500,median)));
   }
   const own=evidence?.chapters;
@@ -74,16 +75,25 @@ export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot
   preferred?:string|null;languages?:readonly string[];chapterLabel?:string;verifiedGroup?:boolean;now?:number;shared?:SharedQualityEvidence;sort?:QualitySort
 }={}){
   const now=options.now??Date.now();
-  const peerEvidence=options.verifiedGroup?refs.flatMap(ref=>{
-    const c=snapshot[qualityKey(ref.sourceId,ref.mangaId)]?.chapters;
+  // Different language entries of one provider/work are not independent
+  // observations. Exclude ambiguous multiple work identities per provider.
+  const peerWorks=new Map<string,Set<string>>();
+  if(options.verifiedGroup)for(const ref of refs){
+    const works=peerWorks.get(ref.sourceId)??new Set<string>();
+    works.add(ref.mangaId);peerWorks.set(ref.sourceId,works);
+  }
+  const peerEvidence=[...peerWorks].flatMap(([sourceId,works])=>{
+    if(works.size!==1)return [];
+    const mangaId=[...works][0];
+    const c=snapshot[qualityKey(sourceId,mangaId)]?.chapters;
     return c&&recent(c.at,now)?[c]:[];
-  }):[];
+  });
   const ranked=refs.map((ref,index)=>{
     const title=snapshot[qualityKey(ref.sourceId,ref.mangaId)];
     const source=snapshot[qualityKey(ref.sourceId)];
     // Use title-specific samples where available, otherwise provider-level
     // evidence is explicitly identified as the fallback, not title proof.
-    const titleQuality=calculateSourceQuality(title,peerEvidence,now);
+    const titleQuality=calculateSourceQuality(title,peerWorks.get(ref.sourceId)?.size===1?peerEvidence:[],now);
     const providerQuality=calculateSourceQuality(source,[],now);
     const shared=sharedProbeQuality(options.shared?.[ref.sourceId],now);
     const quality=titleQuality.score!==null?titleQuality:providerQuality.score!==null?providerQuality:shared;
