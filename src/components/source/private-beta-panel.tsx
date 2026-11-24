@@ -36,10 +36,24 @@ export function PrivateBetaPanel({ user }: { user: User }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    void betaRequest(user, controller.signal).then(body => {
+    let unsubscribe: (() => void) | undefined;
+    void (async () => {
+      const { auth } = await initFirebase();
+      if (controller.signal.aborted || !auth || auth.currentUser?.uid !== user.uid) return;
+      const { onAuthStateChanged } = await import("firebase/auth");
+      if (controller.signal.aborted) return;
+      unsubscribe = onAuthStateChanged(auth, current => {
+        if (current?.uid !== user.uid) {
+          controller.abort();
+          requestRef.current?.abort();
+          setCandidates(null);
+          setCatalog(null);
+        }
+      });
+      const body = await betaRequest(user, controller.signal);
       if (!controller.signal.aborted && Array.isArray(body.data)) setCandidates(body.data);
-    }).catch(() => undefined);
-    return () => { controller.abort(); requestRef.current?.abort(); };
+    })().catch(() => undefined);
+    return () => { controller.abort(); requestRef.current?.abort(); unsubscribe?.(); };
   }, [user]);
 
   if (!candidates) return null;
