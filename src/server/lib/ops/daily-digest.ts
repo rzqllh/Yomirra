@@ -1,6 +1,7 @@
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
+import { hasReaderPageEvidence } from "@/server/lib/sources/health/probe-coverage";
 import { AlertSeverity } from "./severity";
 import { sendTelegramMessage } from "./telegram-notifier";
 import { logger } from "@/shared/logger";
@@ -82,6 +83,8 @@ export function formatDailyDigest(
     message += "Tidak ada gangguan aktif pada pemeriksaan terbaru\n";
   }
 
+  const readerEvidenceCount = healthy.filter(([, snapshot]) => hasReaderPageEvidence(snapshot)).length;
+  message += `Referensi halaman terverifikasi: ${readerEvidenceCount}/${ids.length} source. Probe katalog bukan uji baca lengkap.\n`;
   if (unmeasuredCount) message += `${unmeasuredCount} belum terukur atau belum diperbarui\n`;
   if (expiredCount) message += `${expiredCount} snapshot kedaluwarsa (>12 jam)\n`;
 

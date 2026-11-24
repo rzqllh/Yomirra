@@ -28,6 +28,8 @@ const FAST_ESCALATION_EVENTS = new Set([
   "DOMAIN_CHANGED",
 ]);
 
+import { hasReaderPageEvidence } from "@/server/lib/sources/health/probe-coverage";
+
 export function formatHealthDigest(
   snapshots: Record<string, SourceHealthSnapshot>,
   timestamp = new Date(),
@@ -79,6 +81,9 @@ export function formatHealthDigest(
   } else {
     text += `${healthyCount}/${entries.length} source normal\n`;
   }
+
+  const readerEvidenceCount = healthy.filter(([, snapshot]) => hasReaderPageEvidence(snapshot)).length;
+  text += `Referensi halaman terverifikasi: ${readerEvidenceCount}/${entries.length + missingCount} source. Probe katalog bukan uji baca lengkap.\n`;
 
   if (unhealthy.length) {
     text += "\n*Perlu perhatian*\n";
@@ -136,7 +141,7 @@ export function formatRecoveryAlert(
   downtime?: string
 ): string {
   let text = `🟢 *${sourceDisplayName(snapshot.sourceId)} pulih*\n\n`;
-  text += "Source kembali normal.\n";
+  text += hasReaderPageEvidence(snapshot) ? "Probe referensi halaman kembali berhasil.\n" : "Probe terbaru kembali berhasil; reader belum terverifikasi penuh.\n";
   if (downtime) text += `Gangguan berlangsung ${downtime}.\n`;
   text += `Latency sekarang ${formatLatency(snapshot.latencyMs)}.\n\n`;
   text += "Tidak ada tindakan lanjutan.";
