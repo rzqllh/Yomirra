@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import { initFirebase } from "@/shared/lib/firebase";
 import { Button } from "@/components/ui/button";
+import { PrivateBetaReader } from "./private-beta-reader";
 
 type Candidate = { id: string; name: string; available: boolean };
 type Catalog = { items: { id: string; title: string; format?: string }[]; received: number };
@@ -30,6 +31,7 @@ export function PrivateBetaPanel({ user }: { user: User }) {
   const [selected, setSelected] = useState("");
   const [query, setQuery] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [selectedManga, setSelectedManga] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
@@ -48,6 +50,7 @@ export function PrivateBetaPanel({ user }: { user: User }) {
           requestRef.current?.abort();
           setCandidates(null);
           setCatalog(null);
+          setSelectedManga(null);
         }
       });
       const body = await betaRequest(user, controller.signal);
@@ -61,7 +64,7 @@ export function PrivateBetaPanel({ user }: { user: User }) {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setSelected(id); setBusy(true); setFailed(false); setCatalog(null);
+    setSelected(id); setBusy(true); setFailed(false); setCatalog(null); setSelectedManga(null);
     try {
       const params = "?" + new URLSearchParams({source:id,q:text}).toString();
       const body = await betaRequest(user, controller.signal, params);
@@ -96,10 +99,11 @@ export function PrivateBetaPanel({ user }: { user: User }) {
       )}
       {busy && <p role="status" className="text-sm text-text-secondary">Memeriksa katalog…</p>}
       {failed && <p role="alert" className="text-sm text-semantic-error">Pemeriksaan gagal. Coba lagi nanti.</p>}
+      {selectedManga && selected && <PrivateBetaReader key={JSON.stringify([user.uid,selected,selectedManga])} user={user} source={selected} mangaId={selectedManga} onClose={() => setSelectedManga(null)} />}
       {catalog && <div aria-live="polite">
         <p className="text-xs text-text-secondary">{catalog.items.length} judul dengan klasifikasi aman dari {catalog.received} hasil.</p>
         <ul className="mt-2 divide-y divide-border-subtle">
-          {catalog.items.map((item, index) => <li key={JSON.stringify([item.id,index])} className="py-2 text-sm">{item.title}{item.format ? ` · ${item.format}` : ""}</li>)}
+          {catalog.items.map((item, index) => <li key={JSON.stringify([item.id,index])} className="py-2 text-sm"><button type="button" className="text-left font-semibold hover:underline" onClick={() => setSelectedManga(item.id)}>{item.title}{item.format ? ` · ${item.format}` : ""}</button></li>)}
         </ul>
       </div>}
     </section>

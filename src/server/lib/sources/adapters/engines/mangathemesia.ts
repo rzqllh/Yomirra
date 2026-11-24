@@ -260,7 +260,7 @@ export class MangaThemesiaEngine extends BaseEngine {
       });
 
       // AstralScans V8 anti-scraper decryption handler
-      if (chapters.length === 0) {
+      if (chapters.length === 0 && this.id === "astral-scans") {
         try {
           const formData = new URLSearchParams();
           formData.append("v8_req", "get_list");
