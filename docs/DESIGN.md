@@ -2200,3 +2200,6 @@ Telegram commands stay limited and operational:
 - `/recheck <id>`
 
 Do not add AI diagnosis, auto-fix, auto-deploy, or speculative root-cause claims.
+
+## Reader chrome contrast acceptance (2026-11-24)
+Reader header, bottom dock, active controls and hidden-overlay progress badge use opaque reader-scoped surfaces independent of the app theme and artwork. Text >=4.5:1 and essential non-text controls >=3:1 (WCAG 2.2 AA 1.4.3/1.4.11); visible keyboard focus, 44px control targets where space permits, explicit saved state. Preserve current layout hierarchy, safe areas, gestures and reader navigation. Do not change general app dock styling. See https://www.w3.org/TR/WCAG22/.

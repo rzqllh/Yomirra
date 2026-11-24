@@ -378,7 +378,7 @@ describe("ReaderShell Header & Progress Bar", () => {
 
     const header = container.querySelector("header");
     expect(header).toBeDefined();
-    expect(header?.className).toContain("grid-cols-[84px_1fr_84px]");
+    expect(header?.className).toContain("grid-cols-[92px_minmax(0,1fr)_92px]");
     expect(header?.classList.contains("shadow-none")).toBe(true);
     expect(header?.classList.contains("shadow-lg")).toBe(false);
 
@@ -395,4 +395,16 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(mangaTitleEl.getAttribute("title")).toBe("Frieren: Beyond Journey's End");
     expect(chapterTitleEl.getAttribute("title")).toBe("Chapter 123 - The Hero's Blade");
   });
+
+  it("keeps opaque contrast surfaces and exposes bookmark state in both reader backgrounds",()=>{
+  useReaderStore.setState({preferences:{...useReaderStore.getState().preferences,background:"mist"},isOverlayVisible:true});
+  const {container}=render(<ReaderShell sourceId="contrast-fixture" mangaId="work" currentChapterId="chapter"><div>Content</div></ReaderShell>);
+  expect(container.querySelector(".reader-contrast-scope.light")).not.toBeNull();
+  expect(container.querySelector("header")?.classList.contains("reader-chrome-surface")).toBe(true);
+  expect(screen.getByRole("group",{name:"Kontrol pembaca"}).classList.contains("reader-chrome-surface")).toBe(true);
+  const saved=screen.getByRole("button",{name:"Simpan ke Library"});
+  expect(saved.getAttribute("aria-pressed")).toBe("false");
+  fireEvent.click(saved);
+  expect(screen.getByRole("button",{name:"Hapus dari Library"}).getAttribute("aria-pressed")).toBe("true");
+});
 });

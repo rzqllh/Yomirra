@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe,it,expect,vi,afterEach} from "vitest";
 import {lookupTursoCatalog,getTursoMetadataWork} from "../turso-catalog";
 import {reserveCatalogRequest} from "../catalog-budget";

@@ -38,7 +38,7 @@ export function ReaderPageScrubber({
     return (
       <div
         className={cn(
-          "yomirra-chrome pointer-events-auto select-none rounded-lg px-2.5 py-1 text-text-primary text-2xs font-mono font-medium tracking-tight",
+          "yomirra-chrome reader-chrome-surface reader-chrome-primary pointer-events-auto select-none rounded-lg px-2.5 py-1 text-xs font-mono font-medium tracking-tight",
           className
         )}
         data-testid="reader-page-scrubber"
@@ -62,19 +62,19 @@ export function ReaderPageScrubber({
         onPointerDown={handleStartScrubbing}
         onTouchStart={handleStartScrubbing}
       >
-        <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-2.5">
+        <div className="reader-chrome-muted flex items-center justify-between text-xs font-semibold px-2.5">
           <label htmlFor="reader-webtoon-range">Posisi baca</label>
-          <output htmlFor="reader-webtoon-range" aria-live="off" className="text-text-primary font-bold font-mono">
+          <output htmlFor="reader-webtoon-range" aria-live="off" className="reader-chrome-primary font-bold font-mono">
             {format?.toLowerCase() === "manga" ? (
               <>
-                {progressPercent}% <span className="font-normal text-text-muted text-2xs">(Hal. {page} / {total})</span>
+                {progressPercent}% <span className="reader-chrome-muted font-normal text-xs">(Hal. {page} / {total})</span>
               </>
             ) : (
               `${progressPercent}%`
             )}
           </output>
         </div>
-        <div className="relative flex h-10 w-full min-w-0 items-center px-1">
+        <div className="relative flex h-11 w-full min-w-0 items-center px-1">
           <input
             id="reader-webtoon-range"
             type="range"
@@ -84,7 +84,7 @@ export function ReaderPageScrubber({
             value={progressPercent}
             aria-label="Posisi baca"
             aria-valuetext={`${progressPercent}%`}
-            className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
+            className="reader-page-range relative z-10 h-11 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
             onPointerDown={handleStartScrubbing}
             onPointerUp={handleEndScrubbing}
             onPointerCancel={handleEndScrubbing}
@@ -115,13 +115,13 @@ export function ReaderPageScrubber({
       onPointerDown={handleStartScrubbing}
       onTouchStart={handleStartScrubbing}
     >
-      <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-2.5">
+      <div className="reader-chrome-muted flex items-center justify-between text-xs font-semibold px-2.5">
         <label htmlFor="reader-page-range">Halaman</label>
-        <output htmlFor="reader-page-range" aria-live="off" className="text-text-primary font-bold font-mono">
+        <output htmlFor="reader-page-range" aria-live="off" className="reader-chrome-primary font-bold font-mono">
           {page} / {total}
         </output>
       </div>
-      <div className="relative flex h-10 w-full min-w-0 items-center px-1">
+      <div className="relative flex h-11 w-full min-w-0 items-center px-1">
         <svg
           className="pointer-events-none absolute inset-x-0 mx-2 h-2"
           viewBox="0 0 1000 8"
@@ -138,7 +138,7 @@ export function ReaderPageScrubber({
               vectorEffect="non-scaling-stroke"
               stroke="currentColor"
               strokeWidth="2"
-              className={index < page ? "fill-accent text-accent" : "fill-border-strong text-border-strong"}
+              className={index < page ? "reader-dot-active" : "reader-dot-inactive"}
             />
           ))}
         </svg>
@@ -153,7 +153,7 @@ export function ReaderPageScrubber({
           disabled={total < 2}
           aria-label="Pindah halaman"
           aria-valuetext={`Halaman ${page} dari ${total}`}
-          className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
+          className="reader-page-range relative z-10 h-11 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
           onPointerDown={handleStartScrubbing}
           onPointerUp={handleEndScrubbing}
           onPointerCancel={handleEndScrubbing}

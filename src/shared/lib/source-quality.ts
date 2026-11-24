@@ -62,8 +62,8 @@ export function sharedProbeQuality(evidence:SharedHealthEvidence|undefined,now=D
   const metrics:Partial<Record<QualityMetric,number>>={};
   const checked=Date.parse(evidence?.checkedAt??"");
   if(!evidence?.hasSufficientData||!recent(checked,now)||!Number.isInteger(evidence.sampleCount)||evidence.sampleCount!<MIN_SAMPLES)return {metrics,coverage:0,score:null,samples:0};
-  const uptime=/^(\\d+(?:\\.\\d+)?)%$/.exec(evidence.uptime);
-  const latency=/^(\\d+(?:\\.\\d+)?)ms$/.exec(evidence.p95Latency??"");
+  const uptime=/^(\d+(?:\.\d+)?)%$/.exec(evidence.uptime);
+  const latency=/^(\d+(?:\.\d+)?)ms$/.exec(evidence.p95Latency??"");
   const percent=uptime?Number(uptime[1]):-1;
   if(percent>=0&&percent<=100)metrics.reliability=Math.round(percent);
   if(latency&&Number(latency[1])>0)metrics.speed=Math.round(100*Math.min(1,500/Math.max(500,Number(latency[1]))));

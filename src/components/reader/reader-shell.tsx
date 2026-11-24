@@ -367,7 +367,7 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <header
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden border border-border-glass grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-14 sm:h-14.5 px-2 sm:px-3 rounded-2xl transition-colors duration-200 text-text-primary bg-surface-overlay shadow-none"
+                  "pointer-events-auto relative overflow-hidden border border-border-glass reader-chrome-surface grid grid-cols-[92px_minmax(0,1fr)_92px] items-center w-full max-w-lg md:max-w-2xl min-h-14 sm:min-h-15 px-1.5 sm:px-3 rounded-2xl transition-colors duration-200 text-text-primary bg-surface-overlay shadow-none"
                 )}
               >
                 {/* Left Cluster: Back to Detail + Home Navigation */}
@@ -375,7 +375,7 @@ export function ReaderShell({
                   <motion.button
                     aria-label="Kembali ke detail komik"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={handleBack}
                   >
                     <ArrowLeft size={18} weight="regular" />
@@ -384,7 +384,7 @@ export function ReaderShell({
                   <motion.button
                     aria-label="Kembali ke Beranda"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(event) => {
                       event.stopPropagation();
                       if (beginNavigationIntent("/")) router.replace("/");
@@ -397,21 +397,21 @@ export function ReaderShell({
                 {/* Center Cluster: Mathematically & Visually Centered Manga & Chapter Hierarchy */}
                 <div className="flex flex-col items-center justify-center px-1.5 min-w-0 select-none text-center overflow-hidden">
                   <span
-                    className="text-xs font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
+                    className="reader-chrome-muted text-xs font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
                     title={mangaTitle || chapterTitle}
                   >
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
                     <span
-                      className="text-xs sm:text-sm font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="reader-chrome-primary text-xs sm:text-sm font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={chapterTitle}
                     >
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
                     <span
-                      className="text-xs font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="reader-chrome-muted text-xs font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={`${pageCount} halaman`}
                     >
                       {pageCount} halaman
@@ -423,9 +423,10 @@ export function ReaderShell({
                 <div className="flex items-center justify-end shrink-0">
                   <motion.button
                     aria-label={isSaved ? "Hapus dari Library" : "Simpan ke Library"}
+                    aria-pressed={isSaved}
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       isSaved
                         ? "bg-accent text-accent-on border-accent shadow-xs"
                         : "text-text-muted hover:text-text-primary hover:bg-surface-hover/80 "
@@ -483,7 +484,7 @@ export function ReaderShell({
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
-                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  className="yomirra-chrome reader-chrome-surface reader-chrome-control reader-back-to-top pointer-events-auto self-end flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   aria-label="Kembali ke bagian atas pembaca"
                 >
                   <CaretUp size={18} weight="regular" />
@@ -491,7 +492,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
+              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome reader-chrome-surface yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -501,7 +502,7 @@ export function ReaderShell({
                       format={format}
                       onScrubbingChange={handleScrubbingChange}
                     />
-                    <div className="h-px w-full bg-border-subtle" />
+                    <div className="reader-chrome-divider h-px w-full" />
                   </>
                 )}
 
@@ -511,8 +512,8 @@ export function ReaderShell({
                     aria-label="Chapter sebelumnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                      !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !prevChapterId && "cursor-not-allowed"
                     )}
                     disabled={!prevChapterId}
                     onClick={(e) => {
@@ -528,13 +529,13 @@ export function ReaderShell({
 
                   <motion.button
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="min-w-0 flex-1 h-9 rounded-full bg-surface-base/60 hover:bg-surface-raised border border-border-subtle/80 text-xs font-semibold text-text-secondary hover:text-text-primary transition-all px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent "
+                    className="reader-chrome-control reader-chapter-control min-w-0 flex-1 h-11 rounded-full text-xs font-semibold transition-colors px-2.5 flex items-center justify-center gap-1.5 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsChapterDrawerOpen(true);
                     }}
                   >
-                    <List size={16} weight="regular" className="shrink-0 text-accent" />
+                    <List size={18} weight="regular" className="shrink-0" />
                     <span className="truncate">Daftar chapter</span>
                   </motion.button>
 
@@ -542,8 +543,8 @@ export function ReaderShell({
                     aria-label="Chapter berikutnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                      !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !nextChapterId && "cursor-not-allowed"
                     )}
                     disabled={!nextChapterId}
                     onClick={(e) => {
@@ -559,8 +560,9 @@ export function ReaderShell({
 
                   <motion.button
                     aria-label="Pengaturan pembaca"
+                    aria-expanded={isDrawerOpen || isDesktopPanelOpen && typeof window !== "undefined" && window.innerWidth >= 768}
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (window.innerWidth >= 768) {

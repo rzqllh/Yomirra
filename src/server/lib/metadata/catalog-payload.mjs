@@ -9,7 +9,7 @@ export function encodeCatalogPayload(value){
 export function decodeCatalogPayload(value){
   let text;
   if(typeof value==="string"&&Buffer.byteLength(value)<=MAX_BYTES)text=value;
-  else if(value instanceof Uint8Array&&value.byteLength<=MAX_BYTES)text=inflateRawSync(value,{maxOutputLength:MAX_BYTES}).toString("utf8");
+  else if((Buffer.isBuffer(value)||value instanceof Uint8Array)&&value.byteLength<=MAX_BYTES)text=inflateRawSync(value,{maxOutputLength:MAX_BYTES}).toString("utf8");
   else throw Error("Invalid catalog payload");
   const work=JSON.parse(text);
   if(!work||work.provider!=="mangabaka"||!Number.isSafeInteger(work.externalId)||work.externalId<=0||
