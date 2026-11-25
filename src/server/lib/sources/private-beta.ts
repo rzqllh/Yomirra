@@ -90,7 +90,7 @@ export async function readPrivateBetaCatalog(
   const works=mode==="search"&&!useRemote?await matchMangaBakaWorks(query.trim(),true):[];
   let remoteIndex=0;
   const normalized=candidates.map((m,i)=>{
-    const bucket=local[i]??remote?.[remoteIndex++]??[];
+    const bucket=local[i]!==null?local[i]:(remote?.[remoteIndex++]??[]);
     const classified=inheritCanonicalRating(m,matchCanonicalMetadata(m,bucket));
     return inheritCanonicalRating(classified,matchCanonicalMetadata(m,works));
   });
@@ -176,7 +176,7 @@ export async function readPrivateBetaChapter(uid: string, id: string, mangaId: s
   const result = await adapter.getPages(chapterId,{...options,mangaId});
   if (!result || result.chapterId !== chapterId || !Array.isArray(result.pages) ||
       result.pages.length === 0 || result.pages.length > 300 ||
-      result.pages.some(p => !p || !safePageUrl(p.url))) throw new Error("PRIVATE_BETA_PAGES_UNAVAILABLE");
+      result.pages.some((p,i) => !p || p.index!==i+1 || !safePageUrl(p.url))) throw new Error("PRIVATE_BETA_PAGES_UNAVAILABLE");
   return {
     title: chapter.title,
     pages: result.pages.map(p => issuePageTicket({uid,source:id,url:p.url,exp:Math.floor(Date.now()/1000)+TICKET_TTL})),

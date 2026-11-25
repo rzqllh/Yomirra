@@ -145,7 +145,7 @@ export class AinzScansSource extends BaseEngine {
             (ch.mangaId != null && identifier(ch.mangaId) !== mangaId)) this.schema("chapters");
         seen.add(id);
         return {
-          id: mangaId + "/" + id, mangaId, number: chapterNumber,
+          id: mangaId + "/" + id, mangaId, number: chapterNumber, chapterNumber:String(chapterNumber),
           title: text(ch.name) ?? "Chapter " + chapterNumber,
           date: text(ch.date) ?? "",
           scanlator: text(ch.scan),
@@ -168,7 +168,9 @@ export class AinzScansSource extends BaseEngine {
     }
     try {
       const data = record(await this.client.get<unknown>("/pages/" + encodeURIComponent(mangaId) + "/" + encodeURIComponent(chId)));
-      if (!data || !Array.isArray(data.pages) || data.pages.length === 0) this.schema("pages");
+      if (!data || !Array.isArray(data.pages) || data.pages.length === 0 || data.pages.length>500 ||
+          (data.mangaId!=null&&identifier(data.mangaId)!==mangaId) ||
+          (data.chapterId!=null&&identifier(data.chapterId)!==chId)) this.schema("pages");
       const pages = data.pages.map((p, idx) => {
         const url = httpsUrl(typeof p === "string" ? p : record(p)?.url, this.baseUrl);
         if (!url) this.schema("pages");

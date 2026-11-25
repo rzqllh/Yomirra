@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity, stagedComicFormat } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -75,6 +75,8 @@ export class GenericWpEngine extends BaseEngine {
             title,
             coverUrl,
             latestChapter,
+            format:stagedComicFormat($el.find(".typeflag, .type").first().text()),
+            author:$el.find(".author").first().text().trim()||undefined,
             isNsfw: this.isNsfw,
             contentRating: this.isNsfw ? "pornographic" : "unknown",
           });

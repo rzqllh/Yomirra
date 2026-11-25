@@ -11,7 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
-import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity } from "./normalize-catalog";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity, stagedComicFormat } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -55,8 +55,8 @@ export class MangaThemesiaEngine extends BaseEngine {
           .text()
           .trim() || undefined;
 
-      const format =
-        $el.find(".typeflag, .type").first().text().trim() || undefined;
+      const format=stagedComicFormat($el.find(".typeflag, .type").first().text());
+      const author=$el.find(".author").first().text().trim()||undefined;
 
       const scoreText =
         $el.find(".rating i, .numscore").first().text().trim() || undefined;
@@ -73,6 +73,7 @@ export class MangaThemesiaEngine extends BaseEngine {
           coverUrl,
           latestChapter,
           format,
+          author,
           score,
           isNsfw: this.isNsfw,
           contentRating: this.isNsfw ? "pornographic" : "unknown",
