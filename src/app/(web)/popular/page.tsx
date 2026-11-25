@@ -18,7 +18,7 @@ import { DestinationHeader } from "@/components/chrome/header";
 import { PopularPageView } from "@/components/popular/popular-page-view";
 
 export const metadata: Metadata = {
-  title: "Populer — Yomirra",
+  title: "Populer · Yomirra",
   description: "Peringkat komik paling ramai dibaca dari sumber aktif dan tren global.",
 };
 

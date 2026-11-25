@@ -601,7 +601,7 @@ body.reader-active {
 
   @media (prefers-reduced-motion: no-preference) {
     .yomirra-dock-indicator[data-positioned] {
-      transition: transform 220ms ease-out, width 220ms ease-out;
+      transition: transform 220ms var(--ease-snappy);
     }
   }
 
@@ -919,6 +919,14 @@ body.reader-active section[aria-label*="Notifications" i] {
   z-index: 10 !important;
 }
 
+[data-sonner-toast] [data-close-button]::after,
+.yomirra-toast-close::after,
+[data-close-button]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -8px !important;
+}
+
 [data-sonner-toast] [data-close-button]:hover {
   background: rgba(0, 0, 0, 0.08) !important;
   color: var(--text-primary) !important;
@@ -956,7 +964,7 @@ body.reader-active section[aria-label*="Notifications" i] {
   inset: 0;
   display: grid;
   place-items: center;
-  transition: opacity 300ms cubic-bezier(.2, .8, .2, 1), transform 420ms cubic-bezier(.18, 1.35, .32, 1);
+  transition: opacity 300ms var(--ease-standard), transform 420ms var(--ease-snappy);
 }
 [aria-pressed="true"] > .icon-morph > *:first-child,
 .theme-morph[data-on="true"] > *:first-child {

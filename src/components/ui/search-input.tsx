@@ -56,9 +56,10 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         {value && onClear && (
           <IconButton
             type="button"
+            size="sm"
             onClick={handleClear}
             variant="ghost"
-            className="text-text-muted hover:text-text-primary p-1 h-auto w-auto shrink-0"
+            className="text-text-muted hover:text-text-primary shrink-0"
             aria-label="Clear search"
           >
             <X size={16} weight="regular" />

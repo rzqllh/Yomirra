@@ -141,9 +141,7 @@ export function UnifiedFilterDrawer({
   const [selectedReadingStatuses, setSelectedReadingStatuses] = React.useState<string[]>([]);
   const [localSources, setLocalSources] = React.useState<SourceMetadata[]>([]);
 
-  // ----------------------------------------------------
-  // Dynamic Sources & Filters for Search context
-  // ----------------------------------------------------
+  // Dynamic sources and filters for search context
   React.useEffect(() => {
     const loadLocal = () => setLocalSources(dynamicSourceRegistry.getAll());
     loadLocal();
@@ -192,9 +190,7 @@ export function UnifiedFilterDrawer({
     })),
   });
 
-  // ----------------------------------------------------
-  // Single Source or All Sources Filters for Library context
-  // ----------------------------------------------------
+  // Single source or all sources filters for library context
   const isAllLibrary = context === "library" && (activeSourceId === "all" || !activeSourceId);
   const activeLibrarySource = allSources.find((source) => source.id === activeSourceId);
   const supportsLibraryProviderFilters =
@@ -223,9 +219,7 @@ export function UnifiedFilterDrawer({
       supportsLibraryProviderFilters,
   });
 
-  // ----------------------------------------------------
-  // Unified Dynamic Filters with NSFW filtering applied
-  // ----------------------------------------------------
+  // Unified dynamic filters with NSFW filtering applied
   const dynamicFilters = React.useMemo<MergedFilterList>(() => {
     if (context === "search" || isAllLibrary) {
       const sourcesList = context === "search" ? filterSourcesToFetch : eligibleLibrarySources;

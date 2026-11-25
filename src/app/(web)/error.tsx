@@ -30,29 +30,6 @@ export default function GlobalError({
 
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center gap-6 px-6 text-center overflow-hidden">
-
-      <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
-        {/* Glowing aura */}
-        <div className="absolute size-72 md:size-96 bg-accent/15 dark:bg-accent/10 rounded-full blur-3xl" />
-
-        {/* Floating elements simulating manga panels */}
-        <motion.div
-          animate={{ y: [-10, 10, -10], rotate: [-2, 2, -2] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-12 -left-6 md:top-16 md:left-16 w-32 h-40 bg-surface-glass border border-border-glass rounded-xl shadow-glass opacity-60 backdrop-blur-md rotate-12"
-        />
-        <motion.div
-          animate={{ y: [15, -15, 15], rotate: [4, -4, 4] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-12 -right-8 md:bottom-20 md:right-16 w-48 h-32 bg-surface-glass border border-border-glass rounded-xl shadow-glass opacity-50 backdrop-blur-md -rotate-6"
-        />
-        <motion.div
-          animate={{ y: [-15, 15, -15], x: [-5, 5, -5] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute top-36 right-0 md:top-28 md:right-32 w-20 h-20 bg-surface-glass border border-border-glass rounded-xl shadow-glass opacity-40 backdrop-blur-sm rotate-45"
-        />
-      </div>
-
       <motion.div
         initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)", y: 20 }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
@@ -90,8 +67,9 @@ export default function GlobalError({
       >
         <Button
           variant="accent"
+          size="lg"
           onClick={() => reset()}
-          className="h-13 rounded-lg shadow-lg shadow-accent/25 font-bold w-full text-sm sm:text-base hover:scale-105 active:scale-95 transition-all"
+          className="w-full"
         >
           <ArrowCounterClockwise className="mr-2.5" size={20} weight="regular" />
           Coba lagi
@@ -99,8 +77,9 @@ export default function GlobalError({
         {!isHome && (
           <Button
             variant="outline"
+            size="lg"
             asChild
-            className="h-13 rounded-lg font-bold border border-border-strong w-full text-sm sm:text-base bg-surface-glass backdrop-blur-md hover:bg-surface-hover hover:scale-105 active:scale-95 transition-all text-text-primary"
+            className="w-full"
           >
             <Link href="/">
               <House className="mr-2.5" size={20} weight="fill" />
@@ -132,7 +111,6 @@ export default function GlobalError({
           </div>
         </div>
       </motion.div>
-
     </div>
   );
 }

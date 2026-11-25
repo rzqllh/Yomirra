@@ -6,6 +6,7 @@ import { WarningCircle, ArrowUpRight } from "@phosphor-icons/react";
 import { EditorialCard } from "@/components/komik/card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { ChipRail } from "@/components/ui/chip-rail";
 import { EmptyState } from "@/components/states/empty-state";
 import {
   aggregatePopularFeeds,
@@ -81,7 +82,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
         <div className="space-y-6">
           {/* Source Filter Pills Rail */}
           {feeds.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter sumber komik">
+            <ChipRail bleed={false} role="group" aria-label="Filter sumber komik">
               <FilterChip
                 label={`Semua Sumber (${aggregated.length})`}
                 selected={selectedSourceId === "all"}
@@ -98,7 +99,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                   variant={selectedSourceId === feed.sourceId ? "accent-subtle" : "default"}
                 />
               ))}
-            </div>
+            </ChipRail>
           )}
 
           {/* Aggregated (All Sources) View */}

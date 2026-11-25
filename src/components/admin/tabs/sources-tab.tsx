@@ -298,11 +298,11 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
                         </div>
                       </td>
                       <td className="px-4 py-3.5"><StatusPill tone={sourceTone(source.status)} dot>{sourceLabel(source.status)}</StatusPill></td>
-                      <td className="px-4 py-3.5 font-mono text-xs tabular-nums text-zinc-400">{source.latencyMs > 0 ? `${source.latencyMs} ms` : "—"}</td>
+                      <td className="px-4 py-3.5 font-mono text-xs tabular-nums text-zinc-400">{source.latencyMs > 0 ? `${source.latencyMs} ms` : " - "}</td>
                       <td className="px-4 py-3.5">
                         <div className="flex min-w-0 items-center gap-2">
                           <Globe className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
-                          <span className="truncate font-mono text-[11px] text-zinc-400">{source.activeDomain || source.upstreamDomain || "—"}</span>
+                          <span className="truncate font-mono text-[11px] text-zinc-400">{source.activeDomain || source.upstreamDomain || " - "}</span>
                         </div>
                         {(source.mirrors?.length ?? 0) > 0 ? <p className="mt-0.5 text-[10px] text-zinc-700">{source.mirrors.length} mirror</p> : null}
                       </td>
@@ -336,10 +336,10 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
                       </div>
                       <p className="mt-1 font-mono text-[10px] uppercase text-zinc-700">{source.id}</p>
                     </div>
-                    <span className="font-mono text-xs text-zinc-500">{source.latencyMs > 0 ? `${source.latencyMs}ms` : "—"}</span>
+                    <span className="font-mono text-xs text-zinc-500">{source.latencyMs > 0 ? `${source.latencyMs}ms` : " - "}</span>
                   </div>
                   <div className="mt-3 rounded-xl border border-zinc-800/80 bg-zinc-950/45 px-3 py-2">
-                    <p className="truncate font-mono text-[11px] text-zinc-400">{source.activeDomain || source.upstreamDomain || "—"}</p>
+                    <p className="truncate font-mono text-[11px] text-zinc-400">{source.activeDomain || source.upstreamDomain || " - "}</p>
                     <p className="mt-1 text-[10px] text-zinc-700">Last check {formatChecked(source.lastCheckedAt)} · {source.mirrors?.length ?? 0} mirror</p>
                   </div>
                   <div className="mt-3 flex gap-2">

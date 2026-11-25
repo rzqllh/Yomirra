@@ -2,10 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const source = fs.readFileSync(
-  path.resolve(process.cwd(), "src/components/komik/card/manga-card.tsx"),
-  "utf-8"
-);
+const cardDir = path.resolve(process.cwd(), "src/components/komik/card");
+const source =
+  fs.readFileSync(path.resolve(cardDir, "manga-card.tsx"), "utf-8") +
+  fs.readFileSync(path.resolve(cardDir, "manga-card-parts.tsx"), "utf-8");
 
 describe("manga card partial-data contract", () => {
   it("does not invent status or opaque rating placeholders", () => {
