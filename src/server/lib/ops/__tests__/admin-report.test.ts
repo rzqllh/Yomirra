@@ -1,28 +1,27 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Mock redis
-const mockLpush = vi.fn();
-const mockLtrim = vi.fn();
+const mockEval = vi.fn();
 const mockLrange = vi.fn();
-const mockSet = vi.fn();
+const mockReady = vi.fn();
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: true,
+  ensureRedisReady: () => mockReady(),
   redis: {
-    lpush: (...args: any[]) => mockLpush(...args),
-    ltrim: (...args: any[]) => mockLtrim(...args),
+    eval: (...args: any[]) => mockEval(...args),
     lrange: (...args: any[]) => mockLrange(...args),
-    set: (...args: any[]) => mockSet(...args),
   },
 }));
 
 describe("Admin User Report Service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    mockReady.mockResolvedValue(undefined);
   });
 
   it("should enqueue a new report to Redis list", async () => {
-    mockLpush.mockResolvedValueOnce(1);
-    mockLtrim.mockResolvedValueOnce("OK");
+    mockEval.mockResolvedValueOnce(1);
 
     const { enqueueUserReport } = await import("../admin-report-service");
     const report = await enqueueUserReport({
@@ -36,11 +35,15 @@ describe("Admin User Report Service", () => {
 
     expect(report.id).toBeDefined();
     expect(report.status).toBe("pending");
-    expect(mockLpush).toHaveBeenCalledWith(
-      "yomirra:reports:list",
+    expect(mockReady).toHaveBeenCalledTimes(1);
+    expect(mockEval).toHaveBeenCalledTimes(1);
+    expect(mockEval).toHaveBeenCalledWith(
+      expect.stringContaining("LTRIM"), 1, "yomirra:reports:list",
       expect.stringContaining("solo-leveling")
     );
-    expect(mockLtrim).toHaveBeenCalledWith("yomirra:reports:list", 0, 199);
+    const script=mockEval.mock.calls[0][0];
+    expect(script).toContain("LPUSH");
+    expect(script).not.toContain("DEL");
   });
 
   it("should retrieve reports with optional status filtering", async () => {
@@ -53,6 +56,8 @@ describe("Admin User Report Service", () => {
     const { getStoredUserReports } = await import("../admin-report-service");
     const pendingOnly = await getStoredUserReports("pending");
 
+    expect(mockReady).toHaveBeenCalledTimes(1);
+    expect(mockLrange).toHaveBeenCalledWith("yomirra:reports:list",0,199);
     expect(pendingOnly.length).toBe(1);
     expect(pendingOnly[0].id).toBe("1");
   });
