@@ -87,12 +87,11 @@ export async function readPrivateBetaCatalog(
   const remoteRows=candidates.filter((_,i)=>local[i]===null);
   const useRemote=isTursoCatalogEnabled()&&remoteRows.length>0;
   const remote=useRemote?await lookupTursoCatalogBatch(remoteRows):null;
-  const works=mode==="search"&&!useRemote?await matchMangaBakaWorks(query.trim(),true):[];
+  const works=mode==="search"&&!useRemote&&local.some(bucket=>bucket===null)?await matchMangaBakaWorks(query.trim(),true):[];
   let remoteIndex=0;
   const normalized=candidates.map((m,i)=>{
-    const bucket=local[i]!==null?local[i]:(remote?.[remoteIndex++]??[]);
-    const classified=inheritCanonicalRating(m,matchCanonicalMetadata(m,bucket));
-    return inheritCanonicalRating(classified,matchCanonicalMetadata(m,works));
+    const bucket=local[i]!==null?local[i]:useRemote?(remote?.[remoteIndex++]??[]):works;
+    return inheritCanonicalRating(m,matchCanonicalMetadata(m,bucket));
   });
   const rows=normalized.filter(m=>classifyContent(m)==="SAFE").map(m=>({
     id:m.id.slice(0,300),title:m.title.slice(0,300),format:m.format?.slice(0,40)
