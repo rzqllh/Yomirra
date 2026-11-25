@@ -93,11 +93,23 @@ for (const { width, height } of VIEWPORTS) {
         `[MEASURED] Viewport: ${width}x${height}px | Step: ${step + 1} | CTA: "${ctaName}" | x: ${box.x.toFixed(1)}px | y: ${box.y.toFixed(1)}px | bottom: ${bottomEdge.toFixed(1)}px <= ${height}px`
       );
 
-      await page.screenshot({ path: testInfo.outputPath(`step-${step + 1}.png`) });
+      // Playwright visibility alone accepts opacity:0; wait for the actual
+      // step title and its ancestor animation to settle before evidence.
+      const headings=["Jelajahi komik lintas sumber","Baca komik dengan caramu","Temukan bacaan berikutnya"];
+      const heading=dialog.getByText(headings[step],{exact:true});
+      await expect(heading).toBeVisible();
+      await expect.poll(()=>heading.evaluate(el=>{
+        let opacity=1;
+        for(let node:Element|null=el;node;node=node.parentElement){
+          opacity*=Number(getComputedStyle(node).opacity);
+          if(node.getAttribute("role")==="dialog")break;
+        }
+        return opacity;
+      })).toBeGreaterThanOrEqual(.99);
+      await page.screenshot({ path: testInfo.outputPath(`step-${step + 1}.png`),animations:"disabled" });
       // Advance to next step if not on final step
       if (step < 2) {
         await ctaButton.click();
-        await page.waitForTimeout(350); // allow motion transition
       }
     }
   });
