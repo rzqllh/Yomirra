@@ -208,7 +208,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors shrink-0"
+                className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors shrink-0 focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <Bug size={13} aria-hidden="true" />
                 <span>Laporkan</span>
@@ -225,8 +225,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle bg-surface-base/35 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
           <ToggleSwitch
-            checked={isPreferenceEnabled && source.isEnabled && !source.maintenance}
-            disabled={!source.isEnabled || Boolean(source.maintenance)}
+            checked={isPreferenceEnabled && !isUnavailable}
+            disabled={isUnavailable}
             onCheckedChange={() => {
               toggleSource(source.id)
               window.dispatchEvent(new Event("sources_updated"))
@@ -236,7 +236,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
           />
           <div className="min-w-0">
             <p className="text-xs font-bold text-text-primary">
-              {source.maintenance ? "Dijeda" : !source.isEnabled ? "Dinonaktifkan pengelola" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
+              {source.maintenance ? "Dijeda" : !source.isEnabled ? "Dinonaktifkan pengelola" : effectiveStatus === "in-dev" ? "Belum tersedia" : effectiveStatus === "in-fix" ? "Dalam perbaikan" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
             </p>
             <p className="truncate text-2xs text-text-muted">
               {!isPreferenceEnabled && DEFAULT_DISABLED_SOURCE_IDS.some(id => id === source.id)

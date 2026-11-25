@@ -134,7 +134,12 @@ export function ReportSheet({
         });
         onOpenChange(false);
       } else if (res.status === 403 || res.status === 503) {
-        toast.error("Verifikasi belum berhasil",{description:"Coba verifikasi ulang sebelum mengirim laporan."});
+        const failure=await res.json().catch(()=>null);
+        if(failure?.code==="CHALLENGE_INVALID"||failure?.code==="CHALLENGE_UNAVAILABLE"){
+          toast.error("Verifikasi belum berhasil",{description:"Coba verifikasi ulang sebelum mengirim laporan."});
+        }else{
+          toast.error("Laporan belum terkirim",{description:"Layanan laporan belum tersedia. Coba lagi beberapa saat."});
+        }
       } else if (res.status === 429) {
         toast.warning("Mohon Tunggu Sebentar", {
           description: "Terlalu banyak laporan dikirim. Silakan tunggu beberapa saat.",

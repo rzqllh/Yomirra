@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -40,6 +41,23 @@ class DailyTests(unittest.TestCase):
             (root/".daily-lock").mkdir()
             with self.assertRaisesRegex(ValueError,"prior attempt"):
                 daily.run(root,day="2026-11-26")
+    def test_failed_staging_is_not_reused_as_a_completed_refresh(self):
+        with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{"YOMIRRA_MANGABAKA_METADATA":"permitted","YOMIRRA_CATALOG_DAILY_PREPARE":"yes","CI":"","GITHUB_ACTIONS":""}), \
+             patch.object(daily.shutil,"disk_usage",return_value=SimpleNamespace(free=10*1024**3)), \
+             patch.object(daily.refresh,"previous_snapshot",return_value=(Path("fixture.sqlite"),{"normalizedInputSha256":"a"*64})) as previous, \
+             patch.object(daily.refresh,"verify_sqlite_snapshot"),patch.object(daily.refresh,"prepare",return_value={"status":"UNCHANGED","officialSha1":"a"*40}) as prep:
+            root=Path(tmp)
+            good=root/"2026-11-23"
+            (good/"snapshot").mkdir(parents=True)
+            (good/"stage").mkdir()
+            (good/"result.json").write_text(json.dumps({"status":"CANDIDATE_STAGED","snapshot":"a"*64,"database":"good"}))
+            (good/"stage"/"import-plan.json").write_text(json.dumps({"catalogSnapshot":"a"*64,"database":"good"}))
+            failed=root/"2026-11-24"
+            (failed/"snapshot").mkdir(parents=True)
+            (failed/"attempt.json").write_text("{}")
+            self.assertEqual(daily.run(root,day="2026-11-25")["status"],"UNCHANGED")
+            previous.assert_called_once_with(good/"snapshot")
+            prep.assert_called_once_with(root/"2026-11-25"/"snapshot",good/"snapshot")
     def test_permission_disk_and_retention_fail_before_network(self):
         with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{"YOMIRRA_MANGABAKA_METADATA":"permitted","YOMIRRA_CATALOG_DAILY_PREPARE":"","CI":"","GITHUB_ACTIONS":""}),patch.object(daily.refresh,"prepare") as prep:
             root=Path(tmp)

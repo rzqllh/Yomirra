@@ -11,12 +11,14 @@ for(const [width,theme] of [[320,"dark"],[1440,"light"]] as const){
     const base={language:"id",description:"Fixture",baseUrl:"https://example.test",version:"1.0.0",isEnabled:true,isInstalled:true,isDynamic:false,isNsfw:false,status:"unknown",capabilities:{popular:true,latest:true,search:true,detail:true,chapters:true,pages:true}};
     const sources=[
       {...base,id:"mangadex",name:"MangaDex Fixture",icon:"https://example.test/fixture-icon.png"},
-      {...base,id:"komiku",name:"Komiku Fixture",icon:"https://example.test/missing-icon.png"}
+      {...base,id:"komiku",name:"Komiku Fixture",icon:"https://example.test/missing-icon.png"},
+      {...base,id:"asurascans",name:"Staged Fixture",status:"in-dev",icon:""}
     ];
     await page.route("**/api/sources",route=>route.fulfill({json:{data:sources}}));
     await page.route("**/api/sources/health",route=>route.fulfill({json:{data:{
       mangadex:{status:"online",coverage:"catalog",latency:"100 ms",uptime:"100%",checkedAt:new Date().toISOString(),message:"Fixture"},
-      komiku:{status:"degraded",latency:"-",uptime:"-",checkedAt:new Date().toISOString(),message:"Fixture probe failed"}
+      komiku:{status:"degraded",latency:"-",uptime:"-",checkedAt:new Date().toISOString(),message:"Fixture probe failed"},
+      asurascans:{status:"online",coverage:"page-references",latency:"100 ms",uptime:"100%",checkedAt:new Date().toISOString(),message:"Fixture"}
     }}}));
     await page.route("https://example.test/fixture-icon.png",route=>route.fulfill({contentType:"image/png",body:png}));
     await page.route("https://example.test/missing-icon.png",route=>route.fulfill({status:404,body:""}));
@@ -29,7 +31,15 @@ for(const [width,theme] of [[320,"dark"],[1440,"light"]] as const){
     await expect(bad.getByText("KF",{exact:true})).toBeVisible();
     await expect(bad.locator("img")).toHaveCount(0);
     await expect(bad.getByText("Fixture probe failed")).toBeVisible();
-    await expect(bad.getByRole("button",{name:"Laporkan"})).toBeVisible();
+    const report=bad.getByRole("button",{name:"Laporkan"});
+    await expect(report).toBeVisible();
+    expect((await report.boundingBox())?.height).toBeGreaterThanOrEqual(43.5);
+    const staged=page.locator("article").filter({has:page.getByRole("heading",{name:"Staged Fixture",exact:true})});
+    await expect(staged.getByText("Dalam pengembangan",{exact:true})).toBeVisible();
+    await expect(staged.getByText("Belum tersedia",{exact:true})).toBeVisible();
+    await expect(staged.getByRole("checkbox")).toBeDisabled();
+    await expect(staged.getByRole("checkbox")).not.toBeChecked();
+    await expect(staged.getByRole("button",{name:"Buka Jelajah"})).toHaveCount(0);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.screenshot({path:info.outputPath("source-health-icons.png"),animations:"disabled"});
   });

@@ -53,10 +53,34 @@ def run(root,bootstrap=None,day=None):
             raise ValueError("Local retention ceiling; archive verified inactive candidates before continuing")
         if shutil.disk_usage(root).free<MIN_DISK:
             raise ValueError("Insufficient local disk headroom")
-        previous=retained[0] if retained else bootstrap
+        # A locally built snapshot is not a completed refresh until staging
+        # succeeded. Reusing a failed staging attempt would make a matching
+        # checksum return UNCHANGED forever without an import candidate.
+        previous=bootstrap
+        previous_result=None
+        for candidate in retained:
+            result_path=candidate.parent/"result.json"
+            if candidate.parent.name>=day or not result_path.is_file() or result_path.is_symlink():
+                continue
+            if result_path.stat().st_size>65536:
+                raise ValueError("Invalid prior refresh result")
+            prior=json.loads(result_path.read_text("utf8"))
+            if prior.get("status")=="CANDIDATE_STAGED":
+                previous=candidate
+                previous_result=prior
+                break
         if previous is not None:
             index,report=refresh.previous_snapshot(previous)
             refresh.verify_sqlite_snapshot(index,report)
+            if previous_result is not None:
+                plan_path=previous.parent/"stage"/"import-plan.json"
+                if not plan_path.is_file() or plan_path.is_symlink() or plan_path.stat().st_size>65536:
+                    raise ValueError("Missing prior import plan")
+                plan=json.loads(plan_path.read_text("utf8"))
+                if (previous_result.get("snapshot")!=report.get("normalizedInputSha256") or
+                    plan.get("catalogSnapshot")!=previous_result.get("snapshot") or
+                    plan.get("database")!=previous_result.get("database")):
+                    raise ValueError("Prior staged snapshot mismatch")
         # Reserve the day before the first network request. A failed or
         # interrupted attempt is not automatically retried on the same day.
         run_dir.mkdir(exist_ok=False)

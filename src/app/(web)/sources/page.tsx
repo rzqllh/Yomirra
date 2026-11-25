@@ -82,6 +82,8 @@ export default function SourcesPage() {
     return s.map(source => {
       const health = healthStats?.[source.id];
       if (source.maintenance) return { ...source, status: "in-fix" as const };
+      // Health is observation, not authorization to promote a staged source.
+      if (source.status === "in-fix" || source.status === "in-dev") return source;
       if (health) {
         const observedAt = Date.parse(health.checkedAt || "");
         const isFresh = Number.isFinite(observedAt)
