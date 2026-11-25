@@ -55,7 +55,8 @@ export async function POST(req: Request) {
     code:"CHALLENGE_"+verification.toUpperCase()}, {status:verification==="unavailable"?503:403});
 
   // Enqueue report for Admin Dashboard Inbox
-  await enqueueUserReport(sanitizedPayload);
+  try { await enqueueUserReport(sanitizedPayload); }
+  catch { return limitedJson({error:"Report storage unavailable",code:"REPORT_STORAGE_UNAVAILABLE"},{status:503}); }
 
   const message = formatUserReport(sanitizedPayload);
 

@@ -22,6 +22,11 @@ describe("report challenge boundary",()=>{
     expect((await POST(request(valid))).status).toBe(503);
     expect(state.enqueue).not.toHaveBeenCalled();expect(state.send).not.toHaveBeenCalled();
   });
+  it("does not report success or notify Telegram when durable storage fails",async()=>{
+    state.enqueue.mockRejectedValueOnce(Error("offline"));
+    expect((await POST(request(valid))).status).toBe(503);
+    expect(state.send).not.toHaveBeenCalled();
+  });
   it("never passes tokens or extra fields to report storage or formatting",async()=>{
     const res=await POST(request({...valid,unexpected:"secret"}));
     expect(res.status).toBe(200);

@@ -1,13 +1,37 @@
-import { redis } from "@/server/lib/cache/redis";
+import { randomUUID } from "node:crypto";
+import { redis,isRedisConfigured,ensureRedisReady } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type { UserReport, UserReportPayload } from "@/shared/types/report";
 
 const REPORTS_LIST_KEY = "yomirra:reports:list";
 const inMemoryReports: UserReport[] = [];
+const MAX_REPORTS=200;
+const APPEND_REPORT=`
+redis.call('LPUSH',KEYS[1],ARGV[1])
+redis.call('LTRIM',KEYS[1],0,199)
+return 1
+`;
+const UPDATE_REPORT=`
+local rows=redis.call('LRANGE',KEYS[1],0,199)
+for i,raw in ipairs(rows) do
+  local ok,row=pcall(cjson.decode,raw)
+  if ok and type(row)=='table' and row.id==ARGV[1] then
+    row.status=ARGV[2]
+    if ARGV[2]=='resolved' then row.resolvedAt=ARGV[3] else row.resolvedAt=nil end
+    local encoded=cjson.encode(row)
+    redis.call('LSET',KEYS[1],i-1,encoded)
+    return encoded
+  end
+end
+return false
+`;
+function durableRequired(){return isRedisConfigured||process.env.NODE_ENV==="production";}
+function unavailable(){return new Error("REPORT_STORAGE_UNAVAILABLE");}
+
 
 export async function enqueueUserReport(payload: UserReportPayload): Promise<UserReport> {
   const report: UserReport = {
-    id: `rep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    id: `rep_${Date.now()}_${randomUUID()}`,
     type: payload.type,
     category: payload.category,
     detail: payload.detail,
@@ -21,18 +45,17 @@ export async function enqueueUserReport(payload: UserReportPayload): Promise<Use
     createdAt: new Date().toISOString(),
   };
 
-  if (redis) {
-    try {
-      await redis.lpush(REPORTS_LIST_KEY, JSON.stringify(report));
-      await redis.ltrim(REPORTS_LIST_KEY, 0, 199); // keep last 200 reports
-    } catch (err) {
-      logger.warn("Failed to push report to Redis, storing in memory", { err });
-      inMemoryReports.unshift(report);
-      if (inMemoryReports.length > 200) inMemoryReports.pop();
+  if(durableRequired()){
+    try{
+      await ensureRedisReady();
+      if(Number(await redis.eval(APPEND_REPORT,1,REPORTS_LIST_KEY,JSON.stringify(report)))!==1)throw unavailable();
+    }catch{
+      logger.warn("Report storage unavailable");
+      throw unavailable();
     }
-  } else {
+  }else{
     inMemoryReports.unshift(report);
-    if (inMemoryReports.length > 200) inMemoryReports.pop();
+    if(inMemoryReports.length>MAX_REPORTS)inMemoryReports.pop();
   }
 
   return report;
@@ -44,24 +67,22 @@ export async function getStoredUserReports(
 ): Promise<UserReport[]> {
   let reports: UserReport[] = [];
 
-  if (redis) {
-    try {
-      const items = await redis.lrange(REPORTS_LIST_KEY, 0, 199);
-      reports = items
-        .map((raw) => {
-          try {
-            return JSON.parse(raw) as UserReport;
-          } catch {
-            return null;
-          }
-        })
-        .filter((r): r is UserReport => r !== null);
-    } catch (err) {
-      logger.warn("Failed to read reports from Redis, using in-memory", { err });
-      reports = inMemoryReports;
+  if(durableRequired()){
+    try{
+      await ensureRedisReady();
+      const items=await redis.lrange(REPORTS_LIST_KEY,0,MAX_REPORTS-1);
+      reports=items.flatMap(raw=>{
+        try{
+          const row=JSON.parse(raw) as UserReport|null;
+          return row&&typeof row.id==="string"&&typeof row.status==="string"?[row]:[];
+        }catch{return [];}
+      });
+    }catch{
+      logger.warn("Report storage read unavailable");
+      throw unavailable();
     }
-  } else {
-    reports = inMemoryReports;
+  }else{
+    reports=[...inMemoryReports];
   }
 
   if (statusFilter && statusFilter !== "all") {
@@ -79,31 +100,25 @@ export async function updateReportStatus(
   reportId: string,
   status: "pending" | "investigating" | "resolved"
 ): Promise<UserReport | null> {
-  const reports = await getStoredUserReports();
-  const target = reports.find((r) => r.id === reportId);
-  if (!target) return null;
-
-  target.status = status;
-  if (status === "resolved") {
-    target.resolvedAt = new Date().toISOString();
-  } else {
-    delete target.resolvedAt;
-  }
-
-  if (redis) {
-    try {
-      // Re-serialize the updated list to Redis
-      const pipeline = redis.pipeline();
-      pipeline.del(REPORTS_LIST_KEY);
-      for (const r of [...reports].reverse()) {
-        pipeline.lpush(REPORTS_LIST_KEY, JSON.stringify(r));
-      }
-      pipeline.ltrim(REPORTS_LIST_KEY, 0, 199);
-      await pipeline.exec();
-    } catch (err) {
-      logger.error("Failed to update report status in Redis", { err });
+  const at=new Date().toISOString();
+  if(durableRequired()){
+    try{
+      await ensureRedisReady();
+      const updated=await redis.eval(UPDATE_REPORT,1,REPORTS_LIST_KEY,reportId,status,at);
+      if(updated===null||updated===false)return null;
+      if(typeof updated!=="string")throw unavailable();
+      const row=JSON.parse(updated) as UserReport;
+      if(row.id!==reportId||row.status!==status)throw unavailable();
+      return row;
+    }catch{
+      logger.warn("Report status update unavailable");
+      throw unavailable();
     }
   }
-
-  return target;
+  const target=inMemoryReports.find(row=>row.id===reportId);
+  if(!target)return null;
+  target.status=status;
+  if(status==="resolved")target.resolvedAt=at;
+  else delete target.resolvedAt;
+  return {...target};
 }
