@@ -135,9 +135,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           if (!ref.sourceId || !ref.mangaId) continue;
           if (ref.matchConfidence !== "CONFIRMED") continue;
 
-          let basePriority = 2;
-          if (ref.matchConfidence === "CONFIRMED") basePriority = 8;
-          else if (ref.matchConfidence === "HIGH_CONFIDENCE") basePriority = 6;
+          const basePriority = 8;
 
           candidates.push({
             sourceId: ref.sourceId,
@@ -159,13 +157,18 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         }
       });
 
-      // Deduplicate by sourceId keeping highest priority
+      // A confirmed link does not resolve conflicting editions on one
+      // provider. Preserve the exact primary identity; skip ambiguous alternates.
+      const workIdsBySource=new Map<string,Set<string>>();
+      for(const c of candidates){
+        const ids=workIdsBySource.get(c.sourceId)??new Set<string>();
+        ids.add(c.mangaId);workIdsBySource.set(c.sourceId,ids);
+      }
       const candidateMap = new Map<string, CandidateTarget>();
       for (const c of candidates) {
+        if(!c.isPrimary&&(c.sourceId===item.sourceId||workIdsBySource.get(c.sourceId)?.size!==1))continue;
         const existing = candidateMap.get(c.sourceId);
-        if (!existing || c.priority > existing.priority) {
-          candidateMap.set(c.sourceId, c);
-        }
+        if (!existing || c.priority > existing.priority) candidateMap.set(c.sourceId, c);
       }
 
       // Sort candidates by priority descending
@@ -226,6 +229,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         }
       }
 
+      if(options.signal?.aborted)break;
+
       // Self-heal: If item.title is missing, corrupted into a chapter label, or coverUrl is missing
       let resolvedTitle = item.title;
       let resolvedCoverUrl = item.coverUrl;
@@ -236,7 +241,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           const detail = await apiClient.getDetail(item.sourceId, item.mangaId, {
             signal: options.signal,
           });
-          if (detail?.title) {
+          if (detail?.title&&!options.signal?.aborted) {
             resolvedTitle = detail.title;
             resolvedCoverUrl = detail.coverUrl || resolvedCoverUrl;
             useLibraryStore.getState().updateLibraryItem(item.sourceId, item.mangaId, {
@@ -248,6 +253,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           // Non-blocking fallback
         }
       }
+
+      if(options.signal?.aborted)break;
 
       // Preserve the cursor's numbering convention. A volume-local and a
       // global chapter number are not directly comparable. For a new cursor,

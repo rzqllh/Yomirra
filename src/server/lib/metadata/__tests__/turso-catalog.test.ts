@@ -4,12 +4,14 @@ import {lookupTursoCatalog,getTursoMetadataWork} from "../turso-catalog";
 import {reserveCatalogRequest} from "../catalog-budget";
 import {encodeCatalogPayload} from "../catalog-payload.mjs";
 vi.mock("../catalog-budget",()=>({reserveCatalogRequest:vi.fn()}));
+vi.mock("@/server/lib/cache/redis",()=>({isRedisConfigured:false,isRedisCommandAllowed:()=>false,redis:{get:vi.fn()}}));
 vi.mock("@/server/lib/cache/redis-cache",()=>({withCache:async(_k:string,load:()=>Promise<unknown>)=>load()}));
 const snapshot="a".repeat(64);
 const work={provider:"mangabaka" as const,externalId:1995,title:"Fixture",aliases:["Fixture"],format:"manga" as const,contentRating:"safe" as const};
 const cell=(value:string)=>({type:"text",value});
 const blob={type:"blob",base64:encodeCatalogPayload(work).toString("base64")};
 function configure(){
+  vi.stubEnv("YOMIRRA_TURSO_POINTER_ENABLED","");
   vi.stubEnv("YOMIRRA_MANGABAKA_METADATA","permitted");
   vi.stubEnv("YOMIRRA_TURSO_FREE_CONFIRMED","yes");
   vi.stubEnv("YOMIRRA_TURSO_URL","libsql://fixture-test.turso.io");

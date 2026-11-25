@@ -6,28 +6,15 @@ import type {ExternalWorkIds} from "@/shared/sources/source-types";
 import type {MetadataWork} from "@/shared/lib/metadata-catalog";
 import {decodeCatalogPayload} from "./catalog-payload.mjs";
 import {reserveCatalogRequest} from "./catalog-budget";
+import {currentTursoCatalog,isTursoCatalogConfigured} from "./catalog-pointer";
+import type {CatalogSlot as Config} from "./catalog-slots.mjs";
 
 const MAX_RESPONSE=2*1024*1024;
 const MAX_AGE=7*86400000;
 let pausedUntil=0;
 type Query={sql:string;args:string[];maxRows:number};
 type PipelineValue={type:string;value?:string;base64?:string};
-type Config={origin:string;token:string;snapshot:string};
-function config():Config|null{
-  if(process.env.YOMIRRA_MANGABAKA_METADATA!=="permitted"||
-     process.env.YOMIRRA_TURSO_FREE_CONFIRMED!=="yes")return null;
-  const token=process.env.YOMIRRA_TURSO_READ_TOKEN;
-  const snapshot=process.env.YOMIRRA_TURSO_SNAPSHOT;
-  if(!token||!snapshot||!/^[a-f0-9]{64}$/.test(snapshot))return null;
-  try{
-    const raw=process.env.YOMIRRA_TURSO_URL??"";
-    const u=new URL(raw.replace(/^(?:libsql|turso):\/\//,"https://"));
-    if(u.protocol!=="https:"||u.username||u.password||u.port||u.search||u.hash||u.pathname!=="/"||
-       !/^[a-z0-9-]+\.turso\.io$/.test(u.hostname))return null;
-    return {origin:u.origin,token,snapshot};
-  }catch{return null;}
-}
-export function isTursoCatalogEnabled(){return config()!==null;}
+export function isTursoCatalogEnabled(){return isTursoCatalogConfigured();}
 function textCell(cell:PipelineValue):string{
   if(cell?.type!=="text"||typeof cell.value!=="string")throw Error("Invalid catalog cell");
   return cell.value;
@@ -93,8 +80,10 @@ async function cachedQuery(c:Config,queries:Query[],parse:(rows:PipelineValue[][
 /** Explicit search/detail only; one bounded pipeline, no per-cover fan-out.
  * Returns null for unavailable; empty results remain distinct from an outage. */
 export async function lookupTursoCatalog(query:string,externalIds?:ExternalWorkIds,includeDiscovery=false):Promise<CatalogResult|null>{
-  const c=config(),title=normalizeTitle(query);
-  if(!c||title.length<3||title.length>160)return null;
+  const title=normalizeTitle(query);
+  if(title.length<3||title.length>160)return null;
+  const c=await currentTursoCatalog();
+  if(!c)return null;
   const keys=["title:"+title,...Object.entries(normalizeExternalWorkIds(externalIds)??{}).map(([ns,id])=>"id:"+ns+":"+id)];
   const queries:Query[]=keys.map(key=>({sql:"SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key=? LIMIT 17",args:[key],maxRows:17}));
   if(includeDiscovery)queries.push({sql:"SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key>=? AND l.key<? ORDER BY l.key LIMIT 20",args:["title:"+title,"title:"+title+"\uffff"],maxRows:20});
@@ -115,8 +104,9 @@ export async function lookupTursoCatalog(query:string,externalIds?:ExternalWorkI
   }catch{return null;}
 }
 export async function getTursoMetadataWork(id:number):Promise<MetadataWork|null>{
-  const c=config();
-  if(!c||!Number.isSafeInteger(id)||id<=0)return null;
+  if(!Number.isSafeInteger(id)||id<=0)return null;
+  const c=await currentTursoCatalog();
+  if(!c)return null;
   try{
     const result=await cachedQuery(c,[{sql:"SELECT payload FROM works WHERE id=? LIMIT 1",args:[String(id)],maxRows:1}],rows=>{
       const work=rows[0][0]?payload(rows[0][0][0]):null;

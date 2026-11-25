@@ -332,6 +332,28 @@ describe("cross-source notification boundaries",()=>{
     vi.clearAllMocks();useLibraryStore.setState({items:{fixture:{id:"fixture",sourceId:"primary",mangaId:"work",title:"Fixture",coverUrl:"/cover.jpg",addedAt:"2026-01-01",updatedAt:"2026-01-01",linkedSources:[{sourceId:"alternate",mangaId:"alt-work",matchConfidence:"CONFIRMED",addedAt:1}]}}});
     useUpdateStore.setState({items:{}});useSettingsStore.setState({perTitleSourcePreferences:{}});useSourceHealthStore.setState({healthBySource:{}});
   });
+  it("never polls competing editions on one alternate provider",async()=>{
+    const item=useLibraryStore.getState().items.fixture;
+    useLibraryStore.setState({items:{fixture:{...item,linkedSources:[
+      ...(item.linkedSources??[]),
+      {sourceId:"alternate",mangaId:"different-edition",matchConfidence:"CONFIRMED",addedAt:1},
+      {sourceId:"primary",mangaId:"wrong-primary",matchConfidence:"CONFIRMED",addedAt:1}
+    ]}}});
+    vi.mocked(apiClient.getChapters).mockResolvedValue([{id:"p1",mangaId:"work",title:"Chapter 1",number:1,date:"",isLocked:false}]);
+    await scanLibraryUpdates({forceRefresh:true});
+    expect(apiClient.getChapters).toHaveBeenCalledTimes(1);
+    expect(apiClient.getChapters).toHaveBeenCalledWith("primary","work",expect.anything());
+    expect(useUpdateStore.getState().items.fixture.latestChapterId).toBe("p1");
+  });
+  it("does not write a cursor after an aborted poll",async()=>{
+    const controller=new AbortController();
+    vi.mocked(apiClient.getChapters).mockImplementation(async()=>{
+      controller.abort();
+      return [{id:"p1",mangaId:"work",title:"Chapter 1",number:1,date:"",isLocked:false}];
+    });
+    await scanLibraryUpdates({forceRefresh:true,signal:controller.signal});
+    expect(useUpdateStore.getState().items).toEqual({});
+  });
   it("rejects alternate chapters with missing parent or unlock evidence",async()=>{
     vi.mocked(apiClient.getChapters).mockImplementation(async sourceId=>sourceId==="primary"?
       [{id:"p10",mangaId:"work",title:"Chapter 10",number:10,date:"",isLocked:false}]:
