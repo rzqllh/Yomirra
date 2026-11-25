@@ -9,6 +9,9 @@ on:
       - 'scripts/prepare-mangabaka-refresh.py'
       - 'scripts/prepare-turso-import.py'
       - 'scripts/verify-turso-candidate.py'
+      - 'scripts/publish-turso-catalog.mjs'
+      - 'scripts/__tests__/publish-turso-catalog.test.mjs'
+      - 'src/server/lib/metadata/catalog-slots.mjs'
       - 'scripts/__tests__/verify-turso-candidate.test.py'
       - 'scripts/__tests__/prepare-turso-import.test.py'
       - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
@@ -35,3 +38,4 @@ jobs:
       - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
       - run: python3 scripts/__tests__/prepare-turso-import.test.py
       - run: python3 scripts/__tests__/verify-turso-candidate.test.py
+      - run: node --test scripts/__tests__/publish-turso-catalog.test.mjs
