@@ -7,6 +7,8 @@ on:
       - 'scripts/canonical-review.mjs'
       - 'scripts/__tests__/canonical-review.test.mjs'
       - 'scripts/prepare-mangabaka-refresh.py'
+      - 'scripts/refresh-catalog-daily.py'
+      - 'scripts/__tests__/refresh-catalog-daily.test.py'
       - 'scripts/prepare-turso-import.py'
       - 'scripts/verify-turso-candidate.py'
       - 'scripts/publish-turso-catalog.mjs'
@@ -39,3 +41,4 @@ jobs:
       - run: python3 scripts/__tests__/prepare-turso-import.test.py
       - run: python3 scripts/__tests__/verify-turso-candidate.test.py
       - run: node --test scripts/__tests__/publish-turso-catalog.test.mjs
+      - run: python3 scripts/__tests__/refresh-catalog-daily.test.py
