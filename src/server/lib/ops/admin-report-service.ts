@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import {APPEND_REPORT,UPDATE_REPORT} from "./report-redis-scripts.mjs";
 import { redis,isRedisConfigured,ensureRedisReady } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type { UserReport, UserReportPayload } from "@/shared/types/report";
@@ -6,25 +7,6 @@ import type { UserReport, UserReportPayload } from "@/shared/types/report";
 const REPORTS_LIST_KEY = "yomirra:reports:list";
 const inMemoryReports: UserReport[] = [];
 const MAX_REPORTS=200;
-const APPEND_REPORT=`
-redis.call('LPUSH',KEYS[1],ARGV[1])
-redis.call('LTRIM',KEYS[1],0,199)
-return 1
-`;
-const UPDATE_REPORT=`
-local rows=redis.call('LRANGE',KEYS[1],0,199)
-for i,raw in ipairs(rows) do
-  local ok,row=pcall(cjson.decode,raw)
-  if ok and type(row)=='table' and row.id==ARGV[1] then
-    row.status=ARGV[2]
-    if ARGV[2]=='resolved' then row.resolvedAt=ARGV[3] else row.resolvedAt=nil end
-    local encoded=cjson.encode(row)
-    redis.call('LSET',KEYS[1],i-1,encoded)
-    return encoded
-  end
-end
-return false
-`;
 function durableRequired(){return isRedisConfigured||process.env.NODE_ENV==="production";}
 function unavailable(){return new Error("REPORT_STORAGE_UNAVAILABLE");}
 
