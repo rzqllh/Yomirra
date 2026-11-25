@@ -8,7 +8,8 @@ import type { MangaItem } from "@/shared/sources/source-types";
 import { getStagedKeiyoushiSource } from "./adapters/keiyoushi";
 import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
 import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
-import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
+import { applyLocalCanonicalMetadata, findLocalMetadataWorks } from "@/server/lib/metadata/local-catalog-index";
+import { isTursoCatalogEnabled, lookupTursoCatalogBatch } from "@/server/lib/metadata/turso-catalog";
 
 /** Only non-restricted, implemented candidates may be considered for private
  * metadata testing. No duplicate, DRM, login/paywall prototype or explicit
@@ -72,14 +73,30 @@ export async function readPrivateBetaCatalog(
   const result = mode === "search" ? await adapter.search(query.trim(), page, undefined, options) :
     mode === "latest" ? await adapter.getLatest(page, options) : await adapter.getPopular(page, options);
   if (!Array.isArray(result?.mangas) || typeof result.hasNextPage !== "boolean") throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
-  // No request per listing item. Only an explicit title search may supply
-  // canonical evidence, and only strong identity can inherit its rating.
-  const works = mode === "search" ? await matchMangaBakaWorks(query.trim(),true) : [];
-  const normalized = result.mangas.map(m => m && applyLocalCanonicalMetadata(inheritCanonicalRating(m,matchCanonicalMetadata(m,works))));
-  const rows = normalized.filter((m: MangaItem) =>
-    m && typeof m.id === "string" && typeof m.title === "string" &&
-    validBetaMangaId(id, m.id) && m.title.trim() && classifyContent(m) === "SAFE"
-  ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
+  // Bound candidate work before classification. Restrictive source evidence
+  // never enters the visible result or needs remote enrichment.
+  const candidates=result.mangas.filter((m:MangaItem)=>
+    m&&validBetaMangaId(id,m.id)&&typeof m.title==="string"&&m.title.trim()&&classifyContent(m)!=="NSFW"
+  ).slice(0,24);
+  const local=candidates.map(m=>findLocalMetadataWorks({
+    titles:[m.title,m.originalTitle??"",...(m.alternativeTitles??[])],externalWorkIds:m.externalWorkIds
+  }));
+  // The deployed catalog may reside in Turso rather than local SQLite.
+  // Use ONE shared-budget batch for unresolved local lookups, no source
+  // API fan-out. Do not fall through to per-item metadata API requests.
+  const remoteRows=candidates.filter((_,i)=>local[i]===null);
+  const useRemote=isTursoCatalogEnabled()&&remoteRows.length>0;
+  const remote=useRemote?await lookupTursoCatalogBatch(remoteRows):null;
+  const works=mode==="search"&&!useRemote?await matchMangaBakaWorks(query.trim(),true):[];
+  let remoteIndex=0;
+  const normalized=candidates.map((m,i)=>{
+    const bucket=local[i]??remote?.[remoteIndex++]??[];
+    const classified=inheritCanonicalRating(m,matchCanonicalMetadata(m,bucket));
+    return inheritCanonicalRating(classified,matchCanonicalMetadata(m,works));
+  });
+  const rows=normalized.filter(m=>classifyContent(m)==="SAFE").map(m=>({
+    id:m.id.slice(0,300),title:m.title.slice(0,300),format:m.format?.slice(0,40)
+  }));
   return { items: rows, received: result.mangas.length, page, hasNextPage: page < PRIVATE_BETA_MAX_PAGE && result.hasNextPage };
 }
 

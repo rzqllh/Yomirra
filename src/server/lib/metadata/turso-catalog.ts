@@ -2,7 +2,8 @@ import {createHash} from "node:crypto";
 import {withCache} from "@/server/lib/cache/redis-cache";
 import {normalizeTitle} from "@/shared/lib/title-matcher";
 import {normalizeExternalWorkIds} from "@/shared/lib/external-work-ids";
-import type {ExternalWorkIds} from "@/shared/sources/source-types";
+import type {ExternalWorkIds,MangaItem} from "@/shared/sources/source-types";
+import {comicFormat} from "@/shared/lib/metadata-catalog";
 import type {MetadataWork} from "@/shared/lib/metadata-catalog";
 import {decodeCatalogPayload} from "./catalog-payload.mjs";
 import {reserveCatalogRequest} from "./catalog-budget";
@@ -65,10 +66,10 @@ function validateManifest(rows:PipelineValue[][],snapshot:string){
   return at;
 }
 type CatalogResult={works:MetadataWork[];discovery:MetadataWork[]};
-async function cachedQuery(c:Config,queries:Query[],parse:(rows:PipelineValue[][][])=>CatalogResult):Promise<CatalogResult>{
+async function cachedQuery<T>(c:Config,queries:Query[],parse:(rows:PipelineValue[][][])=>T,scope=""):Promise<T>{
   const key="metadata:turso:v1:"+createHash("sha256").update(JSON.stringify([c.origin,c.snapshot,queries])).digest("hex");
   // Strict cache TTL for classification. No stale safety rating on errors.
-  const cached=await withCache(key+":manifest-v2",async()=>{
+  const cached=await withCache(key+":manifest-v2"+scope,async()=>{
     const [m,...rows]=await request(c,[manifest,...queries]);
     const createdAt=validateManifest(m,c.snapshot);
     return {createdAt,result:parse(rows)};
@@ -113,5 +114,44 @@ export async function getTursoMetadataWork(id:number):Promise<MetadataWork|null>
       return {works:work?.externalId===id&&work.contentRating==="safe"?[work]:[],discovery:[]};
     });
     return result.works[0]??null;
+  }catch{return null;}
+}
+
+/** Owner-only staged listing classification. One bounded indexed pipeline,
+ * never one request per item. Missing identity evidence or an ambiguous
+ * bucket cannot inherit a rating. All ratings remain in the candidate set. */
+export async function lookupTursoCatalogBatch(items:readonly MangaItem[]):Promise<MetadataWork[][]|null>{
+  if(items.length>24)return null;
+  const keysByItem:string[][]=items.map(()=>[]);
+  let eligible=0;
+  for(const [i,item] of items.entries()){
+    const title=normalizeTitle(item.title);
+    const ids=normalizeExternalWorkIds(item.externalWorkIds);
+    if(eligible>=12||!comicFormat(item.format)||title.length<3||title.length>160||
+       (!normalizeTitle(item.author)&&!ids))continue;
+    keysByItem[i]=["title:"+title,...Object.entries(ids??{}).map(([ns,id])=>"id:"+ns+":"+id)];
+    eligible++;
+  }
+  const keys=[...new Set(keysByItem.flat())].sort();
+  if(!keys.length)return items.map(()=>[]);
+  const c=await currentTursoCatalog();
+  if(!c)return null;
+  const queries:Query[]=keys.map(key=>({sql:"SELECT w.payload FROM lookup l JOIN works w ON w.id=l.work_id WHERE l.key=? LIMIT 5",args:[key],maxRows:5}));
+  try{
+    const buckets=await cachedQuery(c,queries,rows=>rows.map(bucket=>
+      bucket.length===5?null:bucket.map(row=>{
+        if(row.length!==1)throw Error("Invalid batch catalog row");
+        return payload(row[0]);
+      })),":private-batch-v1");
+    const byKey=new Map(keys.map((key,i)=>[key,buckets[i]]));
+    return keysByItem.map(itemKeys=>{
+      const matches=new Map<number,MetadataWork>();
+      for(const key of itemKeys){
+        const bucket=byKey.get(key);
+        if(!bucket)return [];
+        for(const work of bucket)matches.set(work.externalId,work);
+      }
+      return matches.size<=16?[...matches.values()]:[];
+    });
   }catch{return null;}
 }

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {describe,it,expect,vi,afterEach} from "vitest";
-import {lookupTursoCatalog,getTursoMetadataWork} from "../turso-catalog";
+import {lookupTursoCatalog,getTursoMetadataWork,lookupTursoCatalogBatch} from "../turso-catalog";
 import {reserveCatalogRequest} from "../catalog-budget";
 import {encodeCatalogPayload} from "../catalog-payload.mjs";
 vi.mock("../catalog-budget",()=>({reserveCatalogRequest:vi.fn()}));
@@ -53,5 +53,28 @@ describe("Turso optional catalog",()=>{
     vi.stubGlobal("fetch",fetcher);
     expect(await lookupTursoCatalog("Fixture")).toEqual({works:[],discovery:[]});
     expect(await getTursoMetadataWork(1995)).toEqual(work);
+  });
+});
+
+describe("bounded owner listing lookup",()=>{
+  it("does not look up rows without strong identity or above the page bound",async()=>{
+    configure();const fetcher=vi.fn();vi.stubGlobal("fetch",fetcher);
+    expect(await lookupTursoCatalogBatch([{id:"a",title:"Fixture",coverUrl:"",format:"manga"}])).toEqual([[]]);
+    expect(await lookupTursoCatalogBatch(Array.from({length:25},()=>({id:"a",title:"Fixture",coverUrl:"",format:"manga",author:"Writer"})))).toBeNull();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+  it("deduplicates keys, bounds admission and preserves restrictive competing candidates",async()=>{
+    configure();
+    const restricted={...work,externalId:2000,contentRating:"suggestive" as const};
+    const other={type:"blob",base64:encodeCatalogPayload(restricted).toString("base64")};
+    const fetcher=vi.fn().mockResolvedValue(response([[blob],[other]]));vi.stubGlobal("fetch",fetcher);
+    const rows=[{id:"a",title:"Fixture",coverUrl:"",format:"manga",author:"Writer"},{id:"b",title:"Fixture",coverUrl:"",format:"manga",author:"Writer"}];
+    expect(await lookupTursoCatalogBatch(rows)).toEqual([[work,restricted],[work,restricted]]);
+    expect(fetcher).toHaveBeenCalledTimes(1);expect(reserveCatalogRequest).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(fetcher.mock.calls[0][1].body).requests).toHaveLength(3);
+  });
+  it("does not truncate an ambiguous bucket into a unique identity",async()=>{
+    configure();const fetcher=vi.fn().mockResolvedValue(response(Array.from({length:5},()=>[blob])));vi.stubGlobal("fetch",fetcher);
+    expect(await lookupTursoCatalogBatch([{id:"a",title:"Fixture",coverUrl:"",format:"manga",author:"Writer"}])).toEqual([[]]);
   });
 });
