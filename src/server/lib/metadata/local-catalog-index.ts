@@ -1,5 +1,6 @@
-import { statSync } from "node:fs";
+import { lstatSync, readFileSync, statSync } from "node:fs";
 import { decodeCatalogPayload } from "./catalog-payload.mjs";
+import { isSnapshot, MAX_CATALOG_FRESHNESS_MS, parseCatalogFreshnessAttestation } from "./catalog-slots.mjs";
 import { resolve } from "node:path";
 import type { MetadataWork } from "@/shared/lib/metadata-catalog";
 import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
@@ -12,12 +13,27 @@ interface ReadOnlyIndex{
   close():void;
 }
 type BuiltinSqlite={DatabaseSync:new(path:string,opts:{readOnly:boolean})=>ReadOnlyIndex};
-let current:{path:string;mtime:number;db:ReadOnlyIndex;createdAt:number}|undefined;
+let current:{path:string;mtime:number;freshnessMtime:number;db:ReadOnlyIndex;createdAt:number;verifiedAt:number}|undefined;
 let checkedAt=0;
 let checkedPath:string|undefined;
 let checkedDb:ReadOnlyIndex|null=null;
-const MAX_AGE=7*24*60*60*1000;
+const MAX_AGE=MAX_CATALOG_FRESHNESS_MS;
 const MAX_MATCHES=16;
+function readLocalFreshness(path:string,snapshot:string|undefined,createdAt:string,createdMs:number,now:number):{verifiedAt:number;mtime:number}|null{
+  const file=path+".freshness.json";
+  let fstat;
+  try{fstat=lstatSync(file);}catch(err:unknown){
+    if((err as NodeJS.ErrnoException)?.code==="ENOENT"){
+      return now>=createdMs&&now-createdMs<=MAX_AGE?{verifiedAt:createdMs,mtime:0}:null;
+    }
+    return null;
+  }
+  if(!fstat.isFile()||fstat.isSymbolicLink()||fstat.size<=0||fstat.size>1024||!isSnapshot(snapshot))return null;
+  try{
+    const parsed=parseCatalogFreshnessAttestation(readFileSync(file,"utf8"),{snapshot,createdAt,now});
+    return {verifiedAt:Math.max(createdMs,parsed.verifiedAtMs),mtime:fstat.mtimeMs};
+  }catch{return null;}
+}
 function dbForLookup():ReadOnlyIndex|null{
   if(process.env.YOMIRRA_MANGABAKA_METADATA!=="permitted")return null;
   const configured=process.env.YOMIRRA_MANGABAKA_INDEX_PATH;
@@ -25,26 +41,42 @@ function dbForLookup():ReadOnlyIndex|null{
   const path=resolve(configured);
   const now=Date.now();
   if(checkedPath===path && now>=checkedAt && now-checkedAt<30_000){
-    return current&&checkedDb===current.db&&now>=current.createdAt&&now-current.createdAt<=MAX_AGE?checkedDb:null;
+    return current&&checkedDb===current.db&&now>=current.verifiedAt&&now-current.verifiedAt<=MAX_AGE?checkedDb:null;
   }
   checkedAt=now;checkedPath=path;checkedDb=null;
   try{
     const stat=statSync(path);
     if(!stat.isFile()||stat.size>200*1024*1024)return null;
     if(current?.path===path&&current.mtime===stat.mtimeMs){
-      checkedDb=now>=current.createdAt&&now-current.createdAt<=MAX_AGE?current.db:null;
-      return checkedDb;
+      let freshnessMtime=0;
+      try{
+        const fstat=lstatSync(path+".freshness.json");
+        if(!fstat.isFile()||fstat.isSymbolicLink())return null;
+        freshnessMtime=fstat.mtimeMs;
+      }catch(err:unknown){
+        if((err as NodeJS.ErrnoException)?.code!=="ENOENT")return null;
+      }
+      if(freshnessMtime===current.freshnessMtime){
+        checkedDb=now>=current.verifiedAt&&now-current.verifiedAt<=MAX_AGE?current.db:null;
+        return checkedDb;
+      }
     }
     const sqlite=(process as NodeJS.Process & {getBuiltinModule?:(id:string)=>unknown}).getBuiltinModule?.("node:sqlite") as BuiltinSqlite|undefined;
     if(!sqlite?.DatabaseSync)return null;
     const candidate=new sqlite.DatabaseSync(path,{readOnly:true});
     try{
       const manifest=candidate.prepare("SELECT schema_version, created_at, license, provider FROM manifest LIMIT 1").get() as {schema_version?:number;created_at?:string;license?:string;provider?:string}|undefined;
-      const created=Date.parse(manifest?.created_at??"");
+      const createdAtIso=manifest?.created_at??"";
+      const created=Date.parse(createdAtIso);
       if((manifest?.schema_version!==1&&manifest?.schema_version!==2)||manifest.provider!=="mangabaka"||manifest.license!=="CC-BY-NC-SA-4.0"||
-         !Number.isFinite(created)||created>now||now-created>MAX_AGE){candidate.close();return null;}
+         !Number.isFinite(created)||created>now){candidate.close();return null;}
+      const sha=manifest.schema_version===2
+        ? (candidate.prepare("SELECT source_sha256 FROM manifest LIMIT 1").get() as {source_sha256?:string}|undefined)?.source_sha256
+        : undefined;
+      const freshness=readLocalFreshness(path,sha,createdAtIso,created,now);
+      if(!freshness){candidate.close();return null;}
       current?.db.close();
-      current={path,mtime:stat.mtimeMs,db:candidate,createdAt:created};
+      current={path,mtime:stat.mtimeMs,freshnessMtime:freshness.mtime,db:candidate,createdAt:created,verifiedAt:freshness.verifiedAt};
       checkedDb=candidate;
       return candidate;
     }catch{candidate.close();return null;}

@@ -103,6 +103,21 @@ def run(root,bootstrap=None,day=None):
         if result.get("status")=="UNCHANGED":
             output={"status":"UNCHANGED","day":day,"officialSha1":result["officialSha1"],"downloaded":False,"productionActivated":False,
                     **freshness(previous_report,day)}
+            if (isinstance(previous_report,dict) and
+                    re.fullmatch("[a-f0-9]{64}",str(previous_report.get("normalizedInputSha256",""))) and
+                    isinstance(previous_report.get("createdAt"),str) and
+                    previous_report.get("officialSha1")==result["officialSha1"]):
+                verified_now=datetime.now(timezone.utc)
+                write_new(run_dir/"freshness-evidence.json",{
+                    "schema_version":1,
+                    "provider":"mangabaka",
+                    "license":"CC-BY-NC-SA-4.0",
+                    "source_sha256":previous_report["normalizedInputSha256"],
+                    "created_at":previous_report["createdAt"],
+                    "last_verified_at":verified_now.isoformat().replace("+00:00","Z"),
+                    "verified_epoch_ms":int(verified_now.timestamp()*1000),
+                    "official_sha1":result["officialSha1"],
+                })
         elif result.get("status")=="CANDIDATE_VERIFIED":
             plan=staging.stage(run_dir/"snapshot",run_dir/"stage")
             if plan.get("catalogSnapshot")!=result.get("normalizedInputSha256") or plan.get("productionActivated") is not False:

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { matchMangaBakaWorks, parseMangaBakaWork } from "../mangabaka";
+import { parseCatalogRecord } from "../mangabaka-record.mjs";
 
 vi.mock("@/server/lib/cache/optional-service-budget",()=>({reserveOptionalService:vi.fn().mockResolvedValue(true)}));
 vi.mock("@/server/lib/cache/redis-cache", () => ({
@@ -82,8 +83,61 @@ describe("MangaBaka v2 response boundary", () => {
     expect(parseMangaBakaWork({...fixture,content_rating:"unrecognized"},true)).toBeNull();
   });
   it("rejects incomplete, merged, non-comic, and restricted records", () => {
-    for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
+    for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, merged_with: 42}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
       expect(parseMangaBakaWork(invalid)).toBeNull();
     }
+  });
+  it("extracts v1 top-level secondary_titles and artists while excluding nested source.*.id by default (ENG-05)", () => {
+    const v1DumpRow = {
+      id: 1995,
+      state: "active",
+      merged_with: null,
+      type: "manga",
+      content_rating: "safe",
+      title: "Frieren: Beyond Journey's End",
+      native_title: "葬送のフリーレン",
+      secondary_titles: {
+        unknown: [
+          { type: "unknown", title: "Frieren at the Funeral", note: null },
+          { type: "unknown", title: "Sousou no Frieren", note: null },
+        ],
+      },
+      authors: ["Kanehito Yamada"],
+      artists: ["Tsukasa Abe", "Kanehito Yamada"],
+      source: {
+        anilist: { id: 118586, rating: 91 },
+        my_anime_list: { id: 126287, description: "Third-party restricted" },
+      },
+    };
+    const defaultParsed = parseCatalogRecord(v1DumpRow);
+    expect(defaultParsed).toEqual({
+      provider: "mangabaka",
+      externalId: 1995,
+      title: "Frieren: Beyond Journey's End",
+      aliases: [
+        "Frieren: Beyond Journey's End",
+        "葬送のフリーレン",
+        "Frieren at the Funeral",
+        "Sousou no Frieren",
+      ],
+      format: "manga",
+      contentRating: "safe",
+      authors: ["Kanehito Yamada", "Tsukasa Abe"],
+    });
+    expect(defaultParsed?.externalWorkIds).toBeUndefined();
+    expect(defaultParsed).not.toHaveProperty("source");
+
+    // Only explicitly verified provider keys may contribute IDs, and conflicts still veto.
+    const verifiedAnilist = parseCatalogRecord(v1DumpRow, false, {
+      verifiedThirdPartyIdProviders: ["anilist"],
+    });
+    expect(verifiedAnilist?.externalWorkIds).toEqual({ anilist: "118586" });
+
+    const conflicting = parseCatalogRecord(
+      { ...v1DumpRow, source_ids: { anilist: "999999" } },
+      false,
+      { verifiedThirdPartyIdProviders: ["anilist"] }
+    );
+    expect(conflicting?.externalWorkIds).toBeUndefined();
   });
 });

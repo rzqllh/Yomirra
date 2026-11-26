@@ -7,11 +7,12 @@ import {comicFormat} from "@/shared/lib/metadata-catalog";
 import type {MetadataWork} from "@/shared/lib/metadata-catalog";
 import {decodeCatalogPayload} from "./catalog-payload.mjs";
 import {reserveCatalogRequest} from "./catalog-budget";
+import {resolveCatalogVerifiedAt} from "./catalog-freshness";
 import {currentTursoCatalog,isTursoCatalogConfigured} from "./catalog-pointer";
-import type {CatalogSlot as Config} from "./catalog-slots.mjs";
+import {MAX_CATALOG_FRESHNESS_MS,type CatalogSlot as Config} from "./catalog-slots.mjs";
 
 const MAX_RESPONSE=2*1024*1024;
-const MAX_AGE=7*86400000;
+const MAX_AGE=MAX_CATALOG_FRESHNESS_MS;
 let pausedUntil=0;
 type Query={sql:string;args:string[];maxRows:number};
 type PipelineValue={type:string;value?:string;base64?:string};
@@ -57,13 +58,14 @@ async function request(c:Config,queries:Query[]):Promise<PipelineValue[][][]>{
   });
 }
 const manifest:Query={sql:"SELECT CAST(schema_version AS TEXT), created_at, license, provider, source_sha256 FROM manifest LIMIT 2",args:[],maxRows:2};
-function validateManifest(rows:PipelineValue[][],snapshot:string){
+async function validateManifest(rows:PipelineValue[][],snapshot:string){
   if(rows.length!==1||rows[0].length!==5)throw Error("Catalog manifest missing");
   const [version,created,license,provider,sha]=rows[0].map(textCell);
   const at=Date.parse(created),now=Date.now();
   if(version!=="2"||license!=="CC-BY-NC-SA-4.0"||provider!=="mangabaka"||sha!==snapshot||
-     !Number.isFinite(at)||at>now||now-at>MAX_AGE)throw Error("Catalog snapshot invalid or expired");
-  return at;
+     !Number.isFinite(at)||at>now)throw Error("Catalog snapshot invalid or expired");
+  const verifiedAt=await resolveCatalogVerifiedAt({snapshot,createdAt:created,now});
+  return {createdAt:at,createdAtIso:created,verifiedAt};
 }
 type CatalogResult={works:MetadataWork[];discovery:MetadataWork[]};
 async function cachedQuery<T>(c:Config,queries:Query[],parse:(rows:PipelineValue[][][])=>T,scope=""):Promise<T>{
@@ -71,11 +73,15 @@ async function cachedQuery<T>(c:Config,queries:Query[],parse:(rows:PipelineValue
   // Strict cache TTL for classification. No stale safety rating on errors.
   const cached=await withCache(key+":manifest-v2"+scope,async()=>{
     const [m,...rows]=await request(c,[manifest,...queries]);
-    const createdAt=validateManifest(m,c.snapshot);
-    return {createdAt,result:parse(rows)};
+    const meta=await validateManifest(m,c.snapshot);
+    return {createdAt:meta.createdAt,createdAtIso:meta.createdAtIso,verifiedAt:meta.verifiedAt,result:parse(rows)};
   },1800,{allowStaleOnError:false,shouldPersist:data=>JSON.stringify(data).length<=64*1024});
   const now=Date.now();
-  if(!Number.isFinite(cached?.createdAt)||cached.createdAt>now||now-cached.createdAt>MAX_AGE)throw Error("Catalog snapshot expired");
+  if(!Number.isFinite(cached?.createdAt)||cached.createdAt>now)throw Error("Catalog snapshot expired");
+  const verifiedAt=typeof cached?.createdAtIso==="string"
+    ? await resolveCatalogVerifiedAt({snapshot:c.snapshot,createdAt:cached.createdAtIso,now})
+    : cached.createdAt;
+  if(!Number.isFinite(verifiedAt)||verifiedAt>now||now-verifiedAt>MAX_AGE)throw Error("Catalog snapshot expired");
   return cached.result;
 }
 /** Explicit search/detail only; one bounded pipeline, no per-cover fan-out.

@@ -13,7 +13,10 @@ on:
       - 'scripts/verify-turso-candidate.py'
       - 'scripts/publish-turso-catalog.mjs'
       - 'scripts/__tests__/publish-turso-catalog.test.mjs'
+      - 'scripts/renew-catalog-freshness.mjs'
+      - 'scripts/__tests__/renew-catalog-freshness.test.mjs'
       - 'src/server/lib/metadata/catalog-slots.mjs'
+      - 'src/server/lib/metadata/catalog-freshness.ts'
       - 'scripts/__tests__/verify-turso-candidate.test.py'
       - 'scripts/__tests__/prepare-turso-import.test.py'
       - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
@@ -40,5 +43,5 @@ jobs:
       - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
       - run: python3 scripts/__tests__/prepare-turso-import.test.py
       - run: python3 scripts/__tests__/verify-turso-candidate.test.py
-      - run: node --test scripts/__tests__/publish-turso-catalog.test.mjs
+      - run: node --test scripts/__tests__/publish-turso-catalog.test.mjs scripts/__tests__/renew-catalog-freshness.test.mjs
       - run: python3 scripts/__tests__/refresh-catalog-daily.test.py

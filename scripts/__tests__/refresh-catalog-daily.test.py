@@ -58,6 +58,22 @@ class DailyTests(unittest.TestCase):
             self.assertEqual(daily.run(root,day="2026-11-25")["status"],"UNCHANGED")
             previous.assert_called_once_with(good/"snapshot")
             prep.assert_called_once_with(root/"2026-11-25"/"snapshot",good/"snapshot")
+
+    def test_unchanged_verified_snapshot_writes_immutable_freshness_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{"YOMIRRA_MANGABAKA_METADATA":"permitted","YOMIRRA_CATALOG_DAILY_PREPARE":"yes","CI":"","GITHUB_ACTIONS":""}), \
+             patch.object(daily.shutil,"disk_usage",return_value=SimpleNamespace(free=10*1024**3)), \
+             patch.object(daily.refresh,"previous_snapshot",return_value=(Path("fixture.sqlite"),{"normalizedInputSha256":"a"*64,"createdAt":"2026-11-20T00:00:00Z","officialSha1":"b"*40})), \
+             patch.object(daily.refresh,"verify_sqlite_snapshot"), \
+             patch.object(daily.refresh,"prepare",return_value={"status":"UNCHANGED","officialSha1":"b"*40}):
+            root=Path(tmp)
+            out=daily.run(root,bootstrap=root/"bootstrap",day="2026-11-25")
+            self.assertEqual(out["status"],"UNCHANGED")
+            self.assertTrue(out["freshnessRenewalRequired"])
+            evidence=json.loads((root/"2026-11-25"/"freshness-evidence.json").read_text("utf8"))
+            self.assertEqual(evidence["source_sha256"],"a"*64)
+            self.assertEqual(evidence["created_at"],"2026-11-20T00:00:00Z")
+            self.assertEqual(evidence["official_sha1"],"b"*40)
+            self.assertEqual(evidence["schema_version"],1)
     def test_unchanged_checksum_flags_snapshot_nearing_runtime_expiry(self):
         self.assertEqual(daily.freshness({"createdAt":"2026-11-20T00:00:00+00:00"},"2026-11-22"),
                          {"snapshotAgeDays":2.0,"freshnessRenewalRequired":False})
