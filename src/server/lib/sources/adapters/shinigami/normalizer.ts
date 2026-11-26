@@ -90,5 +90,6 @@ export function normalizeChapter(chapter: ShinigamiChapterItem, mangaId: string)
     number: chapter.chapter_number,
     title: chapter.chapter_title || `Chapter ${chapter.chapter_number}`,
     date: parseDate(chapter.release_date),
+    isLocked: false,
   };
 }

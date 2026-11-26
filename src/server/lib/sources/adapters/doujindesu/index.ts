@@ -284,6 +284,7 @@ export class DoujinDesuSource implements MangaSource {
       number: Number(c.chapter_number) || 0,
       title: `Chapter ${c.chapter_number}`,
       date: c.created_at || "",
+      isLocked: false,
     }));
   }
 

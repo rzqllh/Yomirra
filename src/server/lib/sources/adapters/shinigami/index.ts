@@ -37,7 +37,7 @@ export class ShinigamiSource implements MangaSource {
   public readonly supportedLanguages = ["id"];
   public readonly version = "1.0.0";
   public readonly adapterVersion = "1.1.0";
-  public readonly icon = "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=64";
+  public readonly icon = "https://s2.googleusercontent.com/s2/favicons?domain=s1.shinigami.mx&sz=128";
   public readonly isEnabled = true;
   public readonly isInstalled = true;
   public readonly status = "online" as const;

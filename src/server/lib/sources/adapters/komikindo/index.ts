@@ -195,6 +195,7 @@ export class KomikindoSource implements MangaSource {
           number,
           title,
           date,
+          isLocked: false,
         });
       }
     });

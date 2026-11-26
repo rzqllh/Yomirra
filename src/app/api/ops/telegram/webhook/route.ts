@@ -4,9 +4,13 @@ import { logger } from "@/shared/logger";
 import { sendTelegramMessage } from "@/server/lib/ops/telegram-notifier";
 import { AlertSeverity } from "@/server/lib/ops/severity";
 import { redis, isRedisConfigured } from "@/server/lib/cache/redis";
-import { sourceRegistry, getSourceMetadata } from "@/shared/sources/source-registry";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
+import { getRuntimeSource, getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { probeSourceHealth } from "@/server/lib/sources/health/probe";
+import { hasReaderPageEvidence } from "@/server/lib/sources/health/probe-coverage";
+import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
 import { sendHealthDigest } from "@/server/lib/ops/health-digest";
 import {
   failureGuidance,
@@ -17,6 +21,17 @@ import {
 } from "@/server/lib/ops/message-format";
 
 export const dynamic = "force-dynamic";
+
+const MAX_OPS_SNAPSHOT_AGE_MS = 12 * 60 * 60 * 1000;
+
+function isFreshOpsSnapshot(
+  snapshot: SourceHealthSnapshot | null | undefined,
+  nowMs = Date.now()
+): snapshot is SourceHealthSnapshot {
+  if (!snapshot?.lastCheckedAt) return false;
+  const checkedMs = Date.parse(snapshot.lastCheckedAt);
+  return Number.isFinite(checkedMs) && checkedMs <= nowMs && nowMs - checkedMs <= MAX_OPS_SNAPSHOT_AGE_MS;
+}
 
 export async function POST(req: Request) {
   const secretToken = req.headers.get("x-telegram-bot-api-secret-token");
@@ -83,12 +98,15 @@ export async function POST(req: Request) {
         break;
 
       case "/sources": {
-        const active = sourceRegistry.filter((source) => source.isEnabled && source.isInstalled);
+        const runtimeSources = await getRuntimeSources();
+        const active = runtimeSources.filter(isDiscoverySourceSystemEligible);
         const snapshots = await sourceHealthStore.getAllSnapshots(active.map((source) => source.id));
+        const nowMs = Date.now();
 
         let message = `📚 *Yomirra · Sources*\n\n${active.length} source aktif\n\n`;
         for (const source of active) {
-          const snapshot = snapshots[source.id];
+          const rawSnapshot = snapshots[source.id];
+          const snapshot = isFreshOpsSnapshot(rawSnapshot, nowMs) ? rawSnapshot : undefined;
           const status = snapshot?.status || "UNKNOWN";
           const rolling = await sourceHealthStore.getRollingStats(source.id);
 
@@ -116,7 +134,7 @@ export async function POST(req: Request) {
           break;
         }
 
-        const meta = getSourceMetadata(sourceId);
+        const meta = (await getRuntimeSource(sourceId)) ?? getSourceMetadata(sourceId);
         if (!meta) {
           await sendTelegramMessage(`Source \`${sourceId}\` tidak ditemukan di registry.`, {
             severity: AlertSeverity.WARNING,
@@ -124,15 +142,16 @@ export async function POST(req: Request) {
           break;
         }
 
-        const snapshot = await sourceHealthStore.getSnapshot(sourceId);
+        const rawSnapshot = await sourceHealthStore.getSnapshot(sourceId);
+        const snapshot = isFreshOpsSnapshot(rawSnapshot) ? rawSnapshot : null;
         const rolling = await sourceHealthStore.getRollingStats(sourceId);
         const status = snapshot?.status || "UNKNOWN";
 
         let message = `🔎 *${meta.name}* (\`${meta.id}\`)\n\n`;
         message += `Status: ${statusIcon(status)} ${status}\n`;
         message += `Latency terkini: ${snapshot && snapshot.latencyMs ? formatLatency(snapshot.latencyMs) : "belum terukur"}\n`;
-        if (snapshot?.lastCheckedAt) {
-          message += `Terakhir dicek: ${formatWibTime(snapshot.lastCheckedAt)}\n`;
+        if (rawSnapshot?.lastCheckedAt) {
+          message += `Terakhir dicek: ${formatWibTime(rawSnapshot.lastCheckedAt)}${snapshot ? "" : " (kedaluwarsa >12j)"}\n`;
         }
 
         message += "\n*Statistik 24 Jam*\n";
@@ -147,7 +166,7 @@ export async function POST(req: Request) {
           if (snapshot.stage) message += ` · stage \`${snapshot.stage}\``;
           message += `\n${guidance.cause}\n\n*Tindakan*\n${guidance.action}\n`;
         } else if (status === "UNKNOWN") {
-          message += "\n_Source ini belum di-probe sejak serverless restart/cache miss._\n";
+          message += "\n_Source ini belum memiliki probe segar dalam 12 jam terakhir._\n";
         }
 
         message += `\nPerintah recheck: \`/recheck ${meta.id}\``;
@@ -156,16 +175,22 @@ export async function POST(req: Request) {
       }
 
       case "/errors": {
-        const sourceIds = sourceRegistry
-          .filter((source) => source.isEnabled && source.isInstalled)
+        const runtimeSources = await getRuntimeSources();
+        const sourceIds = runtimeSources
+          .filter(isDiscoverySourceSystemEligible)
           .map((source) => source.id);
         const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);
-        const activeErrors = Object.entries(snapshots).filter(
-          ([, snap]) => snap.status !== "HEALTHY" && snap.status !== "UNKNOWN" && Boolean(snap.status)
-        );
-        const unmeasured = Object.entries(snapshots).filter(
-          ([, snap]) => snap.status === "UNKNOWN" || !snap.status
-        );
+        const nowMs = Date.now();
+        const activeErrors: Array<[string, SourceHealthSnapshot]> = [];
+        const unmeasured: string[] = [];
+        for (const sourceId of sourceIds) {
+          const snap = snapshots[sourceId];
+          if (!isFreshOpsSnapshot(snap, nowMs) || snap.status === "UNKNOWN" || !snap.status) {
+            unmeasured.push(sourceId);
+          } else if (snap.status !== "HEALTHY") {
+            activeErrors.push([sourceId, snap]);
+          }
+        }
 
         if (activeErrors.length === 0) {
           let text = "🟢 *Tidak ada error aktif*\n\nSemua source yang terukur berjalan normal.";
@@ -198,7 +223,7 @@ export async function POST(req: Request) {
           break;
         }
 
-        const meta = getSourceMetadata(sourceId);
+        const meta = (await getRuntimeSource(sourceId)) ?? getSourceMetadata(sourceId);
         if (!meta) {
           await sendTelegramMessage(`Source \`${sourceId}\` tidak ditemukan di registry.`, {
             severity: AlertSeverity.WARNING,
@@ -229,8 +254,14 @@ export async function POST(req: Request) {
           const snapshot = await probeSourceHealth(sourceId, { deep: true });
 
           if (snapshot.status === "HEALTHY") {
+            const stageSummary = hasReaderPageEvidence(snapshot)
+              ? "deep probe (listing + detail + chapter + referensi halaman)"
+              : snapshot.metadata?.pagesSkipped
+                ? `deep probe hingga stage \`${snapshot.stage || "chapters"}\` (halaman dilewati: \`${snapshot.metadata.pagesSkipped}\`)`
+                : `deep probe hingga stage \`${snapshot.stage || "search"}\``;
             let reply = `🟢 *${meta.name} normal*\n\n`;
-            reply += `• Stage diuji: deep probe (listing + search + chapter)\n`;
+            reply += `• Stage diuji: ${stageSummary}\n`;
+            reply += "• Cakupan: referensi halaman terverifikasi; decode gambar di perangkat pengguna tidak diuji server\n";
             reply += `• Latency: ${formatLatency(snapshot.latencyMs)}\n`;
             if (snapshot.resolvedHost) reply += `• Host: \`${snapshot.resolvedHost}\`\n`;
             reply += "\nTidak ada tindakan lanjutan yang diperlukan.";
@@ -255,8 +286,9 @@ export async function POST(req: Request) {
       }
 
       case "/version": {
-        const activeSources = sourceRegistry.filter((source) => source.isEnabled && source.isInstalled).length;
-        const totalSources = sourceRegistry.length;
+        const runtimeSources = await getRuntimeSources();
+        const activeSources = runtimeSources.filter(isDiscoverySourceSystemEligible).length;
+        const totalSources = runtimeSources.length;
         const commitHash =
           process.env.VERCEL_GIT_COMMIT_SHA ||
           process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ||

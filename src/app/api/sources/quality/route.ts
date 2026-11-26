@@ -37,7 +37,7 @@ export async function POST(request:NextRequest){
   try{raw=await boundedBody(request);}catch{return respond({},400);}
   const parsed=schema.safeParse(raw);
   if(!parsed.success)return respond({},400);
-  if(!isRedisConfigured||!isRedisCommandAllowed()||!await reserveOptionalService("sqs"))return respond({});
+  if(!isRedisConfigured||!isRedisCommandAllowed())return respond({});
   try{
     // Static built-ins only. No user manifests, arbitrary URLs, private beta,
     // or adult-scope caches. Honor the authoritative admin disable switch.
@@ -51,7 +51,7 @@ export async function POST(request:NextRequest){
       try{assertSourceAccess(source,options);}catch{return [];}
       return [{ref,keys:[contentCacheKey(source,"manga",ref.mangaId,options),contentCacheKey(source,"chapters",ref.mangaId,options)]}];
     });
-    if(new Set(requests.map(r=>r.ref.sourceId)).size<2)return respond({});
+    if(new Set(requests.map(r=>r.ref.sourceId)).size<2||!await reserveOptionalService("sqs"))return respond({});
     // One bounded MGET for all existing cache entries; no writes, probes,
     // upstream fan-out or per-user telemetry.
     const rows=await redis.mget(...requests.flatMap(r=>r.keys));

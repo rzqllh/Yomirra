@@ -35,6 +35,7 @@ describe("alternate chapter navigation evidence", () => {
     expect(suggestAlternateChapter("Chapter 9", "work", [chapter()])).toEqual({ type: "UNMAPPED" });
     expect(suggestAlternateChapter("Chapter 10", "work", [chapter({ title: "Vol. 2 Chapter 10", chapterNumber: "Vol. 1 Chapter 10" })])).toEqual({ type: "UNMAPPED" });
     expect(suggestAlternateChapter("Vol. 2 Chapter 10", "work", [chapter({ volume: "1" })])).toEqual({ type: "UNMAPPED" });
+    expect(suggestAlternateChapter("Chapter 10", "work", [chapter({ volume: "2" })])).toEqual({ type: "UNMAPPED" });
     expect(suggestAlternateChapter("Chapter 10", "work", [chapter(), chapter({ id: "other-edition", isLocked: true })])).toEqual({ type: "AMBIGUOUS", number: 10 });
     expect(suggestAlternateChapter("Vol. 2 Chapter 10", "work", [chapter({ volume: "2" }), chapter({ id: "other-volume", volume: "1" })])).toMatchObject({ type: "EXACT" });
   });

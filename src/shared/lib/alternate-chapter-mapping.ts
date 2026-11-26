@@ -73,7 +73,7 @@ export function suggestAlternateChapter(
       typeof rawVolume === "string" && /^\d+$/.test(rawVolume.trim()) ? Number(rawVolume) : null;
     if (volume === null || (volume !== undefined && !Number.isSafeInteger(volume)) ||
         (labelVolume !== undefined && volume !== labelVolume)) continue;
-    if (current.volume !== undefined && volume !== current.volume) continue;
+    if ((current.volume !== undefined) !== (volume !== undefined) || volume !== current.volume) continue;
     matches.push(chapter);
   }
   if (matches.length > 1) return { type: "AMBIGUOUS", number: current.number };

@@ -13,6 +13,7 @@ import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
 const memoryStore = new Map<string, string>();
 vi.mock("@/server/lib/cache/redis", () => ({
   isRedisConfigured: true,
+  isRedisCommandAllowed: () => true,
   redis: {
     get: vi.fn(async (key: string) => memoryStore.get(key) || null),
     set: vi.fn(async (key: string, val: string) => {

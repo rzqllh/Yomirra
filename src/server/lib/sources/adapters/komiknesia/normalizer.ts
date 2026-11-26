@@ -90,6 +90,7 @@ export function normalizeKomikNesiaChapter(
       chapter.releasedAt ||
       chapter.createdAt ||
       "",
+    isLocked: false,
   };
 }
 

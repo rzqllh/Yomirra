@@ -1,6 +1,7 @@
 import {test,expect} from "./fixtures";
 import Redis from "ioredis";
 import {randomUUID} from "node:crypto";
+import {redisKeyNamespace} from "../src/server/lib/cache/redis-key-scope";
 
 test.use({serviceWorkers:"block",reducedMotion:"reduce"});
 // Reader acceptance must pass on the first attempt, not hide a WebKit race.
@@ -18,7 +19,11 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       !baseURL||new URL(baseURL).hostname!=="localhost"||!["redis","localhost","127.0.0.1"].includes(host),
       "Requires isolated production-build CI Redis fixture");
     test.setTimeout(60000);
-    const redis=new Redis(redisUrl!,{maxRetriesPerRequest:1,connectTimeout:2000});
+    const redis=new Redis(redisUrl!,{
+      maxRetriesPerRequest:1,
+      connectTimeout:2000,
+      ...(redisKeyNamespace?{keyPrefix:redisKeyNamespace}:{}),
+    });
     const id=randomUUID(),chapter=randomUUID(),before=randomUUID(),after=randomUUID();
     const title="Reader contrast fixture";
     const entries=[{id:after,mangaId:id,title:"Chapter 3",number:3,date:"2026-01-01",isLocked:false},{id:chapter,mangaId:id,title:"Chapter 2",number:2,date:"2026-01-01",isLocked:false},{id:before,mangaId:id,title:"Chapter 1",number:1,date:"2026-01-01",isLocked:false}];

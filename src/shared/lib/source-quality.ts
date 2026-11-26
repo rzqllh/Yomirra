@@ -128,9 +128,11 @@ export function rankQualityRefs<T extends QualityRef>(refs:readonly T[],snapshot
     const providerQuality=calculateSourceQuality(source,[],now);
     const shared=sharedProbeQuality(options.shared?.[ref.sourceId],now);
     const quality=titleQuality.score!==null?titleQuality:providerQuality.score!==null?providerQuality:shared;
-    const language=(options.languages??[]).indexOf(ref.language??"");
+    const preferredLanguages=options.languages??[];
+    const directLanguage=preferredLanguages.indexOf(ref.language??"");
+    const language=directLanguage>=0?directLanguage:(ref.language==="multi"&&preferredLanguages.length>0?0:999);
     const chapterMatch=Boolean(options.chapterLabel && title?.chapters && recent(title.chapters.at,now) && title.chapters.labels.includes(options.chapterLabel));
-    return {ref,index,quality,scope:titleQuality.score!==null?"title" as const:providerQuality.score!==null?"source" as const:"monitor" as const,language:language<0?999:language,chapterMatch};
+    return {ref,index,quality,scope:titleQuality.score!==null?"title" as const:providerQuality.score!==null?"source" as const:"monitor" as const,language,chapterMatch};
   });
   const metric=options.sort&&options.sort!=="quality"?options.sort:undefined;
   // Shrink partial observations toward a neutral midpoint for ordering only.

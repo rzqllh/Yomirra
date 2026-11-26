@@ -1,7 +1,13 @@
 import { probeAllSourcesHealth } from "@/server/lib/sources/health/probe";
+import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
-import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
-import { formatHealthDigest, sendTelegramMessage } from "./telegram-notifier";
+import type { SourceHealthSnapshot, SourceHealthTransition } from "@/server/lib/sources/health/types";
+import {
+  formatCriticalAlert,
+  formatHealthDigest,
+  formatRecoveryAlert,
+  sendTelegramMessage,
+} from "./telegram-notifier";
 import { formatWibTime } from "./message-format";
 import { AlertSeverity } from "./severity";
 import { logger } from "@/shared/logger";
@@ -40,13 +46,46 @@ export function formatHealthDigestWithCoverage(
     : message;
 }
 
+export async function notifySourceHealthTransition(
+  transition: SourceHealthTransition
+): Promise<boolean> {
+  const fingerprint = `health:source:${transition.sourceId}`;
+  if (transition.event === "SOURCE_BROKEN") {
+    return await sendTelegramMessage(formatCriticalAlert(transition.snapshot), {
+      severity: AlertSeverity.CRITICAL,
+      sourceId: transition.sourceId,
+      event: transition.snapshot.lastFailureCode || transition.event,
+      stage: transition.snapshot.stage,
+      fingerprint,
+    });
+  }
+  if (transition.event === "SOURCE_RECOVERED") {
+    return await sendTelegramMessage(formatRecoveryAlert(transition.snapshot), {
+      severity: AlertSeverity.RECOVERY,
+      sourceId: transition.sourceId,
+      stage: transition.snapshot.stage,
+      fingerprint,
+    });
+  }
+  return false;
+}
+
 /**
  * Runs bounded lightweight functional probes across installed sources,
- * then sends a digest that includes incomplete-probe coverage.
+ * dispatches transition alerts for confirmed outages/recoveries, then sends
+ * a digest that includes incomplete-probe coverage.
  */
 export async function sendHealthDigest(): Promise<boolean> {
+  const transitions: SourceHealthTransition[] = [];
+  const unsubscribe = sourceHealthStore.onTransition((transition) => {
+    transitions.push(transition);
+  });
   try {
     const probedSnapshots = await probeAllSourcesHealth({ deep: false });
+    unsubscribe();
+    for (const transition of transitions) {
+      await notifySourceHealthTransition(transition).catch(() => false);
+    }
     const runtimeSources = await getRuntimeSources();
     const activeIds = runtimeSources
       .filter(isDiscoverySourceSystemEligible)
@@ -59,5 +98,7 @@ export async function sendHealthDigest(): Promise<boolean> {
       error: error instanceof Error ? error.message : String(error),
     });
     return false;
+  } finally {
+    unsubscribe();
   }
 }

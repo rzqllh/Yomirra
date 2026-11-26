@@ -217,6 +217,38 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1", { mangaId: "solo-leveling" });
   });
 
+  it("rejects non-HTTPS page references in deep probes and preserves lastSuccessAt on subsequent failure", async () => {
+    const getPopular = vi.fn()
+      .mockResolvedValueOnce({ mangas: [{ id: "work-1", title: "Work 1" }], hasNextPage: false })
+      .mockResolvedValueOnce({ mangas: [{ id: "work-1", title: "Work 1" }], hasNextPage: false });
+    const getDetail = vi.fn().mockResolvedValue({ id: "work-1", title: "Work 1" });
+    const getChapters = vi.fn().mockResolvedValue([
+      { id: "ch-1", mangaId: "work-1", number: 1, title: "Chapter 1", isLocked: false },
+    ]);
+    const getPages = vi.fn().mockResolvedValue({
+      chapterId: "ch-1",
+      pages: [{ index: 0, url: "http://insecure.example/page1.jpg" }],
+    });
+
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "asurascans",
+      getPopular,
+      getDetail,
+      getChapters,
+      getPages,
+    } as any);
+
+    const healthy = await probeSourceHealth("asurascans", { deep: false });
+    expect(healthy.status).toBe("HEALTHY");
+    expect(healthy.lastSuccessAt).toBeTruthy();
+
+    const failedDeep = await probeSourceHealth("asurascans", { deep: true });
+    expect(failedDeep.status).toBe("DEGRADED");
+    expect(failedDeep.stage).toBe("pages");
+    expect(failedDeep.lastFailureCode).toBe("SCHEMA_CHANGED");
+    expect(failedDeep.lastSuccessAt).toBe(healthy.lastSuccessAt);
+  });
+
   it("does not request locked chapter pages or mark a valid empty chapter list broken", async () => {
     const getPages = vi.fn();
     const getChapters = vi.fn().mockResolvedValueOnce([{ id: "locked", isLocked: true }]).mockResolvedValueOnce([]);

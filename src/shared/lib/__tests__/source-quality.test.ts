@@ -64,6 +64,14 @@ describe("evidence-based source quality",()=>{
     expect(rankQualityRefs(refs,snapshot,{languages:["en"],now})[0].ref.sourceId).toBe("b");
     expect(refs.map(r=>r.sourceId)).toEqual(["a","b"]);
   });
+  it("allows multi-language sources to compete in the top preferred-language tier by measured quality",()=>{
+    const refs=[{sourceId:"single-slow",mangaId:"1",language:"id"},{sourceId:"mangadex",mangaId:"2",language:"multi"}];
+    const snapshot={
+      [qualityKey("single-slow","1")]:{samples:samples(false,"api",1500)},
+      [qualityKey("mangadex","2")]:{samples:samples(true,"api",300)}
+    };
+    expect(rankQualityRefs(refs,snapshot,{languages:["id","en"],now})[0].ref.sourceId).toBe("mangadex");
+  });
 });
 
 describe("shared monitoring quality",()=>{

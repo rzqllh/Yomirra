@@ -30,11 +30,17 @@ export class MangaThemesiaEngine extends BaseEngine {
 
     $(this.itemSelector).each((_, el) => {
       const $el = $(el);
+      const cleanPrefix = this.mangaPath.replace(/^\/+|\/+$/g, "");
+      const seriesAnchor = cleanPrefix
+        ? $el.find(`a[href*='/${cleanPrefix}/']`).attr("href")
+        : undefined;
       const link =
+        seriesAnchor ||
         $el.find("a[href*='/manga/']").attr("href") ||
         $el.find("a").first().attr("href") ||
         "";
-      if (!sameProviderUrl(link, this.baseUrl)) return;
+      const resolvedLink = sameProviderUrl(link, this.baseUrl);
+      if (!resolvedLink || /\/(?:chapter|ch)-/i.test(resolvedLink.pathname)) return;
 
       const title =
         $el.find(".tt, .title, h4, h3").text().trim() ||
@@ -62,9 +68,15 @@ export class MangaThemesiaEngine extends BaseEngine {
         $el.find(".rating i, .numscore").first().text().trim() || undefined;
       const score = scoreText ? parseFloat(scoreText) || undefined : undefined;
 
-      // Extract slug from URL: /manga/slug/
-      const match = link.match(/\/manga\/([^\/]+)\/?/);
-      const id = match ? match[1] : link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+      const escapedPrefix = cleanPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const prefixMatch = cleanPrefix
+        ? new RegExp(`^/${escapedPrefix}/([^/]+)/?$`, "i").exec(resolvedLink.pathname)
+        : null;
+      const genericMatch =
+        prefixMatch ??
+        /^\/(?:manga|series|comic|komik)\/([^/]+)\/?$/i.exec(resolvedLink.pathname) ??
+        /^\/([^/]+)\/?$/.exec(resolvedLink.pathname);
+      const id = genericMatch ? genericMatch[1] : "";
 
       if (id && title) {
         mangas.push({

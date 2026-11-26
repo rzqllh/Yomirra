@@ -212,8 +212,19 @@ export class NatsuIdEngine extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) {
+      throw new SourceError("Invalid provider identity", {
+        sourceId: this.id,
+        code: "CONTENT_NOT_FOUND",
+        stage: "chapters",
+      });
+    }
+    const detailPath = mangaId.startsWith("http")
+      ? mangaId
+      : `/manga/${encodeURIComponent(mangaId)}/`;
+
     try {
-      let html = await this.client.getHtml(`/manga/${encodeURIComponent(mangaId)}/`);
+      let html = await this.client.getHtml(detailPath);
       let $ = cheerio.load(html);
 
       // If no chapters found on detail page, attempt admin-ajax fallback

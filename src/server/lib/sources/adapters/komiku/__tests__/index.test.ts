@@ -163,6 +163,7 @@ describe("KomikuSource", () => {
       number: 179,
       title: "Chapter 179",
       date: "2 jam lalu",
+      isLocked: false,
     });
     expect(chapters[1]).toEqual({
       id: "solo-leveling-chapter-178",
@@ -170,6 +171,7 @@ describe("KomikuSource", () => {
       number: 178,
       title: "Chapter 178",
       date: "1 hari lalu",
+      isLocked: false,
     });
   });
 

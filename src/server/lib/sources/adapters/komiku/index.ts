@@ -239,6 +239,7 @@ export class KomikuSource implements MangaSource {
           number,
           title: title || `Chapter ${number}`,
           date,
+          isLocked: false,
         });
       }
     });

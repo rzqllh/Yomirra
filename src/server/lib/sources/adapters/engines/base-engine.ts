@@ -93,16 +93,34 @@ export abstract class BaseEngine implements MangaSource {
       ...(config.capabilities ?? {}),
     };
 
-    this.client = new HttpClient(this.baseUrl, {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-      Referer: `${this.baseUrl}/`,
+    this.client = this.createHttpClient(this.baseUrl);
+  }
+
+  private createHttpClient(baseUrl: string): HttpClient {
+    const hosts = new Set<string>();
+    if (this.upstreamDomain) hosts.add(this.upstreamDomain);
+    try {
+      const parsedHost = new URL(baseUrl).hostname;
+      if (parsedHost) hosts.add(parsedHost);
+    } catch {
+      // Keep upstreamDomain allowlist if baseUrl is malformed
+    }
+    return new HttpClient({
+      baseUrl,
+      allowedHosts: hosts.size > 0 ? [...hosts] : undefined,
+      maxRedirects: 2,
+      maxResponseSize: 2 * 1024 * 1024,
+      defaultHeaders: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        Referer: `${baseUrl}/`,
+      },
     });
   }
 
   public setBaseUrl(url: string): void {
     this.baseUrl = url.replace(/\/+$/, "");
-    this.client.setBaseUrl(this.baseUrl);
+    this.client = this.createHttpClient(this.baseUrl);
   }
 
   /**

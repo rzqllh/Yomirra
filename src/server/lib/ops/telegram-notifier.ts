@@ -297,6 +297,10 @@ export async function sendTelegramMessage(
           logger.info("Successfully delivered Telegram alert via plain-text fallback");
           return await finishDelivery();
         }
+        void fallbackResponse.body?.cancel().catch(() => undefined);
+        logger.error("Failed to send Telegram alert plain-text fallback", {
+          status: fallbackResponse.status,
+        });
       }
 
       return false;

@@ -1,5 +1,6 @@
 import { chapterQualityEvidence,type QualityChapters } from "@/shared/lib/source-quality";
 import { classifyContent } from "@/shared/sources/content-policy";
+import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
 import type {Chapter,MangaItem} from "@/shared/sources/source-types";
 
 const MAX_ENTRY_BYTES=512*1024;
@@ -18,8 +19,9 @@ export function cachedPublicChapterEvidence(mangaId:string,detailRaw:string|null
   const detail=freshEntry(detailRaw,detailTtl,now);
   const chapters=freshEntry(chapterRaw,chapterTtl,now);
   if(!detail||!chapters||!detail.data||typeof detail.data!=="object"||
-     (detail.data as MangaItem).id!==mangaId||classifyContent(detail.data as MangaItem)!=="SAFE"||
-     !Array.isArray(chapters.data))return;
+     (detail.data as MangaItem).id!==mangaId||!Array.isArray(chapters.data))return;
+  const resolvedDetail=applyLocalCanonicalMetadata(detail.data as MangaItem);
+  if(classifyContent(resolvedDetail)!=="SAFE")return;
   const evidence=chapterQualityEvidence(chapters.data as Chapter[],mangaId,Math.floor(chapters.at/300000)*300000);
   // Return only bounded public chapter numbering. Do not infer anything
   // from empty, oversized or unclassified cache entries.

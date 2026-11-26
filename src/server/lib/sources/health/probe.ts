@@ -105,6 +105,22 @@ export async function probeSourceHealth(
         if (!pagesResult || pagesResult.chapterId !== targetChapter.id || !Array.isArray(pagesResult.pages) || pagesResult.pages.length === 0) {
           throw new SourceError("Unlocked chapter returned no page references", { code: "PARSER_BROKEN", sourceId: normalizedId, stage });
         }
+        const hasInvalidPageUrl = pagesResult.pages.some((pageItem) => {
+          if (typeof pageItem?.url !== "string" || !pageItem.url.trim()) return true;
+          try {
+            const parsed = new URL(pageItem.url.trim());
+            return parsed.protocol !== "https:" || Boolean(parsed.username || parsed.password);
+          } catch {
+            return true;
+          }
+        });
+        if (hasInvalidPageUrl) {
+          throw new SourceError("Unlocked chapter returned invalid page URL", {
+            code: "SCHEMA_CHANGED",
+            sourceId: normalizedId,
+            stage,
+          });
+        }
       }
     }
 
@@ -174,7 +190,7 @@ export async function probeSourceHealth(
       latencyMs,
       resolvedHost,
       lastCheckedAt: new Date().toISOString(),
-      lastSuccessAt: null,
+      lastSuccessAt: previous?.lastSuccessAt ?? null,
       lastFailureAt: new Date().toISOString(),
       consecutiveFailures,
       lastFailureCode: classified.code,
