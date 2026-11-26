@@ -18,7 +18,7 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
     const reducedMotion = useReducedMotion()
 
     return (
-      <label htmlFor={elementId} className={cn("relative inline-flex min-h-11 items-center gap-3 cursor-pointer text-sm font-semibold text-text-primary", className)}>
+      <label htmlFor={elementId} className={cn("relative inline-flex min-h-11 items-center gap-3 cursor-pointer has-[:disabled]:cursor-not-allowed text-sm font-semibold text-text-primary", className)}>
         {label && <span className="sr-only">{label}</span>}
         <input
           type="checkbox"
@@ -29,7 +29,7 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
           ref={ref}
           {...props}
         />
-        <span aria-hidden="true" className="relative block h-8 w-14 shrink-0 rounded-full border border-border-strong bg-surface-muted motion-safe:transition-[background-color,border-color] motion-safe:duration-200 peer-checked:border-accent peer-checked:bg-accent-dim peer-checked:[&>span]:bg-accent peer-checked:[&>span]:text-accent-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+        <span aria-hidden="true" className="relative block h-8 w-14 shrink-0 rounded-full border border-border-strong bg-surface-muted motion-safe:transition-[background-color,border-color] motion-safe:duration-200 peer-disabled:opacity-45 peer-disabled:cursor-not-allowed peer-checked:border-accent peer-checked:bg-accent-dim peer-checked:[&>span]:bg-accent peer-checked:[&>span]:text-accent-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
           <motion.span
             initial={false}
             animate={{ x: checked ? 24 : 0 }}

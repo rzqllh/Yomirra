@@ -198,7 +198,7 @@ export function ReportSheet({
                   type="button"
                   onClick={() => {resetChallenge();setSelected(isSelected ? null : tpl)}}
                   className={cn(
-                    "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left text-sm font-medium transition-all active:scale-[0.97]",
+                    "flex min-h-11 items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left text-sm font-medium transition-colors",
                     isSelected
                       ? "bg-accent/15 border-accent/60 text-accent"
                       : "bg-surface-raised/50 border-border-default text-text-secondary hover:bg-surface-raised hover:text-text-primary hover:border-border-strong"
@@ -215,7 +215,7 @@ export function ReportSheet({
           {showDetail && (
             <div className="mb-4 animate-in fade-in slide-in-from-top-1 duration-150">
               <label className="text-xs font-semibold text-text-secondary mb-1.5 block">
-                Tambah detail <span className="font-normal text-text-tertiary">(opsional)</span>
+                Tambah detail <span className="font-normal text-text-muted">(opsional)</span>
               </label>
               <textarea
                 value={detail}
@@ -226,7 +226,7 @@ export function ReportSheet({
                     : "Contoh: chapter langsung loncat ke bab 10..."
                 }
                 maxLength={500}
-                className="w-full p-3.5 bg-surface-base border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all text-text-primary resize-none h-24 placeholder:text-text-tertiary"
+                className="w-full p-3.5 bg-surface-base border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all text-text-primary resize-none h-24 placeholder:text-text-muted"
               />
             </div>
           )}

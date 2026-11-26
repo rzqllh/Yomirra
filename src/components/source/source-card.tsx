@@ -123,7 +123,17 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               referrerPolicy="no-referrer"
               loading="lazy"
               decoding="async"
-              onLoad={() => setLoadedIconUrl(source.icon)}
+              onLoad={(e) => {
+                if (
+                  source.icon?.includes("sz=128") &&
+                  e.currentTarget.naturalWidth > 0 &&
+                  e.currentTarget.naturalWidth <= 16
+                ) {
+                  setFailedIconUrl(source.icon)
+                  return
+                }
+                setLoadedIconUrl(source.icon)
+              }}
               onError={() => setFailedIconUrl(source.icon)}
             />
           )}

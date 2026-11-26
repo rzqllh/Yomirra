@@ -456,4 +456,25 @@ describe("ReaderShell Header & Progress Bar", () => {
       await waitFor(()=>expect(screen.getByRole("group",{name:"Kontrol pembaca"})).toBeDefined());
     }finally{spy.mockRestore();}
   });
+
+  it("restores dock immediately upon leaving the end card when toolbarBehavior is always-visible",async()=>{
+    useReaderStore.setState({
+      preferences:{...useReaderStore.getState().preferences,toolbarBehavior:"always-visible"},
+      isOverlayVisible:true,
+    });
+    let atEnd=true;
+    const box={x:0,y:0,width:200,height:200,top:0,right:200,bottom:200,left:0,toJSON:()=>({})};
+    const original=HTMLElement.prototype.getBoundingClientRect;
+    const spy=vi.spyOn(HTMLElement.prototype,"getBoundingClientRect").mockImplementation(function(this:HTMLElement){
+      if(this.hasAttribute("data-reader-end-controls"))return {...box,top:atEnd?0:window.innerHeight+100,bottom:atEnd?200:window.innerHeight+300};
+      return original.call(this);
+    });
+    try{
+      render(<ReaderShell sourceId="srcA" mangaId="m1" currentChapterId="ch1"><div data-reader-end-controls>End chapter</div></ReaderShell>);
+      expect(screen.queryByRole("group",{name:"Kontrol pembaca"})).toBeNull();
+      atEnd=false;
+      fireEvent.resize(window);
+      await waitFor(()=>expect(screen.getByRole("group",{name:"Kontrol pembaca"})).toBeDefined());
+    }finally{spy.mockRestore();}
+  });
 });

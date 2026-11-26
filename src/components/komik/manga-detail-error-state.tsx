@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, HardDrives } from "@phosphor-icons/react";
+import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, HardDrives, LockKey } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/chrome/header";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
@@ -62,7 +62,7 @@ export function MangaDetailErrorState({
         <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-accent-dim text-accent flex items-center justify-center mb-4">
             {isRestricted ? (
-              <Button asChild variant="primary"><Link href="/settings">Buka Pengaturan</Link></Button>
+              <LockKey size={28} weight="regular" />
             ) : isDisabled ? (
               <HardDrives size={28} weight="regular" />
             ) : isNotFound ? (
@@ -81,7 +81,14 @@ export function MangaDetailErrorState({
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
-            {isDisabled ? (
+            {isRestricted ? (
+              <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
+                <Link href="/settings">
+                  <LockKey size={18} weight="regular" />
+                  Buka Pengaturan
+                </Link>
+              </Button>
+            ) : isDisabled ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
                 <Link href="/sources">
                   <HardDrives size={18} weight="regular" />

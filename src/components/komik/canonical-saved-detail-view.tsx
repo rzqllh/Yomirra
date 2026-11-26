@@ -9,6 +9,7 @@ import { MangaCover } from "@/components/komik/manga-cover";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useDownloadStore } from "@/shared/store/download-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
@@ -29,6 +30,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const router = useRouter();
   const libraryItems = useLibraryStore(state => state.items);
   const historyItems = useHistoryStore(state => state.items);
+  const downloads = useDownloadStore(state => state.downloads);
   const perTitlePrefs = useSettingsStore(state => state.perTitleSourcePreferences);
   const setPreferred = useSettingsStore(state => state.setPerTitleSourcePreference);
   const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
@@ -147,6 +149,9 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const missing = safeBindings.filter(ref => !available.some(ok =>
     ok.sourceId === ref.sourceId && ok.mangaId === ref.mangaId
   ));
+  const cachedSourceRefs = Object.values(downloads)
+    .filter(item => item.status === "downloaded" && referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)))
+    .map(item => ({ sourceId: item.sourceId, mangaId: item.mangaId }));
   const decision = legacyConflict
     ? { action: "pick-source" as const, reason: "preference-conflict" as const }
     : resolveCanonicalResume({
@@ -156,6 +161,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         disabledSourceIds: disabledSources,
         unavailableSourceIds: missing.map(ref => ref.sourceId),
         deviceOffline: offline,
+        cachedSourceRefs,
       });
   const resume = () => {
     if (decision.action === "resume") {

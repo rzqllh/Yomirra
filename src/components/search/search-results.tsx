@@ -127,35 +127,7 @@ export function SearchResults({
       {/* Content Area */}
       {isInitialLoading && searchMangas.length === 0 ? (
         <SearchResultSkeleton showControls={false} />
-      ) : metadataOnly.length>0&&searchMangas.length===0 ? null : activeSelectedSources.length === 0 ? (
-          <motion.div
-            key="no-source"
-            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={reducedMotion ? { duration: 0 } : transitions.page}
-            className="pt-8"
-          >
-            <EmptyState
-              icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-              title="Pilih sumber untuk mulai mencari"
-              description="Aktifkan setidaknya satu sumber pencarian."
-            />
-          </motion.div>
-        ) : !hasSearchIntent ? (
-          <motion.div
-            key="search-initial"
-            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={reducedMotion ? { duration: 0 } : transitions.page}
-            className="pt-8"
-          >
-            <EmptyState
-              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-              title="Cari komik"
-              description="Ketik judul atau kreator untuk mulai mencari."
-            />
-          </motion.div>
-        ) : allSourcesFailed && searchMangas.length === 0 ? (
+      ) : allSourcesFailed && searchMangas.length === 0 ? (
           <motion.div
             key="global-error"
             initial={reducedMotion ? false : { opacity: 0, y: 4 }}
@@ -194,6 +166,34 @@ export function SearchResults({
                   Coba lagi
                 </Button>
               }
+            />
+          </motion.div>
+        ) : metadataOnly.length > 0 && searchMangas.length === 0 ? null : activeSelectedSources.length === 0 ? (
+          <motion.div
+            key="no-source"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
+            className="pt-8"
+          >
+            <EmptyState
+              icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
+              title="Pilih sumber untuk mulai mencari"
+              description="Aktifkan setidaknya satu sumber pencarian."
+            />
+          </motion.div>
+        ) : !hasSearchIntent ? (
+          <motion.div
+            key="search-initial"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
+            className="pt-8"
+          >
+            <EmptyState
+              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+              title="Cari komik"
+              description="Ketik judul atau kreator untuk mulai mencari."
             />
           </motion.div>
         ) : searchMangas.length > 0 ? (

@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
 import { useReaderDockGate } from "@/shared/hooks/use-reader-dock-gate"
 import { useMounted } from "@/shared/hooks/use-mounted"
+import { useMediaQuery } from "@/shared/hooks/use-media-query"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
 interface ReaderShellProps {
@@ -70,9 +71,10 @@ export function ReaderShell({
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const readerRoot=React.useRef<HTMLDivElement>(null);
   const {endVisible,dockAwaitingTap}=useReaderDockGate(readerRoot,`${sourceId}::${mangaId}::${currentChapterId??""}`,preferences.readingMode);
-  const dockAllowed=!endVisible&&!dockAwaitingTap;
+  const dockAllowed=!endVisible&&(!dockAwaitingTap||preferences.toolbarBehavior==="always-visible");
   const showDock=isOverlayVisible&&dockAllowed;
 
   const isScrubbingRef = React.useRef(false);
@@ -526,12 +528,12 @@ export function ReaderShell({
 
                   <motion.button
                     aria-label="Pengaturan pembaca"
-                    aria-expanded={isDrawerOpen || isDesktopPanelOpen && typeof window !== "undefined" && window.innerWidth >= 768}
+                    aria-expanded={isDrawerOpen || (isDesktopPanelOpen && isDesktop)}
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.innerWidth >= 768) {
+                      if (isDesktop) {
                         toggleDesktopPanel();
                       } else {
                         setIsDrawerOpen(true);

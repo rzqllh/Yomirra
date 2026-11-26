@@ -453,6 +453,9 @@ export function ContinuousVerticalReader({
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        return;
+      }
       const target = e.target as HTMLElement | null;
       if (
         target &&

@@ -77,6 +77,7 @@ export default function SourceBrowsePage({
           <ToggleSwitch
             checked={!isHiddenFromHome}
             onCheckedChange={() => toggleHomeSource(sourceId)}
+            label="Tampilkan di Beranda"
           />
         </div>
 

@@ -14,6 +14,7 @@ import { planVerifiedAliasPreferenceMerge } from "@/shared/lib/canonical-prefere
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +62,14 @@ export function GuestMergeDialog() {
       try {
         const guestLib = useLibraryStore.getState().items || {};
         const guestHist = useHistoryStore.getState().items || {};
-        const currentGuestSnapshot = { library: guestLib, history: guestHist };
+        const guestPreferredSources = {
+          ...(useSettingsStore.getState().perTitleSourcePreferences || {}),
+        };
+        const currentGuestSnapshot = {
+          library: guestLib,
+          history: guestHist,
+          preferredSources: guestPreferredSources,
+        };
 
         const fetchedCloud = await fetchCloudSnapshot(mergeError.user.uid);
         const computedDiff = computeMergeDiff(currentGuestSnapshot, fetchedCloud);
