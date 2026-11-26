@@ -1,3 +1,4 @@
+from contextlib import closing
 import hashlib
 import importlib.util
 import io
@@ -64,7 +65,7 @@ class RefreshTests(unittest.TestCase):
             previous, output = Path(root)/"previous", Path(root)/"restore"
             previous.mkdir()
             index = previous/"catalog.sqlite"
-            with sqlite3.connect(index) as db:
+            with closing(sqlite3.connect(index)) as db, db:
                 db.execute("CREATE TABLE works(id INTEGER PRIMARY KEY)")
                 db.execute("INSERT INTO works VALUES(1)")
                 db.execute("CREATE TABLE manifest(schema_version INTEGER,provider TEXT,license TEXT,source_sha256 TEXT,accepted INTEGER)")

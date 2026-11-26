@@ -22,6 +22,18 @@ staging=load("prepare-turso-import")
 
 MIN_DISK=8*1024**3
 MAX_RETAINED=4
+# Runtime rejects a snapshot older than 7 days (created_at in the manifest).
+# An UNCHANGED upstream checksum builds nothing new, so the active catalog
+# would silently expire. Flag renewal early; never touch remote data here.
+RENEWAL_WARN_DAYS=5
+def freshness(report,day):
+    """Report-only. Unknown age is treated as renewal-required (fail loud)."""
+    try:
+        created=datetime.fromisoformat(str(report["createdAt"]).replace("Z","+00:00"))
+        age=(datetime.fromisoformat(day+"T00:00:00+00:00")-created).total_seconds()/86400
+    except (TypeError,KeyError,ValueError):
+        return {"snapshotAgeDays":None,"freshnessRenewalRequired":True}
+    return {"snapshotAgeDays":round(age,2),"freshnessRenewalRequired":age>=RENEWAL_WARN_DAYS}
 def write_new(path,data):
     with path.open("x",encoding="utf8") as file:
         json.dump(data,file,indent=2)
@@ -58,6 +70,7 @@ def run(root,bootstrap=None,day=None):
         # checksum return UNCHANGED forever without an import candidate.
         previous=bootstrap
         previous_result=None
+        previous_report=None
         for candidate in retained:
             result_path=candidate.parent/"result.json"
             if candidate.parent.name>=day or not result_path.is_file() or result_path.is_symlink():
@@ -72,6 +85,7 @@ def run(root,bootstrap=None,day=None):
         if previous is not None:
             index,report=refresh.previous_snapshot(previous)
             refresh.verify_sqlite_snapshot(index,report)
+            previous_report=report
             if previous_result is not None:
                 plan_path=previous.parent/"stage"/"import-plan.json"
                 if not plan_path.is_file() or plan_path.is_symlink() or plan_path.stat().st_size>65536:
@@ -87,7 +101,8 @@ def run(root,bootstrap=None,day=None):
         write_new(run_dir/"attempt.json",{"day":day,"status":"ATTEMPTED","productionActivated":False})
         result=refresh.prepare(run_dir/"snapshot",previous)
         if result.get("status")=="UNCHANGED":
-            output={"status":"UNCHANGED","day":day,"officialSha1":result["officialSha1"],"downloaded":False,"productionActivated":False}
+            output={"status":"UNCHANGED","day":day,"officialSha1":result["officialSha1"],"downloaded":False,"productionActivated":False,
+                    **freshness(previous_report,day)}
         elif result.get("status")=="CANDIDATE_VERIFIED":
             plan=staging.stage(run_dir/"snapshot",run_dir/"stage")
             if plan.get("catalogSnapshot")!=result.get("normalizedInputSha256") or plan.get("productionActivated") is not False:

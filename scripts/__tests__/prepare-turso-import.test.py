@@ -1,3 +1,4 @@
+from contextlib import closing
 import hashlib
 import importlib.util
 import json
@@ -19,7 +20,7 @@ class ImportTests(unittest.TestCase):
             source,output=Path(root)/"source",Path(root)/"stage"
             source.mkdir()
             index=source/"catalog.sqlite"
-            with sqlite3.connect(index) as db:
+            with closing(sqlite3.connect(index)) as db, db:
                 db.execute("CREATE TABLE works(id INTEGER PRIMARY KEY)")
                 db.execute("INSERT INTO works VALUES(1)")
                 db.execute("CREATE TABLE lookup(key TEXT, work_id INTEGER REFERENCES works(id))")
@@ -37,7 +38,7 @@ class ImportTests(unittest.TestCase):
                 self.assertEqual(index.read_bytes(),original)
                 self.assertEqual(plan["estimatedLogicalRows"],3)
                 self.assertFalse(plan["productionActivated"])
-                with sqlite3.connect(output/plan["file"]) as db:
+                with closing(sqlite3.connect(output/plan["file"])) as db:
                     self.assertEqual(db.execute("PRAGMA journal_mode").fetchone()[0],"wal")
                 with self.assertRaisesRegex(ValueError,"confirmations"):
                     staging.import_candidate(output,"default",10**9,1000,1)

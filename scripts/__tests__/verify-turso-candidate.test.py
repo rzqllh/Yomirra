@@ -1,4 +1,5 @@
 import base64
+from contextlib import closing
 from datetime import datetime,timezone
 import hashlib
 import importlib.util
@@ -20,7 +21,7 @@ class CandidateTests(unittest.TestCase):
             db=root/(name+".db")
             created=datetime.now(timezone.utc).isoformat()
             payload=b"fixture payload"
-            with sqlite3.connect(db) as conn:
+            with closing(sqlite3.connect(db)) as conn, conn:
                 conn.execute("CREATE TABLE works(id INTEGER PRIMARY KEY,payload BLOB)")
                 conn.execute("INSERT INTO works VALUES(1,?)",(payload,))
                 conn.execute("CREATE TABLE lookup(key TEXT,work_id INTEGER REFERENCES works(id),PRIMARY KEY(key,work_id))")

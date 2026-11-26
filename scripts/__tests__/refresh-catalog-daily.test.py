@@ -58,6 +58,13 @@ class DailyTests(unittest.TestCase):
             self.assertEqual(daily.run(root,day="2026-11-25")["status"],"UNCHANGED")
             previous.assert_called_once_with(good/"snapshot")
             prep.assert_called_once_with(root/"2026-11-25"/"snapshot",good/"snapshot")
+    def test_unchanged_checksum_flags_snapshot_nearing_runtime_expiry(self):
+        self.assertEqual(daily.freshness({"createdAt":"2026-11-20T00:00:00+00:00"},"2026-11-22"),
+                         {"snapshotAgeDays":2.0,"freshnessRenewalRequired":False})
+        self.assertEqual(daily.freshness({"createdAt":"2026-11-20T00:00:00Z"},"2026-11-25"),
+                         {"snapshotAgeDays":5.0,"freshnessRenewalRequired":True})
+        for report in (None,{},{"createdAt":"not-a-date"}):
+            self.assertEqual(daily.freshness(report,"2026-11-25"),{"snapshotAgeDays":None,"freshnessRenewalRequired":True})
     def test_permission_disk_and_retention_fail_before_network(self):
         with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{"YOMIRRA_MANGABAKA_METADATA":"permitted","YOMIRRA_CATALOG_DAILY_PREPARE":"","CI":"","GITHUB_ACTIONS":""}),patch.object(daily.refresh,"prepare") as prep:
             root=Path(tmp)
