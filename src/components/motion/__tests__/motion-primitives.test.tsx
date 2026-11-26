@@ -31,19 +31,25 @@ vi.mock("motion/react", () => ({
     div: ({
       children,
       transition,
-      animate: _animate,
-      initial: _initial,
-      ...props
+      ...rest
     }: React.HTMLAttributes<HTMLDivElement> & {
       children?: React.ReactNode;
       transition?: unknown;
       animate?: unknown;
       initial?: unknown;
-    }) => (
-      <div data-transition={JSON.stringify(transition)} {...props}>
-        {children}
-      </div>
-    ),
+      onUpdate?: unknown;
+    }) => {
+      const domProps = Object.fromEntries(
+        Object.entries(rest).filter(
+          ([key]) => key !== "animate" && key !== "initial" && key !== "onUpdate"
+        )
+      ) as React.HTMLAttributes<HTMLDivElement>;
+      return (
+        <div data-transition={JSON.stringify(transition)} {...domProps}>
+          {children}
+        </div>
+      );
+    },
   },
 }));
 
