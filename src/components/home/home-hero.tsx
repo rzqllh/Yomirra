@@ -162,7 +162,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
       <section
         aria-labelledby="home-hero-title"
         className={cn(
-          "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md transition-all shadow-xs",
+          "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md shadow-xs",
           className
         )}
       >
@@ -198,7 +198,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}
@@ -242,7 +242,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
     <section
       aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/5 transition-all min-h-44 sm:min-h-48 shadow-xs",
+        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/5 min-h-44 sm:min-h-48 shadow-xs",
         className
       )}
     >
@@ -270,7 +270,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                 key={`${cover.coverUrl}-${index}`}
                 title={cover.title}
                 className={cn(
-                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/80 bg-surface-muted shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-30 cursor-pointer",
+                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/80 bg-surface-muted shadow-md transition duration-300 hover:scale-105 hover:shadow-xl hover:z-30 cursor-pointer",
                   coverCardStyles[index] ?? coverCardStyles[2]
                 )}
               >
@@ -342,7 +342,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}

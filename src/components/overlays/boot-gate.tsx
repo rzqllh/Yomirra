@@ -56,7 +56,6 @@ export function BootGate({ children }: { children: React.ReactNode }) {
     <>
       <AnimatePresence
         key={presenceResetKey}
-        mode="wait"
         onExitComplete={handleExitComplete}
       >
         {phase === "boot" && (
@@ -67,7 +66,11 @@ export function BootGate({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      <div className={phase === "app" ? "contents" : "invisible pointer-events-none"} aria-hidden={phase !== "app"}>
+      <div
+        className={phase === "app" ? undefined : "pointer-events-none"}
+        aria-hidden={phase !== "app"}
+        inert={phase !== "app" ? true : undefined}
+      >
         {children}
       </div>
     </>

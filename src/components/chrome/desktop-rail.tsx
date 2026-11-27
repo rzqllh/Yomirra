@@ -55,7 +55,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
           }
         }}
         className={cn(
-          "group flex min-h-9 items-center gap-2.5 rounded-xs px-2.5 py-1.5 transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0",
+          "group flex min-h-9 items-center gap-2.5 rounded-xs px-2.5 py-1.5 transition-colors duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0",
           isCollapsed ? "justify-center" : "justify-center xl:justify-start",
           active
             ? "bg-surface-raised text-text-primary font-semibold shadow-xs border border-border-subtle/80"
@@ -144,7 +144,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
             e.currentTarget.blur();
           }}
           className={cn(
-            "group flex min-h-11 items-center gap-2.5 rounded-xs px-2.5 py-2 text-text-secondary hover:bg-surface-hover/70 hover:text-text-primary text-xs font-medium transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0 cursor-pointer",
+            "group flex min-h-11 items-center gap-2.5 rounded-xs px-2.5 py-2 text-text-secondary hover:bg-surface-hover/70 hover:text-text-primary text-xs font-medium transition-colors duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0 cursor-pointer",
             isCollapsed ? "justify-center" : "justify-start w-full"
           )}
         >

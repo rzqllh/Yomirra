@@ -1,8 +1,9 @@
 import * as React from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authState = vi.hoisted(() => ({ loading: false }));
+const pathnameState = vi.hoisted(() => ({ value: "/" }));
 const onboardingState = vi.hoisted(() => ({
   _hasHydrated: false,
   hasCompletedOnboarding: false,
@@ -18,7 +19,7 @@ const animatePresenceControl = vi.hoisted(() => ({
 const runCanonicalMigrationMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => pathnameState.value,
 }));
 
 vi.mock("@/shared/hooks/use-auth", () => ({
@@ -132,6 +133,7 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     authState.loading = false;
+    pathnameState.value = "/";
     onboardingState._hasHydrated = false;
     onboardingState.hasCompletedOnboarding = false;
     capturedSplashProps.lastOnUpdate = undefined;
@@ -146,7 +148,7 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     vi.useRealTimers();
   });
 
-  it("mounts SplashScreen during boot without bypassing it and wires JS frameloop onUpdate opt-out", () => {
+  it("mounts SplashScreen during boot without bypassing it and isolates children via aria-hidden and inert only", () => {
     authState.loading = true;
     render(
       <BootGate>
@@ -156,7 +158,12 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
 
     expect(screen.getByTestId("splash-screen")).toBeTruthy();
     expect(typeof capturedSplashProps.lastOnUpdate).toBe("function");
-    expect(screen.getByText("Beranda").closest("[aria-hidden]")?.getAttribute("aria-hidden")).toBe("true");
+    const appWrapper = screen.getByText("Beranda").closest("[aria-hidden]");
+    expect(appWrapper?.getAttribute("aria-hidden")).toBe("true");
+    expect(appWrapper?.hasAttribute("inert")).toBe(true);
+    expect(appWrapper?.className).toContain("pointer-events-none");
+    expect(appWrapper?.className).not.toContain("invisible");
+    expect(appWrapper?.className).not.toContain("contents");
   });
 
   it("does not reset the 2s boot recovery timeout when SplashScreen receives a new onComplete callback", () => {
@@ -183,7 +190,7 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     expect(onCompleteB).toHaveBeenCalledTimes(1);
   });
 
-  it("detaches a stalled exiting SplashScreen within 600ms and reveals main app content", async () => {
+  it("detaches a stalled exiting SplashScreen within 600ms and reveals main app content without invisible or contents", async () => {
     authState.loading = false;
     onboardingState._hasHydrated = false;
     onboardingState.hasCompletedOnboarding = true;
@@ -211,6 +218,10 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     // Phase already flipped to app while AnimatePresence exit is stalled: exiting splash yields pointer events.
     const appWrapper = screen.getByText("Beranda").closest("[aria-hidden]");
     expect(appWrapper?.getAttribute("aria-hidden")).toBe("false");
+    expect(appWrapper?.hasAttribute("inert")).toBe(false);
+    expect(appWrapper?.className ?? "").not.toContain("pointer-events-none");
+    expect(appWrapper?.className ?? "").not.toContain("invisible");
+    expect(appWrapper?.className ?? "").not.toContain("contents");
     expect(screen.getByTestId("splash-screen").className).toContain("pointer-events-none");
     expect(runCanonicalMigrationMock).toHaveBeenCalledTimes(1);
 
@@ -225,10 +236,11 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     expect(screen.queryByTestId("splash-screen")).toBeNull();
   });
 
-  it("reads latest hydrated hasCompletedOnboarding when splash finishes and routes to onboarding when incomplete", () => {
+  it("reads latest hydrated hasCompletedOnboarding when splash finishes and recovers onboarding -> app transition", async () => {
     authState.loading = false;
     onboardingState._hasHydrated = false;
     onboardingState.hasCompletedOnboarding = false;
+    animatePresenceControl.stallExit = true;
 
     render(
       <BootGate>
@@ -242,5 +254,43 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
 
     expect(screen.getByTestId("onboarding-overlay")).toBeTruthy();
     expect(runCanonicalMigrationMock).not.toHaveBeenCalled();
+
+    const appWrapper = screen.getByText("Beranda").closest("[aria-hidden]");
+    expect(appWrapper?.getAttribute("aria-hidden")).toBe("true");
+    expect(appWrapper?.hasAttribute("inert")).toBe(true);
+
+    // Watchdog settles stalled exiting splash while preserving active onboarding.
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect(screen.queryByTestId("splash-screen")).toBeNull();
+    expect(screen.getByTestId("onboarding-overlay")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Selesai" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(runCanonicalMigrationMock).toHaveBeenCalledTimes(1);
+    expect(appWrapper?.getAttribute("aria-hidden")).toBe("false");
+    expect(appWrapper?.hasAttribute("inert")).toBe(false);
+
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect(screen.queryByTestId("onboarding-overlay")).toBeNull();
+  });
+
+  it("renders admin routes directly without BootGate overlays or inert wrapper", () => {
+    pathnameState.value = "/admin/reports";
+    render(
+      <BootGate>
+        <main>Admin Panel</main>
+      </BootGate>
+    );
+
+    expect(screen.getByText("Admin Panel")).toBeTruthy();
+    expect(screen.queryByTestId("splash-screen")).toBeNull();
+    expect(screen.getByText("Admin Panel").closest("[aria-hidden]")).toBeNull();
   });
 });

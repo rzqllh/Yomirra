@@ -165,7 +165,7 @@ export function TopNav() {
                   className={cn(
                     "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-9 w-full cursor-pointer select-none",
                     "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
-                    "transition-all duration-200 ease-out"
+                    "transition-colors duration-200 ease-out"
                   )}
                 >
                   <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />

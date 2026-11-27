@@ -4,6 +4,7 @@ import { BookmarkSimple, Check } from "@phosphor-icons/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let reducedMotion = false;
+let lastPageTransitionOnUpdate: unknown;
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/search",
@@ -39,6 +40,9 @@ vi.mock("motion/react", () => ({
       initial?: unknown;
       onUpdate?: unknown;
     }) => {
+      if ((rest as Record<string, unknown>)["data-testid"] === "page-transition") {
+        lastPageTransitionOnUpdate = rest.onUpdate;
+      }
       const domProps = Object.fromEntries(
         Object.entries(rest).filter(
           ([key]) => key !== "animate" && key !== "initial" && key !== "onUpdate"
@@ -59,6 +63,7 @@ import { PageTransition } from "../page-transition";
 describe("motion primitives", () => {
   beforeEach(() => {
     reducedMotion = false;
+    lastPageTransitionOnUpdate = undefined;
   });
 
   it("keeps a stable accessible state-icon wrapper", () => {
@@ -103,6 +108,7 @@ describe("motion primitives", () => {
       </PageTransition>
     );
 
+    expect(typeof lastPageTransitionOnUpdate).toBe("function");
     expect(screen.getByTestId("page-transition").getAttribute("data-transition")).toContain(
       '"duration":0.18'
     );
