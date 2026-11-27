@@ -34,7 +34,7 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
       role="group"
       aria-label="Mode Tampilan Listing"
       className={cn(
-        "inline-flex items-center p-1 rounded-sm bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs shrink-0",
+        "inline-flex items-center p-1 rounded-sm bg-surface-raised border border-border-subtle shadow-xs shrink-0",
         className
       )}
     >

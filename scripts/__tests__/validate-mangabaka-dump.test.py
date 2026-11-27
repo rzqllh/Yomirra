@@ -21,5 +21,23 @@ class DumpTests(unittest.TestCase):
     def test_checksum_strictness(self):
         self.assertEqual(dump.expected_sha1("A"*40+"  series.jsonl.zst\n"),"a"*40)
         with self.assertRaises(ValueError):dump.expected_sha1("<html>not a checksum</html>")
+    def test_decompress_checked_roundtrip_and_corrupt_rejection(self):
+        import tempfile
+        try:
+            from compression import zstd as stdlib_zstd
+        except ImportError:
+            self.skipTest("Python 3.14+ compression.zstd unavailable")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            packed = root / "sample.zst"
+            payload = b'{"id":1,"title":"Fixture"}\n'
+            packed.write_bytes(stdlib_zstd.compress(payload))
+            out = root / "sample.jsonl"
+            self.assertEqual(dump.decompress_checked(packed, out), len(payload))
+            self.assertEqual(out.read_bytes(), payload)
+            bad = root / "bad.zst"
+            bad.write_bytes(b"not-a-valid-zstd-frame")
+            with self.assertRaisesRegex(ValueError, "decompression failed"):
+                dump.decompress_checked(bad, root / "bad.jsonl")
 
 if __name__=="__main__":unittest.main()

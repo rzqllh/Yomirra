@@ -262,6 +262,22 @@ describe("Yomirra Editorial Home Components", () => {
       rerender(<HomeHero candidates={allRestricted} />);
       expect(srcs()).toEqual([]);
     });
+
+    it("avoids heavy blur filters, CSS mask compositing, and eager decode on hero collage covers", () => {
+      mockHistoryState = { ...mockHistoryState, items: {} };
+      mockSettingsState.hideNsfw = true;
+      const candidates = [
+        { title: "Known safe", coverUrl: "https://example.com/safe-cover.jpg", sourceId: "shinigami", contentRating: "safe" as const },
+      ];
+
+      const { container } = render(<HomeHero candidates={candidates} />);
+      expect(container.querySelector(".yomirra-hero-glow")).toBeTruthy();
+      expect(container.querySelector(".blur-3xl")).toBeNull();
+      const maskWrapper = container.querySelector('[style*="mask-image"]');
+      expect(maskWrapper).toBeNull();
+      const collageImg = container.querySelector('img[src="https://example.com/safe-cover.jpg"]');
+      expect(collageImg?.getAttribute("loading")).toBe("lazy");
+    });
   });
 
   describe("HomeView & Layout Hierarchy", () => {

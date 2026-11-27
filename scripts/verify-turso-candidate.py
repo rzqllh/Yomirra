@@ -75,7 +75,7 @@ def verify(stage,output,read_headroom):
         raise ValueError("Candidate hash mismatch")
     raw=os.environ.get("YOMIRRA_TURSO_CANDIDATE_URL","")
     u=urlsplit(re.sub(r"^(libsql|turso)://","https://",raw))
-    if u.scheme!="https" or not re.fullmatch(re.escape(name)+r"-[a-z0-9-]+\.turso\.io",u.netloc) or u.path not in ("","/") or u.query or u.fragment:
+    if u.scheme!="https" or not re.fullmatch(re.escape(name)+r"-[a-z0-9-]+(?:\.[a-z0-9-]+)?\.turso\.io",u.netloc) or u.path not in ("","/") or u.query or u.fragment:
         raise ValueError("Candidate endpoint must match newly imported database")
     token=os.environ.get("YOMIRRA_TURSO_CANDIDATE_READ_TOKEN","").strip()
     if not token:

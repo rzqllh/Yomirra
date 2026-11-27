@@ -42,3 +42,11 @@ it("fails closed for unknown pointer and unavailable Redis",async()=>{
   state.allowed=false;
   expect(await currentTursoCatalog()).toBeNull();
 });
+it("accepts regional Turso Cloud hostnames for primary and standby slots",async()=>{
+  vi.stubEnv("YOMIRRA_TURSO_URL","libsql://primary-fixture.aws-ap-southeast-1.turso.io");
+  vi.stubEnv("YOMIRRA_TURSO_STANDBY_URL","libsql://standby-fixture.aws-ap-southeast-1.turso.io");
+  state.get.mockResolvedValueOnce(standby);
+  const active=await currentTursoCatalog();
+  expect(active?.origin).toBe("https://standby-fixture.aws-ap-southeast-1.turso.io");
+  expect(active?.snapshot).toBe(standby);
+});

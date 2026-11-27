@@ -76,10 +76,26 @@ describe("Turso optional catalog",()=>{
     expect(sent.requests[1].stmt.args).toEqual([{type:"text",value:"title:fixture"}]);
     expect(sent.requests.at(-1)).toEqual({type:"close"});
   });
-  it("never sends a token to an unrelated host",async()=>{
-    configure();vi.stubEnv("YOMIRRA_TURSO_URL","https://fixture.turso.io.other.example/");
-    const fetcher=vi.fn();vi.stubGlobal("fetch",fetcher);
-    expect(await lookupTursoCatalog("Fixture")).toBeNull();expect(fetcher).not.toHaveBeenCalled();
+  it("accepts regional Turso Cloud hostnames and never sends a token to unrelated or over-nested hosts",async()=>{
+    configure();
+    vi.stubEnv("YOMIRRA_TURSO_URL","libsql://fixture-test.aws-ap-southeast-1.turso.io");
+    const regionalFetcher=vi.fn().mockResolvedValue(response([[blob]]));
+    vi.stubGlobal("fetch",regionalFetcher);
+    expect(await lookupTursoCatalog("Fixture")).toEqual({works:[work],discovery:[]});
+    expect(regionalFetcher).toHaveBeenCalledTimes(1);
+    expect(regionalFetcher.mock.calls[0][0]).toBe("https://fixture-test.aws-ap-southeast-1.turso.io/v2/pipeline");
+
+    cacheStore.clear();
+    const blockedFetcher=vi.fn();vi.stubGlobal("fetch",blockedFetcher);
+    for(const badUrl of [
+      "https://fixture.turso.io.other.example/",
+      "libsql://a.b.c.turso.io",
+      "libsql://fixture-test.aws-ap-southeast-1.turso.io:8443",
+    ]){
+      vi.stubEnv("YOMIRRA_TURSO_URL",badUrl);
+      expect(await lookupTursoCatalog("Fixture")).toBeNull();
+    }
+    expect(blockedFetcher).not.toHaveBeenCalled();
   });
   it("rejects ambiguous buckets and returns exact safe detail only",async()=>{
     configure();const fetcher=vi.fn().mockResolvedValueOnce(response(Array.from({length:17},()=>[blob]))).mockResolvedValueOnce(response([[blob]]));

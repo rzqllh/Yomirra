@@ -49,5 +49,20 @@ class CandidateTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"mismatch"):
                     verify.verify(root,root/"bad.json",10000)
                 self.assertFalse((root/"bad.json").exists())
+            regional_config={**config,"YOMIRRA_TURSO_CANDIDATE_URL":"libsql://"+name+"-owner.aws-ap-southeast-1.turso.io"}
+            with patch.dict(os.environ,regional_config),patch.object(verify,"pipeline",return_value=rows) as request:
+                regional=verify.verify(root,root/"regional.json",10000)
+                self.assertEqual(regional["status"],"REMOTE_CANDIDATE_VERIFIED")
+                self.assertEqual(regional["activation"]["YOMIRRA_TURSO_URL"],"https://"+name+"-owner.aws-ap-southeast-1.turso.io")
+                self.assertEqual(request.call_args.args[0],"https://"+name+"-owner.aws-ap-southeast-1.turso.io")
+            for bad_url in [
+                "libsql://"+name+"-owner.a.b.turso.io",
+                "https://"+name+"-owner.turso.io.other.example",
+                "libsql://other-db-owner.aws-ap-southeast-1.turso.io",
+            ]:
+                with patch.dict(os.environ,{**config,"YOMIRRA_TURSO_CANDIDATE_URL":bad_url}),patch.object(verify,"pipeline",return_value=rows) as request:
+                    with self.assertRaisesRegex(ValueError,"newly imported database"):
+                        verify.verify(root,root/"rejected.json",10000)
+                    request.assert_not_called()
 if __name__=="__main__":
     unittest.main()

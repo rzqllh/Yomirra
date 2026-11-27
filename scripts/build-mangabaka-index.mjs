@@ -2,13 +2,35 @@
 // MangaBaka JSONL dump. No network, no raw third-party fields, no overwrites.
 import {createReadStream} from "node:fs";
 import {stat,copyFile,link,unlink,open} from "node:fs/promises";
-import {createInterface} from "node:readline";
 import {DatabaseSync} from "node:sqlite";
 import {createHash,randomUUID} from "node:crypto";
 import {pathToFileURL} from "node:url";
 import {parseCatalogRecord} from "../src/server/lib/metadata/mangabaka-record.mjs";
 import {encodeCatalogPayload} from "../src/server/lib/metadata/catalog-payload.mjs";
 import {normalizeTitle} from "../src/shared/lib/normalize-title.mjs";
+
+const MAX_LINE_CHARS=4*1024*1024;
+
+// Split NDJSON strictly on '\n' so U+2028/U+2029 inside JSON strings remain intact.
+async function* readJsonLines(input){
+  const stream=createReadStream(input,{encoding:"utf8",highWaterMark:1024*1024});
+  let buffer="",start=0;
+  for await(const chunk of stream){
+    buffer=start>0?buffer.slice(start)+chunk:buffer+chunk;
+    start=0;
+    let newline=buffer.indexOf("\n");
+    while(newline!==-1){
+      const raw=buffer.slice(start,newline);
+      const line=raw.endsWith("\r")?raw.slice(0,-1):raw;
+      start=newline+1;
+      newline=buffer.indexOf("\n",start);
+      yield line;
+    }
+    if(buffer.length-start>MAX_LINE_CHARS)throw Error("Dump row exceeds limit");
+  }
+  const tail=buffer.slice(start);
+  if(tail)yield tail.endsWith("\r")?tail.slice(0,-1):tail;
+}
 
 export async function buildCatalogIndex(input,output,{previous,permitted=false,minimum=1}={}){
   if(!permitted)throw Error("Confirm permitted MangaBaka use and attribution before importing");
@@ -37,13 +59,11 @@ export async function buildCatalogIndex(input,output,{previous,permitted=false,m
     const mark=db.prepare("UPDATE works SET seen=? WHERE id=?");
     const clear=db.prepare("DELETE FROM lookup WHERE work_id=?");
     const add=db.prepare("INSERT OR IGNORE INTO lookup(key,work_id) VALUES(?,?)");
-    const stream=createReadStream(input,{encoding:"utf8"});
-    const lines=createInterface({input:stream,crlfDelay:Infinity});
     db.exec("BEGIN");
     if(previous)db.exec("UPDATE works SET seen='0'");
-    for await(const line of lines){
+    for await(const line of readJsonLines(input)){
       if(!line.trim())continue;
-      if(line.length>4*1024*1024)throw Error("Dump row exceeds limit");
+      if(line.length>MAX_LINE_CHARS)throw Error("Dump row exceeds limit");
       hash.update(line+"\n");
       read++;
       const row=JSON.parse(line);

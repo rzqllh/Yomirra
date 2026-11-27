@@ -209,8 +209,9 @@ describe("Shell Revamp Regression Coverage", () => {
       // Ensure max-w-[78%] is eliminated
       expect(heroCode).not.toContain("max-w-[78%]");
 
-      // Collage container uses gradient mask to ensure safe text layering on mobile and desktop
-      expect(heroCode).toContain("maskImage");
+      // Collage container uses left-edge gradient scrim overlay instead of expensive maskImage compositing
+      expect(heroCode).toContain("bg-gradient-to-r from-surface-raised");
+      expect(heroCode).not.toContain("maskImage");
       expect(heroCode).toContain("pointer-events-none");
     });
 

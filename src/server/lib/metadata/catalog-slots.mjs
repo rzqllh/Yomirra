@@ -16,7 +16,7 @@ export function configuredSlot(env,prefix){
   try{
     const u=new URL((env[prefix+"_URL"]??"").replace(/^(?:libsql|turso):\/\//,"https://"));
     if(u.protocol!=="https:"||u.username||u.password||u.port||u.search||u.hash||u.pathname!=="/"||
-       !/^[a-z0-9-]+\.turso\.io$/.test(u.hostname))return null;
+       !/^[a-z0-9-]+(?:\.[a-z0-9-]+)?\.turso\.io$/.test(u.hostname))return null;
     return {origin:u.origin,token,snapshot};
   }catch{return null;}
 }

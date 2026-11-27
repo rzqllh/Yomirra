@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 
 DOCUMENT = "https://mangabaka.org/developers/dumps"
@@ -108,7 +109,25 @@ def download_checked(url, destination, expected):
 
 def decompress_checked(compressed, output):
     size = 0
-    child = subprocess.Popen(["zstd", "-q", "-d", "-c", str(compressed)],
+    zstd_bin = shutil.which("zstd")
+    if zstd_bin is None:
+        try:
+            from compression import zstd as stdlib_zstd
+        except ImportError:
+            raise ValueError("zstd binary or Python 3.14+ compression.zstd required") from None
+        try:
+            with stdlib_zstd.open(compressed, "rb") as src, output.open("xb") as file:
+                while block := src.read(1024 * 1024):
+                    size += len(block)
+                    if size > MAX_DECOMPRESSED:
+                        raise ValueError("Decompressed dump exceeds diagnostic limit")
+                    file.write(block)
+            return size
+        except ValueError:
+            raise
+        except Exception:
+            raise ValueError("Official dump decompression failed") from None
+    child = subprocess.Popen([zstd_bin, "-q", "-d", "-c", str(compressed)],
                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     try:
         with output.open("xb") as file:

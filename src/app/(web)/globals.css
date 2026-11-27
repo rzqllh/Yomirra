@@ -560,6 +560,14 @@ body.reader-active {
     }
   }
 
+  .yomirra-hero-glow {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent) 9%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
   .yomirra-dock-frame {
     padding-inline: max(var(--dock-inset), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
     padding-bottom: max(var(--dock-inset), var(--safe-bottom));

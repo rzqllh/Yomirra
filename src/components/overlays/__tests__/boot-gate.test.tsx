@@ -12,6 +12,9 @@ const capturedSplashProps = vi.hoisted(() => ({
   lastOnUpdate: undefined as unknown,
   renderCount: 0,
 }));
+const onboardingLifecycle = vi.hoisted(() => ({
+  mountCount: 0,
+}));
 const animatePresenceControl = vi.hoisted(() => ({
   stallExit: false,
   lastOnExitComplete: undefined as (() => void) | undefined,
@@ -40,13 +43,18 @@ vi.mock("@/shared/lib/canonical-migration", () => ({
 }));
 
 vi.mock("../onboarding-overlay", () => ({
-  OnboardingOverlay: ({ onComplete }: { onComplete: () => void }) => (
-    <div data-testid="onboarding-overlay">
-      <button type="button" onClick={onComplete}>
-        Selesai
-      </button>
-    </div>
-  ),
+  OnboardingOverlay: ({ onComplete }: { onComplete: () => void }) => {
+    React.useEffect(() => {
+      onboardingLifecycle.mountCount += 1;
+    }, []);
+    return (
+      <div data-testid="onboarding-overlay">
+        <button type="button" onClick={onComplete}>
+          Selesai
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock("motion/react", async () => {
@@ -138,6 +146,7 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     onboardingState.hasCompletedOnboarding = false;
     capturedSplashProps.lastOnUpdate = undefined;
     capturedSplashProps.renderCount = 0;
+    onboardingLifecycle.mountCount = 0;
     animatePresenceControl.stallExit = false;
     animatePresenceControl.lastOnExitComplete = undefined;
     runCanonicalMigrationMock.mockClear();
@@ -253,18 +262,20 @@ describe("BootGate and SplashScreen WebKit resilience", () => {
     });
 
     expect(screen.getByTestId("onboarding-overlay")).toBeTruthy();
+    expect(onboardingLifecycle.mountCount).toBe(1);
     expect(runCanonicalMigrationMock).not.toHaveBeenCalled();
 
     const appWrapper = screen.getByText("Beranda").closest("[aria-hidden]");
     expect(appWrapper?.getAttribute("aria-hidden")).toBe("true");
     expect(appWrapper?.hasAttribute("inert")).toBe(true);
 
-    // Watchdog settles stalled exiting splash while preserving active onboarding.
+    // Watchdog settles stalled exiting splash without remounting active onboarding.
     act(() => {
       vi.advanceTimersByTime(600);
     });
     expect(screen.queryByTestId("splash-screen")).toBeNull();
     expect(screen.getByTestId("onboarding-overlay")).toBeTruthy();
+    expect(onboardingLifecycle.mountCount).toBe(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Selesai" }));
     await act(async () => {

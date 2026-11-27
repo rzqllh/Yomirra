@@ -55,3 +55,19 @@ test("rejects a truncated refresh and retains the exact previous snapshot",async
     assert.deepEqual(await readFile(first),before);
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test("preserves valid JSONL rows containing unescaped U+2028 and U+2029 separators",async()=>{
+  const dir=await mkdtemp(join(tmpdir(),"yomirra-index-sep-"));
+  try{
+    const input=join(dir,"input.jsonl"),out=join(dir,"out.sqlite");
+    const description="Line one\u2028\u2028Line two\u2029Line three";
+    const row={...work(10651,"Separator Series"),description};
+    await writeFile(input,JSON.stringify(row)+"\n","utf8");
+    const result=await buildCatalogIndex(input,out,{permitted:true});
+    assert.equal(result.accepted,1);
+    const db=new DatabaseSync(out,{readOnly:true});
+    const payload=db.prepare("SELECT payload FROM works WHERE id=10651").get().payload;
+    db.close();
+    assert.equal(decodeCatalogPayload(payload).description,description);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});

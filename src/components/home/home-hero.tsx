@@ -169,7 +169,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
         {/* Subtle ambient accent glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-accent/[0.04] blur-3xl"
+          className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full yomirra-hero-glow"
         />
 
         <div className="relative z-10 flex flex-col gap-2.5 max-w-2xl">
@@ -249,18 +249,16 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
       {/* Ambient background glow behind artwork */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/5 blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full yomirra-hero-glow"
       />
 
       {/* Layered editorial artwork preview strictly for discovery sessions */}
       {visibleCovers.length > 0 && (
-        <div
-          className="absolute right-0 top-0 h-36 w-1/2 overflow-hidden sm:inset-y-0 sm:h-auto sm:w-1/2 lg:w-5/12 z-10"
-          style={{
-            maskImage: "linear-gradient(to right, transparent 0%, black 35%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%)",
-          }}
-        >
+        <div className="absolute right-0 top-0 h-36 w-1/2 overflow-hidden sm:inset-y-0 sm:h-auto sm:w-1/2 lg:w-5/12 z-10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-0 z-30 w-2/5 bg-gradient-to-r from-surface-raised via-surface-raised/65 to-transparent"
+          />
           {visibleCovers.map((cover, index) => {
             if (failedCovers.has(cover.coverUrl)) return null;
             const loaded = loadedCovers.has(cover.coverUrl);
@@ -279,7 +277,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                   alt={cover.title}
                   referrerPolicy="no-referrer"
                   decoding="async"
-                  loading="eager"
+                  loading="lazy"
                   onLoad={() =>
                     setLoadedCovers((current) => {
                       const next = new Set(current);

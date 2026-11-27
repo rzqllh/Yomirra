@@ -486,7 +486,7 @@ export function MangaCard({
             {effectiveRank !== undefined && (
               <div
                 className={cn(
-                  "absolute top-0 left-0 backdrop-blur-md font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
+                  "absolute top-0 left-0 font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
                   Number(effectiveRank) === 1
                     ? "bg-amber-400 text-amber-950 text-xs size-7.5 ring-1 ring-amber-300 shadow-amber-500/20"
                     : Number(effectiveRank) === 2
@@ -622,15 +622,12 @@ export function MangaCard({
 
     return (
       <motion.article
-        layoutId={reducedMotion ? undefined : transitionNames.card}
-        layout={reducedMotion ? false : "position"}
         initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
         whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
         viewport={shouldReveal ? { once: true, amount: 0.1 } : undefined}
         whileHover={reducedMotion ? undefined : { y: -2 }}
         whileTap={reducedMotion ? undefined : { scale: 0.99 }}
         transition={{
-          layout: { type: "spring", stiffness: 320, damping: 30 },
           ease: "easeOut",
           duration: 0.25,
           delay: shouldReveal ? staggerDelay : 0,
@@ -642,10 +639,7 @@ export function MangaCard({
         )}
         style={vtStyle}
       >
-        <motion.div
-          layoutId={reducedMotion ? undefined : transitionNames.cover}
-          className="w-21 shrink-0 sm:w-24 md:w-26"
-        >
+        <div className="w-21 shrink-0 sm:w-24 md:w-26">
           <Link
             href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
@@ -667,7 +661,7 @@ export function MangaCard({
               />
             </MangaCardCoverFrame>
           </Link>
-        </motion.div>
+        </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
           <div>
@@ -777,15 +771,12 @@ export function MangaCard({
 
   return (
     <motion.article
-      layoutId={reducedMotion ? undefined : transitionNames.card}
-      layout={reducedMotion ? false : "position"}
       initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
       whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
       viewport={shouldReveal ? { once: true, amount: 0.1 } : undefined}
       whileHover={reducedMotion ? undefined : { y: -3 }}
       whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       transition={{
-        layout: { type: "spring", stiffness: 320, damping: 30 },
         ease: "easeOut",
         duration: 0.25,
         delay: shouldReveal ? staggerDelay : 0,
@@ -803,91 +794,87 @@ export function MangaCard({
         aria-haspopup={opensSourcePicker ? "dialog" : undefined}
         onClick={handleCardOpen}
       >
-        <motion.div
-          layoutId={reducedMotion ? undefined : transitionNames.cover}
-        >
-          <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
-            <MangaCover
-              src={manga.coverUrl}
-              sourceId={sourceId}
-              mangaId={manga.id}
-              alt={manga.title}
-              priority={priority}
-              fallbackTitle={manga.title}
-              imageClassName={mangaCardInteraction.coverImage}
-            />
+        <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
+          <MangaCover
+            src={manga.coverUrl}
+            sourceId={sourceId}
+            mangaId={manga.id}
+            alt={manga.title}
+            priority={priority}
+            fallbackTitle={manga.title}
+            imageClassName={mangaCardInteraction.coverImage}
+          />
 
-            {/* Over-cover Badges */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
-              {isUnread && (
-                <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
-                  <span className="text-xs font-bold">Baru</span>
-                </div>
-              )}
+          {/* Over-cover Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
+            {isUnread && (
+              <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
+                <span className="text-xs font-bold">Baru</span>
+              </div>
+            )}
 
-              {isMultiSource && (
-                <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
-                  <span className="text-xs font-bold text-accent">
-                    {availableBindings.length} Sumber
-                  </span>
-                </div>
-              )}
-
-              {effectiveRank !== undefined && (
-                <div
-                  className={cn(
-                    "flex items-center gap-1 rounded-xs backdrop-blur-md px-2 py-1 shadow-sm font-black text-xs",
-                    Number(effectiveRank) === 1
-                      ? "bg-amber-400 text-amber-950 ring-1 ring-amber-300 shadow-xs"
-                      : Number(effectiveRank) === 2
-                      ? "bg-slate-200 text-slate-900 ring-1 ring-slate-100 shadow-xs"
-                      : Number(effectiveRank) === 3
-                      ? "bg-amber-800 text-amber-100 ring-1 ring-amber-600/40 shadow-xs"
-                      : "bg-surface-glass text-text-primary border border-border-default/40"
-                  )}
-                >
-                  <TrendUp
-                    weight="regular"
-                    className={cn(
-                      "text-2xs",
-                      Number(effectiveRank) === 1
-                        ? "text-amber-950"
-                        : Number(effectiveRank) === 2
-                        ? "text-slate-900"
-                        : Number(effectiveRank) === 3
-                        ? "text-amber-100"
-                        : "text-accent"
-                    )}
-                  />
-                  <span>#{effectiveRank}</span>
-                </div>
-              )}
-
-              {currentReadingConfig && (
-                <div
-                  className={cn(
-                    "rounded-xs px-2 py-0.5 text-xs font-bold",
-                    currentReadingConfig.bg,
-                    currentReadingConfig.bg.includes("surface") && "border border-border-subtle"
-                  )}
-                >
-                  {currentReadingConfig.label}
-                </div>
-              )}
-            </div>
-
-            {noEligibleSource && (
-              <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
-                <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
-                  Sumber Nonaktif
-                </div>
-                <span className="mt-1 text-3xs font-semibold text-text-muted">
-                  Cari alternatif &rarr;
+            {isMultiSource && (
+              <div className="flex items-center gap-1 rounded-xs bg-surface-overlay/95 px-1.5 py-0.5 shadow-sm border border-border-default/40">
+                <span className="text-xs font-bold text-accent">
+                  {availableBindings.length} Sumber
                 </span>
               </div>
             )}
-          </MangaCardCoverFrame>
-        </motion.div>
+
+            {effectiveRank !== undefined && (
+              <div
+                className={cn(
+                  "flex items-center gap-1 rounded-xs px-2 py-1 shadow-sm font-black text-xs",
+                  Number(effectiveRank) === 1
+                    ? "bg-amber-400 text-amber-950 ring-1 ring-amber-300 shadow-xs"
+                    : Number(effectiveRank) === 2
+                    ? "bg-slate-200 text-slate-900 ring-1 ring-slate-100 shadow-xs"
+                    : Number(effectiveRank) === 3
+                    ? "bg-amber-800 text-amber-100 ring-1 ring-amber-600/40 shadow-xs"
+                    : "bg-surface-overlay/95 text-text-primary border border-border-default/40"
+                )}
+              >
+                <TrendUp
+                  weight="regular"
+                  className={cn(
+                    "text-2xs",
+                    Number(effectiveRank) === 1
+                      ? "text-amber-950"
+                      : Number(effectiveRank) === 2
+                      ? "text-slate-900"
+                      : Number(effectiveRank) === 3
+                      ? "text-amber-100"
+                      : "text-accent"
+                  )}
+                />
+                <span>#{effectiveRank}</span>
+              </div>
+            )}
+
+            {currentReadingConfig && (
+              <div
+                className={cn(
+                  "rounded-xs px-2 py-0.5 text-xs font-bold",
+                  currentReadingConfig.bg,
+                  currentReadingConfig.bg.includes("surface") && "border border-border-subtle"
+                )}
+              >
+                {currentReadingConfig.label}
+              </div>
+            )}
+          </div>
+
+          {noEligibleSource && (
+            <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
+              <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
+                Sumber Nonaktif
+              </div>
+              <span className="mt-1 text-3xs font-semibold text-text-muted">
+                Cari alternatif &rarr;
+              </span>
+            </div>
+          )}
+        </MangaCardCoverFrame>
 
         <div className="flex flex-col px-2 mt-3">
           {/* Capped Badge / Metadata Row — single line strictly fixed height */}

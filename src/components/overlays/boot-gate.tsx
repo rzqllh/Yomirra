@@ -16,11 +16,13 @@ export function BootGate({ children }: { children: React.ReactNode }) {
 
   // start in boot phase
   const [phase, setPhase] = React.useState<"boot" | "onboarding" | "app">("boot");
-  const [exitSettled, setExitSettled] = React.useState(false);
-  const [presenceResetKey, setPresenceResetKey] = React.useState(0);
+  const [splashExitSettled, setSplashExitSettled] = React.useState(false);
+  const [onboardingExitSettled, setOnboardingExitSettled] = React.useState(true);
+  const [splashResetKey, setSplashResetKey] = React.useState(0);
+  const [onboardingResetKey, setOnboardingResetKey] = React.useState(0);
 
   const handleSplashComplete = React.useCallback(() => {
-    setExitSettled(false);
+    setSplashExitSettled(false);
     if (useOnboardingStore.getState().hasCompletedOnboarding) {
       setPhase("app");
       import("@/shared/lib/canonical-migration").then((m) => m.runCanonicalMigration());
@@ -30,23 +32,36 @@ export function BootGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleOnboardingComplete = React.useCallback(() => {
-    setExitSettled(false);
+    setOnboardingExitSettled(false);
     setPhase("app");
     import("@/shared/lib/canonical-migration").then((m) => m.runCanonicalMigration());
   }, []);
 
-  const handleExitComplete = React.useCallback(() => {
-    setExitSettled(true);
+  const handleSplashExitComplete = React.useCallback(() => {
+    setSplashExitSettled(true);
+  }, []);
+
+  const handleOnboardingExitComplete = React.useCallback(() => {
+    setOnboardingExitSettled(true);
   }, []);
 
   React.useEffect(() => {
-    if (isAdmin || phase === "boot" || exitSettled) return;
+    if (isAdmin || phase === "boot" || splashExitSettled) return;
     const timeout = window.setTimeout(() => {
-      setExitSettled(true);
-      setPresenceResetKey((key) => key + 1);
+      setSplashExitSettled(true);
+      setSplashResetKey((key) => key + 1);
     }, OVERLAY_EXIT_SETTLE_MS);
     return () => window.clearTimeout(timeout);
-  }, [isAdmin, phase, exitSettled]);
+  }, [isAdmin, phase, splashExitSettled]);
+
+  React.useEffect(() => {
+    if (isAdmin || phase !== "app" || onboardingExitSettled) return;
+    const timeout = window.setTimeout(() => {
+      setOnboardingExitSettled(true);
+      setOnboardingResetKey((key) => key + 1);
+    }, OVERLAY_EXIT_SETTLE_MS);
+    return () => window.clearTimeout(timeout);
+  }, [isAdmin, phase, onboardingExitSettled]);
 
   if (isAdmin) {
     return <>{children}</>;
@@ -55,12 +70,18 @@ export function BootGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       <AnimatePresence
-        key={presenceResetKey}
-        onExitComplete={handleExitComplete}
+        key={`splash-${splashResetKey}`}
+        onExitComplete={handleSplashExitComplete}
       >
         {phase === "boot" && (
           <SplashScreen key="splash" onComplete={handleSplashComplete} />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence
+        key={`onboarding-${onboardingResetKey}`}
+        onExitComplete={handleOnboardingExitComplete}
+      >
         {phase === "onboarding" && (
           <OnboardingOverlay key="onboarding" onComplete={handleOnboardingComplete} />
         )}
