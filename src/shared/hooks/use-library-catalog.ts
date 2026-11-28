@@ -4,7 +4,7 @@ import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { useMounted } from "@/shared/hooks/use-mounted";
+import { useCatalogBrowserReady } from "@/shared/hooks/use-catalog-browser-ready";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -25,12 +25,14 @@ type CatalogManga = MangaItem & { sourceId?: string; sourceBindings?: SourceBind
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
 
 export function useLibraryCatalog() {
-  const isMounted = useMounted();
+  const isMounted = useCatalogBrowserReady();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
+  const preferredLanguages = useSettingsStore((state) => state.preferredLanguages);
+  const dataSaver = useSettingsStore((state) => state.dataSaver);
   const { data: runtimeSources, isError: isSourceRegistryError } = useQuery(sourceQueryOptions);
   const sourceCandidates = React.useMemo(
     () => runtimeSources ?? (isSourceRegistryError ? dynamicSourceRegistry.getAll() : []),
@@ -89,19 +91,6 @@ export function useLibraryCatalog() {
   const genreSignature = genreParams.join("|");
   const previousSourceRef = React.useRef(activeSourceId);
   const skipSourceFilterPageReset = React.useRef(false);
-
-  // A direct reload clears session-scoped filters, but explicit URL tags remain an intent
-  // and are applied again immediately below.
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (nav?.type !== "reload") return;
-
-    filterStore.resetFilters();
-    setSearchInput("");
-    setQuery("");
-    setSort(sortParam || "popular");
-  }, []);
 
   // Provider filter values are source-specific. Clear them when the source changes,
   // then synchronize any genre/tag route coming from the manga detail chips.
@@ -170,7 +159,7 @@ export function useLibraryCatalog() {
     staleTime: 1000 * 60 * 15,
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     enabled: !isDisabled && supportsProviderFilters,
   });
 
@@ -362,12 +351,17 @@ export function useLibraryCatalog() {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, page, isNsfwFiltered],
+    queryKey: [
+      "library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres,
+      selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, page,
+      isNsfwFiltered, preferredLanguages, dataSaver,
+      isAllSources ? eligibleSources.map((source) => source.id) : undefined,
+    ],
     queryFn: () => fetchCatalog(page),
     staleTime: 1000 * 60 * 5,
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true,
     enabled: Boolean(activeSourceId) && !isDisabled,
     // Exact query-key data remains cached; unrelated query/filter/page results
     // must not masquerade as the requested catalog.

@@ -2,10 +2,13 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useLibraryStore } from "../library-store";
 import { deleteLibraryItem, pushLibraryItem } from "@/shared/lib/sync-utils";
 import { clearLocalDataOwnerUid, setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
+import { getLibrarySourceProgress } from "@/shared/lib/library-identity";
+import { useCollectionStore } from "../collection-store";
 
 vi.mock("@/shared/lib/sync-utils", () => ({
   pushLibraryItem: vi.fn().mockResolvedValue(undefined),
   deleteLibraryItem: vi.fn().mockResolvedValue(undefined),
+  pushCustomCollections: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("library-store Phase 1 Identity & Relinking", () => {
@@ -13,6 +16,45 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     vi.clearAllMocks();
     clearLocalDataOwnerUid();
     useLibraryStore.setState({ items: {} });
+  });
+
+  it("folds verified saves into the existing title and retains source-specific progress and memberships", () => {
+    const first = { id: "original", sourceId: "source-a", mangaId: "one", title: "Work",
+      addedAt: "2026-01-01", updatedAt: "2026-01-04", lastReadChapterId: "chapter-a" };
+    const second = { id: "legacy-other", sourceId: "source-b", mangaId: "other", title: "Another title",
+      addedAt: "2026-01-02", updatedAt: "2026-01-05", lastReadChapterId: "chapter-b" };
+    useLibraryStore.setState({ items: { [first.id]: first, [second.id]: second } });
+    useCollectionStore.setState({ membershipsByManga: {
+      [first.id]: ["first"], [second.id]: ["second"], "source-b::other": ["third"],
+    } });
+    const store = useLibraryStore.getState();
+    store.recordVerifiedCatalogIdentity('tracker:["anilist","123","manga"]', [first, second].map(({ sourceId, mangaId }) => ({ sourceId, mangaId })));
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["original"]);
+    const saved = store.getLibraryItemById(second.id)!;
+    expect(saved.id).toBe("original");
+    expect(saved.primarySourceId).toBe("source-a");
+    expect(saved.lastReadChapterId).toBe("chapter-a");
+    expect(getLibrarySourceProgress(saved, second.sourceId, second.mangaId).lastReadChapterId).toBe("chapter-b");
+    expect(useCollectionStore.getState().getMemberships(second.id)).toEqual(["first", "second", "third"]);
+    useCollectionStore.getState().removeMangaFromCollection(first.id, "second");
+    expect(useCollectionStore.getState().getMemberships(first.id)).toEqual(["first", "third"]);
+    useCollectionStore.getState().clearCollections();
+  });
+
+  it("keeps similar works separate until the user confirms an alternate", () => {
+    const base = { title: "Same title", author: "Same author", addedAt: "2026-01-01", updatedAt: "2026-01-01" };
+    const store = useLibraryStore.getState();
+    store.addToLibrary({ ...base, id: "a", sourceId: "a", mangaId: "a", lastReadChapterId: "chapter-a",
+      linkedSources: [{ sourceId: "b", mangaId: "b", matchConfidence: "HIGH_CONFIDENCE", addedAt: 1 }] });
+    store.addToLibrary({ ...base, id: "b", sourceId: "b", mangaId: "b", lastReadChapterId: "chapter-b" });
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["a", "b"]);
+    expect(store.attachAlternateSource("a", "b", "b")).toBe(true);
+    expect(store.getLibraryItemById("b")?.id).toBe("a");
+    expect(store.getLibraryItem("b", "b")?.linkedSources?.[0].matchConfidence).toBe("CONFIRMED");
+    expect(store.getLibraryItem("b", "b")?.lastReadChapterId).toBe("chapter-a");
+    store.updateLibraryItem("b", "b", { lastReadChapterId: "chapter-b-2" });
+    expect(store.getLibraryItemById("a")?.lastReadChapterId).toBe("chapter-a");
+    expect(getLibrarySourceProgress(store.getLibraryItemById("a")!, "b", "b").lastReadChapterId).toBe("chapter-b-2");
   });
 
   it("deletes the cloud document using the saved title ID", async () => {

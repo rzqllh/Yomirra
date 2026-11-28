@@ -13,11 +13,15 @@ Panduan ini mengikuti fitur di repository. Tampilan dan ketersediaan sumber dapa
 
 **Jelajah** (`/library`) menampilkan katalog sumber, sedangkan **Library** (`/bookmark`) menampung bacaan pribadi. Koleksi buatan sendiri membantu mengelompokkan judul; Smart Collections seperti Lanjut Dibaca dihitung dari data Library pribadi dan riwayat, tanpa membuat salinan judul baru.
 
+**Library → Tersimpan** menampilkan satu entri jika beberapa bookmark terverifikasi sebagai judul yang sama. Tautan bookmark lama tetap membuka judul tersimpan. Progres chapter tetap dicatat per sumber. Chapter terbaru ditampilkan jika datanya tersedia untuk sumber dan judul yang cocok.
+
+Gunakan **Kembali** di halaman detail untuk menuju katalog asal. Jika data katalog masih tersedia di tab dan pengaturannya sama, pencarian, filter, halaman, dan posisi scroll dapat dipulihkan.
+
 ## Pilih sumber dan bahasa
 
 Buka **Sumber** untuk melihat layanan dan preferensi penjelajahan. Toggle penjelajahan mengubah Beranda, Jelajah, dan Populer. Cari global tetap mencari di sumber yang tersedia, termasuk sumber yang toggle penjelajahannya dimatikan.
 
-Status **Maintenance** atau **Dijeda sementara** menunjukkan masalah operasional sumber, bukan pilihan pengguna untuk menyembunyikan sumber. Memilih sumber tidak memperbaiki layanan yang gagal. Tautan judul tersimpan masih dapat dibuka jika layanan sumber mengizinkan.
+Status **Maintenance** atau **Dijeda sementara** menunjukkan masalah operasional sumber. Detail judul tersimpan masih bisa dibuka saat sumber utama nonaktif. Ketersediaan chapter bergantung pada sumber yang dipakai.
 
 Di **Pengaturan → Bahasa utama**, pilih prioritas bahasa chapter. Ini hanya memengaruhi sumber yang mendukung preferensi bahasa; pilihan tersebut tidak menerjemahkan halaman komik.
 
@@ -32,11 +36,11 @@ Pilih tema **Terang**, **Gelap**, atau **Sistem** di Pengaturan. Animasi yang me
 ## Saat sumber berhenti bekerja
 
 1. Periksa status di **Sumber** dan coba lagi setelah jeda. Hindari request berulang saat sumber membatasi akses.
-2. Pada layar pemulihan judul, pilih **Cari Sumber Alternatif** bila tersedia.
-3. Bandingkan judul, penulis, bahasa/edisi, dan chapter kandidat. Pilih **Gunakan Sumber Ini** setelah cocok.
-4. Periksa chapter dan progres setelah pindah sumber. Jika penomoran berbeda, pilih chapter secara manual; pemetaan otomatis tidak dijamin.
+2. Dari detail judul tersimpan, buka sumber alternatif yang sudah terverifikasi bila tersedia. Jika belum ada, pilih **Cari alternatif**.
+3. Bandingkan judul, penulis, bahasa atau edisi, dan chapter kandidat. Pilih **Tambahkan sumber ini** setelah cocok.
+4. Periksa chapter dan progres pada sumber yang dibuka. Jika penomoran berbeda, pilih chapter secara manual.
 
-Relink menghubungkan sumber baru ke identitas judul tersimpan. Unduhan lama tetap terikat pada chapter asal dan tidak otomatis menjadi unduhan sumber baru. Jika alternatif belum tersedia, pertahankan cadangan data dan tunggu perbaikan atau laporkan masalah sumber.
+Pilihan sumber utama tetap tersimpan saat alternatif dibuka. Gunakan **Jadikan utama** jika ingin mengganti pilihan tersebut. Unduhan lama tetap terikat pada chapter asal. Jika alternatif belum tersedia, pertahankan cadangan data dan tunggu perbaikan atau laporkan masalah sumber.
 
 ## Unduhan, pemasangan PWA, dan offline
 

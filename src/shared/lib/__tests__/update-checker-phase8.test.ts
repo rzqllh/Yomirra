@@ -101,6 +101,7 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     expect(update.latestChapterId).toBe("alt-ch-55");
     expect(update.latestChapterNumber).toBe(55);
     expect(update.detectedSourceId).toBe("healthy-alt");
+    expect(update.detectedMangaId).toBe("alt-manga-2");
     expect(update.isAlternateSource).toBe(true);
   });
 
@@ -272,6 +273,27 @@ describe("Phase 8 — Source-Agnostic Update Engine", () => {
     const update = useUpdateStore.getState().items["title-6"];
     expect(update.detectedSourceId).toBe("source-preferred");
     expect(update.latestChapterNumber).toBe(200);
+  });
+
+  it("polls the relinked primary and a preferred alias without rewriting the notification identity", async () => {
+    useLibraryStore.setState({ items: { survivor: {
+      id: "survivor", sourceId: "original", mangaId: "original-edition", title: "Fixture", coverUrl: "/fixture.png",
+      addedAt: "2026-01-01", updatedAt: "2026-01-01", savedTitleAliases: ["retired"],
+      primarySourceId: "current", primaryMangaId: "current-edition",
+      linkedSources: [{ sourceId: "preferred", mangaId: "preferred-edition", matchConfidence: "CONFIRMED", addedAt: 0 }],
+    } } });
+    useSettingsStore.setState({ perTitleSourcePreferences: { retired: "preferred" } });
+    vi.mocked(apiClient.getChapters).mockImplementation(async (sourceId, mangaId) => [
+      { id: `${sourceId}-12`, mangaId, number: 12, title: "Chapter 12", date: "", isLocked: false },
+    ]);
+
+    await scanLibraryUpdates({ forceRefresh: true });
+
+    expect(vi.mocked(apiClient.getChapters).mock.calls.map(([sourceId, mangaId]) => [sourceId, mangaId]))
+      .toEqual([["preferred", "preferred-edition"], ["current", "current-edition"]]);
+    expect(useUpdateStore.getState().items.survivor).toEqual(expect.objectContaining({
+      sourceId: "original", mangaId: "original-edition", detectedSourceId: "preferred", detectedMangaId: "preferred-edition",
+    }));
   });
 
   it("7. deprioritizes known degraded/offline sources", async () => {

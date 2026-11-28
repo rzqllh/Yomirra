@@ -15,8 +15,9 @@ import { cn } from "@/shared/utils/cn";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { useCatalogBrowserReady } from "@/shared/hooks/use-catalog-browser-ready";
 import { useVerifiedAge } from "@/shared/hooks/use-verified-age";
-import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
+import { isContentVisible, isSourceContentVisible, sourceReadScope } from "@/shared/sources/content-policy";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
@@ -43,8 +44,13 @@ export default function SourceBrowsePage({
   const { user } = useAuth();
   const verifiedAge = useVerifiedAge(user);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const preferredLanguages = useSettingsStore((state) => state.preferredLanguages);
+  const dataSaver = useSettingsStore((state) => state.dataSaver);
   const effectiveHideNsfw = hideNsfw || verifiedAge !== "verified";
-  const [localSources, setLocalSources] = React.useState<SourceMetadata[] | null>(null);
+  const browserReady = useCatalogBrowserReady();
+  const [localSources, setLocalSources] = React.useState<SourceMetadata[] | null>(
+    () => browserReady ? dynamicSourceRegistry.getAll() : null
+  );
   const [restrictedServerIds, setRestrictedServerIds] = React.useState(() => new Set<string>());
 
   React.useEffect(() => {
@@ -81,12 +87,16 @@ export default function SourceBrowsePage({
   const hasSourceError = !sourceInfo && sourceStatus === "error" && localSources !== null;
   const provider = hasServerIdentity ? "server" : "browser";
   const manifestUrl = hasServerIdentity ? null : localSource?.manifestUrl ?? null;
+  const catalogScope = [
+    "sourceBrowse", sourceId, provider, manifestUrl, sort,
+    sourceReadScope({ hideNsfw: effectiveHideNsfw, preferredLanguages, dataSaver }),
+  ];
 
   const {
     data,
     status
   } = useQuery({
-    queryKey: ["sourceBrowse", sourceId, provider, manifestUrl, sort, effectiveHideNsfw, currentPage],
+    queryKey: [...catalogScope, currentPage],
     queryFn: async () => {
       const catalog = await (sort === "popular"
         ? apiClient.getPopular(sourceId, currentPage, { manifestUrl })
@@ -94,15 +104,11 @@ export default function SourceBrowsePage({
       if (!effectiveHideNsfw) return catalog;
       return { ...catalog, mangas: catalog.mangas.filter((manga) => isContentVisible(manga)) };
     },
-    placeholderData: (previousData, previousQuery) => {
-      const [, previousSourceId, previousProvider, previousManifestUrl, previousSort, previousHideNsfw] =
-        previousQuery?.queryKey ?? [];
-      if (previousSourceId === sourceId && previousProvider === provider &&
-        previousManifestUrl === manifestUrl && previousSort === sort &&
-        previousHideNsfw === effectiveHideNsfw) {
-        return previousData;
-      }
-    },
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery && catalogScope.every((part, index) => part === previousQuery.queryKey[index])
+        ? previousData
+        : undefined,
+    refetchOnMount: true,
     enabled: !!sourceInfo,
   });
 

@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
 import { Chapter } from "@/shared/types/source"
 import { useRouter } from "next/navigation"
-import { getReaderHref } from "@/shared/lib/routes"
+import { getReaderChapterHref } from "./reader-navigation"
 import { SearchInput } from "@/components/ui/search-input"
 import { ReaderPanelShell } from "./reader-panel-shell"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
@@ -176,8 +176,8 @@ export function ReaderChapterDrawer({
                       ref={isCurrent ? activeChapterRef : null}
                       onClick={() => {
                         if (!isCurrent) {
-                          const href = getReaderHref(sourceId, mangaId, chapter.id)
-                          if (beginNavigationIntent(href)) {
+                          const href = getReaderChapterHref(sourceId, mangaId, chapter.id)
+                          if (beginNavigationIntent(href, "replace")) {
                             onClose()
                             router.replace(href)
                           }

@@ -16,9 +16,11 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useDelayedFlag } from "@/shared/hooks/use-delayed-flag"
 import { navigationTiming, transitions } from "@/shared/lib/motion/tokens"
 import {
+  commitNavigationParent,
   endNavigationIntent,
   isNavigationIntentComplete,
   NAVIGATION_INTENT_EVENT,
+  rememberNavigationParent,
   type NavigationIntentDetail,
 } from "@/shared/lib/navigation-intent"
 import { useSidebarStore } from "@/shared/store/sidebar-store"
@@ -43,6 +45,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     void useSidebarStore.persist.rehydrate()
   }, [])
+
+  React.useLayoutEffect(() => {
+    commitNavigationParent()
+  }, [pathname])
 
   React.useEffect(() => {
     const handleNavigationIntent = (event: Event) => {
@@ -90,7 +96,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh bg-background text-text-primary w-full max-w-full">
+    <div
+      className="flex min-h-dvh bg-background text-text-primary w-full max-w-full"
+      onClickCapture={(event) => {
+        if (event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+        if (link instanceof HTMLAnchorElement && (!link.target || link.target === "_self") && !link.hasAttribute("download")) {
+          rememberNavigationParent(link.href);
+        }
+      }}
+    >
       {!isReader && <StatusBarBlur />}
       <NetworkStatus />
 

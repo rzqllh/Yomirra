@@ -169,6 +169,24 @@ describe("MangaDetailView - Scroll Position Reset", () => {
     ).toBeDefined();
   });
 
+  it("places desktop reading controls between title metadata and synopsis", () => {
+    const { container, getByRole } = render(
+      <MangaDetailView sourceId="shinigami" mangaId="test-manga" detail={{
+        contentRating: "safe", id: "test-manga", title: "Test Manga", description: "Synopsis text",
+        coverUrl: "", status: "ONGOING", genres: [],
+      }} chapters={[]} />,
+    );
+
+    const desktopTitle = container.querySelector("#manga-detail-title-desktop")!;
+    const synopsis = getByRole("heading", { name: "Sinopsis" });
+    const desktopPrimary = synopsis.parentElement?.parentElement?.parentElement?.querySelector("button[disabled]");
+    const chapters = getByRole("heading", { name: /Daftar chapter/i });
+    expect(desktopPrimary?.textContent).toBe("Belum ada chapter");
+    expect(desktopTitle.compareDocumentPosition(desktopPrimary!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(desktopPrimary?.compareDocumentPosition(synopsis)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(synopsis.compareDocumentPosition(chapters)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it("prefixes 'Menyusul' author as 'Penulis: Menyusul' and omits unknown authors", () => {
     const { getAllByText } = render(
       <MangaDetailView

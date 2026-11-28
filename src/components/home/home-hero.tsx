@@ -96,7 +96,6 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
   const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
-  const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
   const [failedCovers, setFailedCovers] = React.useState<Set<string>>(() => new Set());
   const chosenMode = React.useRef<"safe" | "optin" | null>(null);
   const prevCandidatesRef = React.useRef<HeroCandidate[]>(candidates);
@@ -280,7 +279,6 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
           />
           {visibleCovers.map((cover, index) => {
             if (failedCovers.has(cover.coverUrl)) return null;
-            const loaded = loadedCovers.has(cover.coverUrl);
 
             return (
               <div
@@ -297,13 +295,6 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                   referrerPolicy="no-referrer"
                   decoding="async"
                   loading="lazy"
-                  onLoad={() =>
-                    setLoadedCovers((current) => {
-                      const next = new Set(current);
-                      next.add(cover.coverUrl);
-                      return next;
-                    })
-                  }
                   onError={() =>
                     setFailedCovers((current) => {
                       const next = new Set(current);
@@ -311,10 +302,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                       return next;
                     })
                   }
-                  className={cn(
-                    "size-full object-cover transition-opacity duration-300",
-                    loaded ? "opacity-75 hover:opacity-100 sm:opacity-85 lg:opacity-95" : "opacity-0"
-                  )}
+                  className="size-full object-cover opacity-75 transition-opacity duration-300 hover:opacity-100 sm:opacity-85 lg:opacity-95 motion-reduce:transition-none"
                 />
               </div>
             );

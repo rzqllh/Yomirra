@@ -6,6 +6,7 @@ import { useSourceHealthStore } from "@/shared/store/source-health-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 import { chapterNavigationLabel, readChapterNumberEvidence } from "@/shared/lib/alternate-chapter-mapping";
+import { groupVerifiedCatalogEntries, resolveCanonicalGroupPreference } from "@/shared/lib/canonical-identity";
 import type { Chapter } from "@/shared/sources/source-types";
 
 export const DEFAULT_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
@@ -36,6 +37,11 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
   let libraryItems = Object.values(useLibraryStore.getState().items || {})
     .filter((item) => Boolean(item && item.sourceId && item.mangaId));
   const updateItems = useUpdateStore.getState().items || {};
+  const getExistingUpdate = (item: LibraryItem) =>
+    [
+      item.id ? updateItems[item.id] : undefined,
+      updateItems[getUpdateKey(item.sourceId, item.mangaId)],
+    ].find((update) => update?.sourceId === item.sourceId && update.mangaId === item.mangaId);
   const cooldown = options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
   const now = Date.now();
 
@@ -72,9 +78,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
 
     // Check cooldown unless forceRefresh is true
     if (!options.forceRefresh) {
-      const key = getUpdateKey(item.sourceId, item.mangaId);
-      const existingUpdate =
-        (item.id ? updateItems[item.id] : undefined) || updateItems[key];
+      const existingUpdate = getExistingUpdate(item);
       if (existingUpdate?.lastCheckedAt) {
         const lastCheckedTime = Date.parse(existingUpdate.lastCheckedAt);
         if (!isNaN(lastCheckedTime) && now - lastCheckedTime < cooldown) {
@@ -94,16 +98,14 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       if (options.signal?.aborted) break;
 
       result.totalScanned++;
-      const savedTitleId = item.id || getUpdateKey(item.sourceId, item.mangaId);
-      const existingUpdate =
-        (item.id ? updateItems[item.id] : undefined) ||
-        updateItems[getUpdateKey(item.sourceId, item.mangaId)];
+      const existingUpdate = getExistingUpdate(item);
 
       const settings = useSettingsStore.getState();
-      const explicitPref =
-        (item.id ? settings.perTitleSourcePreferences?.[item.id] : undefined) ||
-        settings.perTitleSourcePreferences?.[savedTitleId] ||
-        settings.perTitleSourcePreferences?.[getUpdateKey(item.sourceId, item.mangaId)];
+      const [group] = groupVerifiedCatalogEntries([item]);
+      const explicitPref = resolveCanonicalGroupPreference(group, settings.perTitleSourcePreferences ?? {}).sourceId;
+      const primary = item.primarySourceId && item.primaryMangaId
+        ? { sourceId: item.primarySourceId, mangaId: item.primaryMangaId }
+        : item;
 
       const healthState = useSourceHealthStore.getState().healthBySource || {};
       const isSourceHealthy = (srcId: string) => {
@@ -119,33 +121,11 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         isPrimary: boolean;
       }
 
-      const candidates: CandidateTarget[] = [];
-      // Primary
-      candidates.push({
-        sourceId: item.sourceId,
-        mangaId: item.mangaId,
-        sourceName: item.sourceName,
-        isPrimary: true,
-        priority: 10,
+      const candidates: CandidateTarget[] = group.sourceBindings.map(ref => {
+        const isPrimary = ref.sourceId === primary.sourceId && ref.mangaId === primary.mangaId;
+        const sourceName = ref.sourceId === item.sourceId ? item.sourceName : getSourceMetadata(ref.sourceId)?.name;
+        return { ...ref, sourceName, isPrimary, priority: isPrimary ? 10 : 8 };
       });
-
-      // Linked sources
-      if (item.linkedSources && item.linkedSources.length > 0) {
-        for (const ref of item.linkedSources) {
-          if (!ref.sourceId || !ref.mangaId) continue;
-          if (ref.matchConfidence !== "CONFIRMED") continue;
-
-          const basePriority = 8;
-
-          candidates.push({
-            sourceId: ref.sourceId,
-            mangaId: ref.mangaId,
-            sourceName: getSourceMetadata(ref.sourceId)?.name ?? ref.sourceId,
-            isPrimary: false,
-            priority: basePriority,
-          });
-        }
-      }
 
       // Apply explicit user choice & health adjustments
       candidates.forEach((c) => {
@@ -166,7 +146,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       }
       const candidateMap = new Map<string, CandidateTarget>();
       for (const c of candidates) {
-        if(!c.isPrimary&&(c.sourceId===item.sourceId||workIdsBySource.get(c.sourceId)?.size!==1))continue;
+        if(!c.isPrimary&&(c.sourceId===primary.sourceId||workIdsBySource.get(c.sourceId)?.size!==1))continue;
         const existing = candidateMap.get(c.sourceId);
         if (!existing || c.priority > existing.priority) candidateMap.set(c.sourceId, c);
       }
@@ -185,6 +165,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         volume?: number;
         isPrimary: boolean;
         sourceId: string;
+        mangaId: string;
         sourceName?: string;
       };
 
@@ -214,6 +195,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
                 volume: explicit?.volume,
                 isPrimary: target.isPrimary,
                 sourceId: target.sourceId,
+                mangaId: target.mangaId,
                 sourceName: target.sourceName,
               });
             }
@@ -231,7 +213,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
 
       if(options.signal?.aborted)break;
 
-      // Self-heal: If item.title is missing, corrupted into a chapter label, or coverUrl is missing
+      // The saved title and cover belong to the original reference even after relinking.
       let resolvedTitle = item.title;
       let resolvedCoverUrl = item.coverUrl;
       const isCorruptedTitle = !resolvedTitle || /^chapter\s*\d+/i.test(resolvedTitle.trim());
@@ -263,6 +245,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       // A different chapter with the same number cannot establish its volume.
       const previousObservation=existingUpdate?.latestChapterId ? discoveredChapters.find(c=>
         c.sourceId===(existingUpdate.detectedSourceId??item.sourceId) &&
+        (!existingUpdate.detectedMangaId || c.mangaId===existingUpdate.detectedMangaId) &&
         c.chapter.id===existingUpdate.latestChapterId &&
         c.normalizedNumber===existingUpdate.latestChapterNumber):undefined;
       const previousVolume = existingUpdate?.latestChapterVolume ??
@@ -279,7 +262,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           if (order===0) {
             if (explicitPref && curr.sourceId === explicitPref && prev.sourceId !== explicitPref) return curr;
             if (explicitPref && prev.sourceId === explicitPref) return prev;
-            if (curr.sourceId === item.sourceId && prev.sourceId !== item.sourceId) return curr;
+            if (curr.isPrimary && !prev.isPrimary) return curr;
           }
           return prev;
         }, comparable[0]);
@@ -318,8 +301,9 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           latestChapterVolume: keepPrevious ? previousVolume : latest.volume,
           latestChapterTitle: keepPrevious ? existingUpdate?.latestChapterTitle : latest.chapter.title,
           detectedSourceId: keepPrevious ? existingUpdate?.detectedSourceId : latest.sourceId,
+          detectedMangaId: keepPrevious ? existingUpdate?.detectedMangaId : latest.mangaId,
           detectedSourceName: keepPrevious ? existingUpdate?.detectedSourceName : (latest.sourceName || latest.sourceId),
-          isAlternateSource: keepPrevious ? existingUpdate?.isAlternateSource : latest.sourceId !== item.sourceId,
+          isAlternateSource: keepPrevious ? existingUpdate?.isAlternateSource : !latest.isPrimary,
           lastCheckedAt: checkTimeIso,
           detectedAt: resolvedDetectedAt,
           seenAt: resolvedSeenAt,
@@ -327,7 +311,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       } else if (pollErrors.length > 0) {
         // All candidate polls errored -> record isolated error
         const primaryError =
-          pollErrors.find((e) => e.sourceId === item.sourceId)?.error || pollErrors[0].error;
+          pollErrors.find((e) => e.sourceId === primary.sourceId && e.mangaId === primary.mangaId)?.error || pollErrors[0].error;
         result.errors.push({
           sourceId: item.sourceId,
           mangaId: item.mangaId,

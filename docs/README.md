@@ -8,7 +8,7 @@ Mulai dari [README proyek](../README.md) untuk gambaran produk. Pilih panduan be
 
 | Tujuan | Panduan |
 | --- | --- |
-| Cari judul, baca, simpan, pindah sumber, atau pasang PWA | [Panduan pembaca](USER_GUIDE.md) |
+| Cari judul, baca, simpan, pindah sumber, atau pasang PWA | [Panduan pembaca](USER_GUIDE.md) · [Pemulihan sumber judul tersimpan](USER_GUIDE.md#saat-sumber-berhenti-bekerja) |
 | Sumber/gambar gagal, offline bermasalah, atau perlu melaporkan bug | [Bantuan dan FAQ](TROUBLESHOOTING.md) |
 | Pindah perangkat, ekspor/pulihkan, atau memahami cloud sync | [Data bacaan dan cadangan](READING_DATA.md) |
 | Laporkan kerentanan atau masalah hak konten | [Security](../SECURITY.md) · [Hak konten](CONTENT_RIGHTS_REPORTING.md) |

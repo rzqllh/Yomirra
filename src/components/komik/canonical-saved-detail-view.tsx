@@ -3,9 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, ArrowLeft, Compass, CheckCircle, WarningCircle } from "@phosphor-icons/react";
+import { BookOpen, Compass, CheckCircle, DownloadSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { MangaCover } from "@/components/komik/manga-cover";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -16,19 +15,61 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
-import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
+import { getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
 import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
 import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 import { useSharedChapterEvidence } from "@/shared/hooks/use-shared-chapter-evidence";
+import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
+import { AlternateSourceModal, type AlternateSourceCandidate } from "./alternate-source-modal";
+import { CatalogDetailSummary } from "./catalog-detail-summary";
+import { CatalogBackButton } from "./catalog-back-button";
 
+function FindAlternateSource({ sourceId, mangaId, title, author, blockedSourceIds, savedTitleId, onAttached }: {
+  sourceId: string;
+  mangaId: string;
+  title: string;
+  author?: string;
+  blockedSourceIds?: ReadonlySet<string>;
+  savedTitleId?: string;
+  onAttached: () => void;
+}) {
+  const attachAlternateSource = useLibraryStore(state => state.attachAlternateSource);
+  const onConfirmed = savedTitleId ? (candidate: AlternateSourceCandidate) => {
+    const attached = attachAlternateSource(savedTitleId, candidate.sourceId, candidate.mangaId);
+    if (attached) onAttached();
+    return attached;
+  } : undefined;
+  const alternate = useAlternateSource({ sourceId, mangaId, knownTitle: title, knownAuthor: author, blockedSourceIds, onConfirmed });
+  return (
+    <>
+      <Button type="button" variant="primary" onClick={alternate.openAndSearch} aria-haspopup="dialog" className="min-h-11 gap-2">
+        <Compass size={17} aria-hidden="true" /> Cari alternatif
+      </Button>
+      <AlternateSourceModal
+        isOpen={alternate.isOpen}
+        onClose={() => alternate.setIsOpen(false)}
+        deadSourceId={sourceId}
+        deadMangaTitle={title}
+        candidates={alternate.candidates}
+        chapterMapResult={alternate.chapterMapResult}
+        currentChapterTitle={savedTitleId ? undefined : alternate.mappingChapterTitle}
+        isLoading={alternate.isSearching}
+        onConfirm={alternate.handleConfirm}
+        confirmLabel={savedTitleId ? "Tambahkan sumber ini" : undefined}
+      />
+    </>
+  );
+}
 
 export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: string }) {
   const mounted = useMounted();
   const router = useRouter();
   const libraryItems = useLibraryStore(state => state.items);
+  const storedItem = useLibraryStore(state => state.getLibraryItemById(savedTitleId));
   const historyItems = useHistoryStore(state => state.items);
   const downloads = useDownloadStore(state => state.downloads);
   const perTitlePrefs = useSettingsStore(state => state.perTitleSourcePreferences);
@@ -41,9 +82,15 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const languages=useSettingsStore(state=>state.preferredLanguages);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const [pickerOpen, setPickerOpen] = React.useState(false);
+  const sourceSectionRef = React.useRef<HTMLElement>(null);
   const [offline, setOffline] = React.useState(false);
 
   React.useEffect(() => {
+    if (pickerOpen) sourceSectionRef.current?.focus();
+  }, [pickerOpen]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
     const updateNetwork = () => setOffline(navigator.onLine === false);
     updateNetwork();
     window.addEventListener("online", updateNetwork);
@@ -80,9 +127,13 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
       ...Array.from(latestHistory.values()),
     ]);
   }, [libraryItems, historyItems]);
-  const group = groups.find(candidate => candidate.members.some(member =>
+  const exactGroup = groups.find(candidate => candidate.members.some(member =>
     member.id === savedTitleId || `${member.sourceId}::${member.mangaId}` === savedTitleId
   ));
+  const group = exactGroup ?? groups.find(candidate =>
+    candidate.members.some(member => member === storedItem) ||
+    candidate.sourceBindings.some(ref => `${ref.sourceId}::${ref.mangaId}` === savedTitleId)
+  );
   const mayShow = (sourceId: string, isNsfw?: boolean) => {
     if (!hideNsfw) return true;
     if (nsfwStatus !== "KNOWN") return false;
@@ -101,7 +152,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId,ref.mangaId)))??[],
     mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline&&Boolean(group?.members.some(member=>mayShow(member.sourceId,member.isNsfw))));
 
-  if (!mounted) {
+  if (!mounted || (hideNsfw && nsfwStatus === "LOADING")) {
     return (
       <div className="mx-auto max-w-3xl p-5 text-text-muted">
         <h1 className="sr-only">Detail katalog</h1>
@@ -116,12 +167,15 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
       <div className="mx-auto max-w-3xl px-4 py-10 space-y-3">
         <h1 className="text-xl font-semibold text-text-primary">Katalog tidak tersedia</h1>
         <p className="text-sm text-text-secondary">Judul tidak ditemukan pada Library di perangkat ini atau tidak dapat ditampilkan dengan filter konten saat ini.</p>
-        <Link className="inline-flex min-h-11 items-center text-sm text-accent underline focus-visible:outline-2 focus-visible:outline-accent" href="/bookmark">Kembali ke Library</Link>
+        <CatalogBackButton fallback="/bookmark?tab=collection" />
       </div>
     );
   }
 
-  const selected = visibleMembers.find(member => !disabledSources.includes(member.sourceId)) ?? visibleMembers[0];
+  const selected = visibleMembers.find(member => member === storedItem) ??
+    visibleMembers.find(member => `${member.sourceId}::${member.mangaId}` === savedTitleId) ??
+    visibleMembers[0];
+  const savedEntry = Object.entries(libraryItems).find(([, item]) => item === selected);
 
   // A safe primary must not expose a known-adult alternate from the same
   // general-purpose provider through a confirmed linkedSources entry.
@@ -134,6 +188,9 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     return !disabledSources.includes(ref.sourceId) &&
       Boolean(source && isDiscoverySourceSystemEligible(source));
   });
+  const selectedAvailable = available.some(ref =>
+    ref.sourceId === selected.sourceId && ref.mangaId === selected.mangaId
+  );
   const preferenceKey = canonicalGroupPreferenceKey(group);
   const preferenceAliases = canonicalGroupPreferenceAliases(group);
   const legacyChoices = preferenceAliases
@@ -142,8 +199,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   // Disagreeing old per-source preferences require explicit choice, not
   // arbitrary member ordering or last-write-wins.
   const legacyConflict = !perTitlePrefs[preferenceKey] && new Set(legacyChoices).size > 1;
-  const preferredSourceId = perTitlePrefs[preferenceKey] ??
-    preferenceAliases.map(key => perTitlePrefs[key]).find(Boolean);
+  const preferredSourceId = legacyConflict ? undefined : perTitlePrefs[preferenceKey] ?? legacyChoices[0];
   const referenceSet = new Set(safeBindings.map(ref => canonicalSourceKey(ref.sourceId, ref.mangaId)));
   const lastRead = Object.values(historyItems)
     .filter(item => referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)))
@@ -151,14 +207,14 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
       sourceId: item.sourceId,
       mangaId: item.mangaId,
       chapterId: item.chapterId,
+      chapterTitle: item.chapterTitle,
       readAt: typeof item.readAt === "number" ? item.readAt : new Date(String(item.readAt)).getTime() || 0,
     }));
   const missing = safeBindings.filter(ref => !available.some(ok =>
     ok.sourceId === ref.sourceId && ok.mangaId === ref.mangaId
   ));
-  const cachedSourceRefs = Object.values(downloads)
-    .filter(item => item.status === "downloaded" && referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)))
-    .map(item => ({ sourceId: item.sourceId, mangaId: item.mangaId }));
+  const cachedChapters = Object.values(downloads)
+    .filter(item => item.status === "downloaded" && referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)));
   const decision = legacyConflict
     ? { action: "pick-source" as const, reason: "preference-conflict" as const }
     : resolveCanonicalResume({
@@ -168,73 +224,80 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         disabledSourceIds: disabledSources,
         unavailableSourceIds: missing.map(ref => ref.sourceId),
         deviceOffline: offline,
-        cachedSourceRefs,
+        cachedSourceRefs: cachedChapters,
       });
+  const canResume = decision.action === "resume" && (offline
+    ? cachedChapters.some(item => item.sourceId === decision.source.sourceId &&
+      item.mangaId === decision.source.mangaId && item.chapterId === decision.chapterId)
+    : preferredSourceId === decision.source.sourceId || (selectedAvailable &&
+      decision.source.sourceId === selected.sourceId && decision.source.mangaId === selected.mangaId));
+  const showSources = () => {
+    setPickerOpen(true);
+    sourceSectionRef.current?.focus();
+  };
+  const returnTo = getCanonicalSavedDetailHref(savedTitleId);
   const resume = () => {
     if (decision.action === "resume") {
       const href = decision.chapterId
-        ? getReaderHref(decision.source.sourceId, decision.source.mangaId, decision.chapterId, "/library")
-        : getMangaDetailHref(decision.source.sourceId, decision.source.mangaId, "/library");
-      router.push(href);
-    } else {
-      setPickerOpen(true);
+        ? getReaderHref(decision.source.sourceId, decision.source.mangaId, decision.chapterId, returnTo)
+        : getMangaDetailHref(decision.source.sourceId, decision.source.mangaId, returnTo);
+      if (beginNavigationIntent(href)) router.push(href);
     }
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
-      <Link href="/bookmark" className="inline-flex min-h-11 items-center gap-2 text-sm text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent">
-        <ArrowLeft size={18} aria-hidden="true" /> Kembali ke Library
-      </Link>
-      <section className="flex flex-col sm:flex-row gap-5 rounded-xl border border-border-subtle bg-surface-raised p-4 sm:p-5">
-        <div className="w-32 sm:w-40 shrink-0 aspect-[2/3] overflow-hidden rounded-lg border border-border-default">
-          <MangaCover
-            src={selected.coverUrl}
-            sourceId={selected.sourceId}
-            mangaId={selected.mangaId}
-            alt={selected.title}
-            fallbackTitle={selected.title}
-            className="w-full h-full"
-          />
-        </div>
-        <div className="flex-1 min-w-0 space-y-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-text-primary">{selected.title}</h1>
-          {selected.author && <p className="text-sm text-text-secondary">{selected.author}</p>}
-          <p className="text-sm text-text-muted">
-            {safeBindings.length} sumber tercatat · {available.length} dapat dibuka
-          </p>
-          <p className="text-xs text-text-muted">
-            Posisi membaca tetap disimpan terpisah pada setiap sumber.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="primary" onClick={resume} className="min-h-11 gap-2">
-              <BookOpen size={17} /> Lanjut baca
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setPickerOpen(state => !state)} className="min-h-11 gap-2">
-              <Compass size={17} /> Pilih sumber
-            </Button>
-          </div>
-          {offline && <p className="text-xs text-status-warning-fg">Perangkat sedang offline. Ketersediaan sumber belum bisa dipastikan.</p>}
-          {legacyConflict && <p className="text-xs text-status-warning-fg">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8">
+      <CatalogBackButton fallback="/bookmark?tab=collection" />
+      <CatalogDetailSummary
+        title={selected.title}
+        author={selected.author}
+        coverUrl={selected.coverUrl}
+        sourceId={selected.sourceId}
+        mangaId={selected.mangaId}
+        actions={<>
+            {canResume && (
+              <Button type="button" variant="primary" onClick={resume} className="min-h-11 gap-2">
+                <BookOpen size={17} aria-hidden="true" /> {decision.chapterId ? "Lanjut baca" : "Buka komik"}
+              </Button>
+            )}
+            {!offline && available.length > 0 && (
+              <Button type="button" variant={canResume ? "outline" : "primary"} onClick={showSources} aria-controls="saved-reading-sources" className="min-h-11 gap-2">
+                <Compass size={17} aria-hidden="true" /> Pilih sumber
+              </Button>
+            )}
+            {!offline && available.length === 0 && (
+              <FindAlternateSource
+                key={canonicalSourceKey(selected.sourceId, selected.mangaId)}
+                sourceId={selected.sourceId}
+                mangaId={selected.mangaId}
+                title={selected.title}
+                author={selected.author}
+                blockedSourceIds={hideNsfw ? nsfwSourceIds : undefined}
+                savedTitleId={savedEntry?.[1].id ?? savedEntry?.[0]}
+                onAttached={() => setPickerOpen(true)}
+              />
+            )}
+            {(offline || cachedChapters.length > 0) && (
+              <Button asChild variant={offline && !canResume ? "primary" : "outline"} className="min-h-11 gap-2">
+                <Link href="/downloads"><DownloadSimple size={17} aria-hidden="true" /> Buka unduhan</Link>
+              </Button>
+            )}
+        </>}
+      >
+          {offline && <p role="status">Perangkat sedang offline.</p>}
+          {!offline && available.length === 0 && <p>Belum ada sumber yang dapat dibuka.</p>}
+          {!offline && available.length > 0 && legacyConflict && <p className="text-status-warning-fg">
             Ada beberapa sumber utama dari riwayat lama. Pilih satu untuk katalog ini.
           </p>}
-          {!legacyConflict && preferredSourceId && decision.action === "pick-source" &&
-            <p className="text-xs text-status-warning-fg">Sumber utama belum tersedia. Pilihan utama tetap disimpan.</p>}
-        </div>
-      </section>
-      <section className="rounded-xl border border-border-subtle bg-surface-raised p-4 space-y-4" aria-label="Sumber katalog">
+          {!offline && available.length > 0 && !legacyConflict && preferredSourceId && decision.action === "pick-source" &&
+            <p className="text-status-warning-fg">Sumber utama belum tersedia. Pilihan utama tetap disimpan.</p>}
+      </CatalogDetailSummary>
+      {!offline && available.length > 0 && (
+      <section ref={sourceSectionRef} id="saved-reading-sources" tabIndex={-1} className="scroll-mt-20 space-y-4 border-t border-border-subtle pt-4 focus-visible:outline-2 focus-visible:outline-accent" aria-labelledby="saved-reading-sources-title">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-bold text-text-primary">Sumber bacaan</h2>
+          <h2 id="saved-reading-sources-title" className="text-base font-bold text-text-primary">Sumber bacaan</h2>
           {preferredSourceId && <span className="text-xs text-text-muted">Sumber utama: {getSourceMetadata(preferredSourceId)?.name ?? preferredSourceId}</span>}
         </div>
-        {(pickerOpen || available.length === 0) && (
-          <p className="text-sm text-text-secondary">
-            {offline ? "Periksa koneksi atau buka unduhan yang sudah tersimpan." :
-              available.length ? "Pilih sumber untuk membaca. Mengunjungi sumber lain tidak mengganti pilihan utama." :
-                "Belum ada sumber aktif. Bookmark dan riwayat tetap disimpan."}
-          </p>
-        )}
-        {available.length === 0 && <div className="flex items-center gap-2 text-sm text-text-muted"><WarningCircle size={18} /> Belum ada sumber yang dapat dibuka</div>}
         <div className="grid gap-3">
           {available.length>1&&<SourceQualitySort value={qualitySort} onChange={setQualitySort}/>}
           {rankQualityRefs(available.map(ref=>({...ref,language:getSourceMetadata(ref.sourceId)?.language})),qualityEvidence,{preferred:preferredSourceId,languages,verifiedGroup:true,shared,sharedChapters,sort:qualitySort}).map(({ref,quality,scope}) => {
@@ -250,13 +313,14 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
                     {sourceName} {isPreferred && <CheckCircle className="text-accent" size={16} aria-label="Pilihan utama" />}
                   </p>
                   <p className="text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":scope==="monitor"?"monitor":"perangkat"}`}</p>
-                  <p className="text-xs text-text-muted">{recent ? `Terakhir: ${recent.chapterId}` : "Belum ada riwayat pada sumber ini"}</p>
+                  {recent && <p className="text-xs text-text-muted">{recent.chapterTitle ? `Terakhir dibaca: ${recent.chapterTitle}` : "Ada riwayat baca"}</p>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border-default px-3 text-sm text-text-primary hover:bg-surface-hover"
-                    href={recent ? getReaderHref(ref.sourceId, ref.mangaId, recent.chapterId, "/library") : getMangaDetailHref(ref.sourceId, ref.mangaId, "/library")}>
-                    {recent ? "Lanjut" : "Buka"}
-                  </Link>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={recent ? getReaderHref(ref.sourceId, ref.mangaId, recent.chapterId, returnTo) : getMangaDetailHref(ref.sourceId, ref.mangaId, returnTo)}>
+                      {recent ? "Lanjut" : "Buka"}
+                    </Link>
+                  </Button>
                   {!isPreferred && <Button type="button" variant="outline" size="sm"
                     onClick={() => setPreferred(preferenceKey, ref.sourceId)}>Jadikan utama</Button>}
                 </div>
@@ -265,6 +329,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
           })}
         </div>
       </section>
+      )}
     </div>
   );
 }

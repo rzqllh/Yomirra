@@ -284,3 +284,22 @@ it("preserves release timestamps when a scan supplies only status",()=>{
   state.upsertUpdate({sourceId:"status-fixture",mangaId:"work",mangaTitle:"Fixture",error:"Unavailable"});
   expect(useUpdateStore.getState().getUpdate("status-fixture","work")).toMatchObject({latestChapterId:"ch1",detectedAt,seenAt:detectedAt,error:"Unavailable"});
 });
+
+it.each([undefined, "Unavailable"])("clears the previous source release after relinking with status %s", (error) => {
+  const state = useUpdateStore.getState();
+  const savedTitleId = "relinked-fixture";
+  state.upsertUpdate({
+    savedTitleId, sourceId: "old", mangaId: "work", mangaTitle: "Fixture",
+    latestChapterId: "ch100", latestChapterNumber: 100, latestChapterTitle: "Chapter 100",
+    detectedSourceId: "old", seenAt: "2026-11-24T00:00:00.000Z",
+  });
+  state.upsertUpdate({ savedTitleId, sourceId: "new", mangaId: "work", mangaTitle: "Fixture", error });
+
+  const relinked = useUpdateStore.getState().getUpdateById(savedTitleId);
+  expect(relinked).toMatchObject({ sourceId: "new", mangaId: "work", error });
+  expect(relinked?.latestChapterId).toBeUndefined();
+  expect(relinked?.latestChapterTitle).toBeUndefined();
+  expect(relinked?.latestChapterNumber).toBeUndefined();
+  expect(relinked?.detectedSourceId).toBeUndefined();
+  expect(relinked?.seenAt).toBeUndefined();
+});

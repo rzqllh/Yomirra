@@ -72,6 +72,9 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
       primarySourceId: item.primarySourceId ?? item.sourceId,
       primaryMangaId: item.primaryMangaId ?? item.mangaId,
       linkedSources: item.linkedSources ?? [],
+      canonicalWorkId: item.canonicalWorkId,
+      savedTitleAliases: item.savedTitleAliases,
+      progressBySource: item.progressBySource,
       // Common fields
       title: item.title,
       coverUrl: item.coverUrl,

@@ -15,7 +15,8 @@ import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { DestinationHeader } from "@/components/chrome/header";
-import { PopularPageView } from "@/components/popular/popular-page-view";
+import { PopularCatalogSnapshot } from "@/components/popular/popular-catalog-snapshot";
+import { catalogSnapshotScope } from "@/shared/lib/catalog-snapshot-scope";
 
 export const metadata: Metadata = {
   title: "Populer · Yomirra",
@@ -70,7 +71,11 @@ export default async function PopularPage() {
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <DestinationHeader destination="popular" />
-        <PopularPageView feeds={feeds} mal={mal} />
+        <PopularCatalogSnapshot
+          feeds={feeds}
+          mal={mal}
+          scope={readOptions.hideNsfw !== false ? catalogSnapshotScope((name) => cookieStore.get(name)?.value) : undefined}
+        />
       </PageContainer>
     </Surface>
   );

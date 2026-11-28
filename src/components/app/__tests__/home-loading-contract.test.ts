@@ -10,8 +10,8 @@ describe("Home loading geometry contract", () => {
     const routeLoading = read("src/app/(web)/loading.tsx");
     const page = read("src/app/(web)/page.tsx");
 
-    expect(routeLoading).toContain("<SourceFeedSkeleton />");
-    expect(page).toContain("fallback={<SourceFeedSkeleton />}");
+    expect(routeLoading).toContain("<HomeCatalogFallback />");
+    expect(page).toContain("fallback={<HomeCatalogFallback />}");
   });
 
   it("matches final Home section order and includes recently updated geometry", () => {

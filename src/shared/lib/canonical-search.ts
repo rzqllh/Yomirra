@@ -122,7 +122,13 @@ export function reconcileCatalogRows(
       output[match] = {
         ...existing,
         sourceBindings,
-        manga: { ...existing.manga, sourceBindings },
+        manga: {
+          ...existing.manga,
+          sourceBindings,
+          ...(verified?.startsWith("tracker:") && sourceBindings.length > 1
+            ? { verifiedCatalogIdentity: { workId: verified, refs: sourceBindings.map(({ sourceId, mangaId }) => ({ sourceId, mangaId })) } }
+            : {}),
+        },
       };
       continue;
     }
@@ -256,6 +262,12 @@ export function clusterCanonicalResults(
       // Confidence describes an observed cross-provider identity match,
       // not merely the presence of a single provider result.
       const identity = options.verifiedIndex?.get(sourceReference);
+      if (options.mergePolicy === "verified-only" && identity?.startsWith("tracker:")) {
+        matchedCluster.primaryResult.verifiedCatalogIdentity = {
+          workId: identity,
+          refs: matchedCluster.sourceBindings.map(({ sourceId, mangaId }) => ({ sourceId, mangaId })),
+        };
+      }
       matchedCluster.matchConfidence = options.mergePolicy === "verified-only" && !identity?.startsWith("tracker:")
         ? "CONFIRMED" : "HIGH_CONFIDENCE";
     } else {

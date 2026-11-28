@@ -148,8 +148,8 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
 
       expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);
       const savedItem = useLibraryStore.getState().getLibraryItem("srcA", "m1");
-      expect(savedItem?.title).toBe("Test Comic");
-      expect(useCollectionStore.getState().membershipsByManga["srcA::m1"]).toEqual([cId]);
+      expect(savedItem).toMatchObject({ id: expect.any(String), title: "Test Comic" });
+      expect(useCollectionStore.getState().membershipsByManga[savedItem!.id!]).toEqual([cId]);
     });
   });
 });

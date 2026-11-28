@@ -24,6 +24,33 @@ describe("UpdateChecker Engine (Slice 1.2)", () => {
     expect(apiClient.getChapters).not.toHaveBeenCalled();
   });
 
+  it("checks and seeds a new baseline when a saved ID now points to another source reference", async () => {
+    const savedTitleId = "relinked-fixture";
+    const now = new Date().toISOString();
+    useLibraryStore.setState({ items: {
+      [savedTitleId]: {
+        id: savedTitleId, sourceId: "srcA", mangaId: "new-work", title: "Relinked",
+        addedAt: now, updatedAt: now,
+      },
+    } });
+    useUpdateStore.getState().upsertUpdate({
+      savedTitleId, sourceId: "srcA", mangaId: "old-work", mangaTitle: "Relinked",
+      latestChapterId: "old-ch100", latestChapterNumber: 100, lastCheckedAt: now,
+    });
+    vi.mocked(apiClient.getChapters).mockResolvedValue([
+      { id: "new-ch2", mangaId: "new-work", number: 2, title: "Chapter 2", date: "2026-11-24" },
+    ]);
+
+    const result = await scanLibraryUpdates();
+
+    expect(result.skippedCooldown).toBe(0);
+    expect(result.updatesDetected).toBe(0);
+    expect(useUpdateStore.getState().getUpdateById(savedTitleId)).toMatchObject({
+      mangaId: "new-work", latestChapterId: "new-ch2", latestChapterNumber: 2,
+      seenAt: expect.any(String),
+    });
+  });
+
   it("seeds baseline on initial scan without triggering unread count", async () => {
     useLibraryStore.setState({
       items: {

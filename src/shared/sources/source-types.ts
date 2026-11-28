@@ -42,6 +42,10 @@ export interface MangaPageResult {
 export type ExternalWorkIds = Partial<Record<"anilist" | "my_anime_list" | "manga_updates", string>>;
 
 export interface MangaItem {
+  verifiedCatalogIdentity?: {
+    workId: string;
+    refs: readonly { sourceId: string; mangaId: string }[];
+  };
   id: string;
   title: string;
   coverUrl: string;

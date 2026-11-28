@@ -10,6 +10,8 @@ Riwayat menyimpan paling banyak 512 entri chapter dengan detail lengkap. Di luar
 
 Ringkasan menyimpan identitas judul dan sumber, chapter, posisi halaman, waktu baca, serta informasi yang dibutuhkan untuk menentukan milestone. Membaca ulang chapter lama tidak seharusnya menghapus milestone yang lebih tinggi. Data chapter lain di luar jendela detail dapat diringkas; ini bukan arsip lengkap seluruh chapter yang pernah dibaca.
 
+Bookmark yang terverifikasi sebagai judul yang sama dapat digabung saat Library direkonsiliasi. Koleksi dan tautan lama tetap merujuk judul yang tersimpan. Progres tiap sumber ikut disimpan, sehingga membuka sumber alternatif tidak memakai ID chapter dari sumber utama sebagai posisi baca.
+
 Progres ringkas tidak kedaluwarsa berdasarkan umur. Aturan penghapusan setelah tiga bulan belum diaktifkan karena definisi ketidakaktifan akun atau judul belum diputuskan. Tindakan penghapusan oleh pengguna tetap berlaku.
 
 ## Saat jaringan bermasalah

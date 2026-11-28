@@ -28,31 +28,27 @@ export function MangaDetailSkeleton() {
       desktopCover={<Skeleton className="w-full h-full rounded-none bg-surface-muted" />}
       desktopMeta={
         <>
+          <div className="w-full space-y-2">
+            <Skeleton className="w-2/3 h-8 rounded-md bg-surface-muted" />
+            <Skeleton className="w-1/3 h-4 rounded-md bg-surface-muted" />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="w-14 h-5 rounded-lg bg-surface-muted" />
             <Skeleton className="w-12 h-5 rounded-lg bg-surface-muted" />
             <Skeleton className="w-16 h-5 rounded-lg bg-surface-muted" />
             <Skeleton className="w-20 h-5 rounded-lg bg-surface-muted" />
           </div>
-          <div className="my-1 space-y-2">
-            <Skeleton className="w-2/3 h-10 rounded-xl bg-surface-muted" />
-            <Skeleton className="w-1/3 h-4 rounded-md bg-surface-muted" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Skeleton className="w-32 h-4 rounded-md bg-surface-muted" />
-            <Skeleton className="w-48 h-3 rounded-md bg-surface-muted" />
-          </div>
         </>
       }
       mainAction={
-        <div className="w-full mt-2">
-          <Skeleton className="w-full h-13 rounded-2xl bg-surface-muted" />
+        <div className="w-full mt-2 md:mt-0 md:w-52">
+          <Skeleton className="w-full h-12 rounded-sm bg-surface-muted" />
         </div>
       }
       actions={
         <>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-10 w-full rounded-xl bg-surface-muted" />
+            <Skeleton key={i} className="h-10 w-full rounded-xl bg-surface-muted md:w-24" />
           ))}
         </>
       }

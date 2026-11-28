@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
   beginNavigationIntent,
+  commitNavigationParent,
   endNavigationIntent,
+  getNavigationParentHref,
   getNavigationPathname,
   isNavigationIntentComplete,
   NAVIGATION_INTENT_EVENT,
@@ -41,5 +43,31 @@ describe("navigation intent", () => {
     expect(isNavigationIntentComplete("/library?source=a", "/search")).toBe(false);
     expect(isNavigationIntentComplete("/library?source=a", "/library")).toBe(true);
     expect(isNavigationIntentComplete(null, "/library")).toBe(false);
+  });
+
+  it("retains each parent after returning through nested history entries", () => {
+    const startHref = window.location.href;
+    const startState = window.history.state;
+    const shelf = "/bookmark?tab=collection";
+    const saved = "/catalog/saved/saved-title";
+    const detail = "/manga/source/title";
+    try {
+      window.history.replaceState(null, "", shelf);
+      beginNavigationIntent(saved);
+      window.history.replaceState({ appRouter: true }, "", saved);
+      commitNavigationParent();
+      const savedState = window.history.state;
+      expect(savedState.appRouter).toBe(true);
+
+      beginNavigationIntent(detail);
+      window.history.replaceState(null, "", detail);
+      commitNavigationParent();
+      expect(getNavigationParentHref()).toBe(saved);
+
+      window.history.replaceState(savedState, "", saved);
+      expect(getNavigationParentHref()).toBe(shelf);
+    } finally {
+      window.history.replaceState(startState, "", startHref);
+    }
   });
 });

@@ -37,10 +37,10 @@ import {
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
-import { useMounted } from "@/shared/hooks/use-mounted";
+import { useCatalogBrowserReady } from "@/shared/hooks/use-catalog-browser-ready";
 
 export function useSearchCatalog() {
-  const isMounted = useMounted();
+  const isMounted = useCatalogBrowserReady();
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const [localQuery, setLocalQuery] = React.useState(query);
@@ -89,7 +89,9 @@ export function useSearchCatalog() {
     navigateToQuery(localQuery);
   };
 
-  const [localSources, setLocalSources] = React.useState<SourceMetadata[]>([]);
+  const [localSources, setLocalSources] = React.useState<SourceMetadata[]>(
+    () => isMounted ? dynamicSourceRegistry.getAll() : []
+  );
 
   const loadLocalSources = React.useCallback(() => {
     setLocalSources(dynamicSourceRegistry.getAll());
@@ -105,6 +107,8 @@ export function useSearchCatalog() {
   const { data: sourcesData, isLoading: isSourcesLoading } = useQuery(sourceQueryOptions);
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const preferredLanguages = useSettingsStore((state) => state.preferredLanguages);
+  const dataSaver = useSettingsStore((state) => state.dataSaver);
   const savedLibraryMap = useLibraryStore((state) => state.items);
   const verifiedSourceIndex = React.useMemo(() => indexDiscoveryCatalog(
     groupVerifiedCatalogEntries(Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false))
@@ -304,6 +308,8 @@ export function useSearchCatalog() {
           hideNsfw,
           payload,
           previousPage,
+          preferredLanguages,
+          dataSaver,
         ]);
         if (previous?.hasNextPage === false) {
           isExhausted = true;
@@ -320,6 +326,8 @@ export function useSearchCatalog() {
           hideNsfw,
           payload,
           page,
+          preferredLanguages,
+          dataSaver,
         ],
         queryFn: async ({ signal }: { signal?: AbortSignal }) => {
           if (useCatalogEndpoint) {
@@ -357,6 +365,7 @@ export function useSearchCatalog() {
           !isExhausted &&
           !isUnreachable &&
           isTagCompatible,
+        refetchOnMount: true,
         // Exact-key cached data is retained by React Query. Never show results
         // from a different query, filter or page as if they were current.
       };
@@ -479,7 +488,7 @@ export function useSearchCatalog() {
   );
 
   const sourceSearchSettled = searchQueries.every(
-    (sourceQuery) => sourceQuery.fetchStatus !== "fetching"
+    (sourceQuery) => sourceQuery.data || sourceQuery.fetchStatus !== "fetching"
   );
   const candidateSignature = intelligenceCandidates
     .map((candidate) => candidate.canonicalKey)
@@ -508,6 +517,7 @@ export function useSearchCatalog() {
       (Boolean(parsedQuery.textQuery) || hardFilterTags.length > 0),
     retry: false,
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   });
 
   const catalogMatches = React.useMemo(() => {

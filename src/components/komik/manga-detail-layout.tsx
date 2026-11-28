@@ -116,24 +116,28 @@ export function MangaDetailLayout({
           <div className="hidden items-start gap-8 md:flex lg:gap-10">
             <div
               className={cn(
-                "relative w-52 lg:w-60 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-border-default/80 bg-surface-raised z-20",
+                "relative w-40 lg:w-48 shrink-0 aspect-2/3 rounded-xl overflow-hidden shadow-lg border border-border-default/80 bg-surface-raised z-20",
                 desktopCoverClassName
               )}
             >
               {desktopCover}
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
               {desktopMeta}
 
-              <div className="w-full rounded-xl border border-border-default/60 bg-surface-raised/80 backdrop-blur-sm p-4 text-sm shadow-xs">
-                {synopsis}
+              <div className="flex w-full flex-wrap items-center gap-2">
+                {mainAction}
+                <div role="group" aria-label="Aksi komik" className="flex flex-wrap gap-2">
+                  {actions}
+                </div>
               </div>
 
-              {mainAction}
-              <div role="group" aria-label="Aksi komik" className="flex flex-wrap gap-2">
-                {actions}
-              </div>
+              {synopsis && (
+                <div className="w-full max-w-prose border-t border-border-default/70 pt-3 text-sm">
+                  {synopsis}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -171,9 +175,9 @@ export function MangaDetailLayout({
 
       {/* Body Content */}
       <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
+        <div className="w-full max-w-7xl mx-auto px-4 pt-4 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
           {/* Mobile view: Info tab displays synopsis */}
-          <div className="block md:hidden">
+          <div className="md:hidden">
             {activeMobileTab === "info" && (
               <div className="flex flex-col gap-6">
                 <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">

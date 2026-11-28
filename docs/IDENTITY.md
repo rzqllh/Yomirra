@@ -13,6 +13,8 @@ Tujuannya: Library dan progress tidak ikut rusak hanya karena source pindah doma
 - setelah dibuat, ID diperlakukan sebagai opaque string;
 - ID tidak berubah hanya karena primary source berubah.
 
+Rekonsiliasi Library menggabungkan entri yang memiliki referensi sumber terverifikasi yang sama, mencatat ID entri lain sebagai alias, atau memiliki `canonicalWorkId` terverifikasi yang sama tanpa konflik referensi dalam satu sumber. `savedTitleAliases` membantu tautan dan referensi koleksi lama menemukan entri hasil rekonsiliasi. Kemiripan judul saja tidak cukup untuk menggabungkan bookmark.
+
 ## SourceRef
 
 Satu SavedTitle dapat punya beberapa source reference.
@@ -71,14 +73,9 @@ Bookmark harus ditambahkan secara eksplisit; rating dan membership koleksi tidak
 
 ## Source recovery
 
-Saat primary source tidak bisa dipakai:
+Detail judul tersimpan dapat membuka referensi sumber yang sudah terverifikasi atau menawarkan pencarian kandidat untuk dikonfirmasi. Membuka alternatif mempertahankan pilihan sumber utama. Pengguna dapat mengubah pilihan melalui **Jadikan utama**.
 
-1. Yomirra mencari kandidat dari source yang layak.
-2. Candidate dibandingkan menggunakan title/alternate title/author dan metadata yang tersedia.
-3. Match ambigu tidak dipindah otomatis.
-4. Setelah user memilih source baru, primary ref diperbarui.
-5. Source lama tetap disimpan sebagai linked source.
-6. Chapter progress hanya dipetakan bila mapping cukup aman; progress lama tetap dipertahankan jika tidak.
+Field progres utama merujuk ke pasangan sumber dan ID judul utama pada record. Progres sumber lain berada di `progressBySource`, dengan kunci pasangan sumber dan ID judul fisik. Chapter dari sumber lain hanya dapat dipakai jika pemetaannya sesuai.
 
 ## Canonical search identity
 

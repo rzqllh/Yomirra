@@ -42,6 +42,7 @@ export interface AlternateSourceModalProps {
   currentChapterTitle?: string;
   onConfirm: (candidate: AlternateSourceCandidate, chapterId?: string) => void;
   isLoading?: boolean;
+  confirmLabel?: string;
 }
 
 // Confidence badge
@@ -116,6 +117,7 @@ export function AlternateSourceModal({
   chapterMapResult,
   currentChapterTitle,
   onConfirm,
+  confirmLabel = "Buka sumber ini",
   isLoading,
 }: AlternateSourceModalProps) {
   const quality=useSourceQualityStore(state=>state.evidence);
@@ -244,10 +246,10 @@ export function AlternateSourceModal({
             className="w-full min-h-11 rounded-sm font-bold text-sm shadow-sm flex items-center justify-center gap-2"
           >
             {isLoading ? (
-              <span>Mengganti sumber...</span>
+              <span>Mencari sumber…</span>
             ) : (
               <>
-                <span>Buka sumber ini</span>
+                <span>{confirmLabel}</span>
                 <ArrowRight size={16} weight="regular" />
               </>
             )}

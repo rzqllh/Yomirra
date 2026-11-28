@@ -67,6 +67,9 @@ type LibraryItem = {
   primarySourceId?: string;
   primaryMangaId?: string;
   linkedSources?: SourceRef[];
+  canonicalWorkId?: string;
+  savedTitleAliases?: string[];
+  progressBySource?: Record<string, LibrarySourceProgress>;
 
   sourceId: string;
   mangaId: string;
@@ -84,6 +87,8 @@ type LibraryItem = {
 ```
 
 Library tidak memiliki eviction otomatis berdasarkan jumlah judul. Batas 1.000 judul pada impor backup telah dihapus; batas berkas tetap 10 MB.
+
+`progressBySource` memakai kunci referensi sumber dan ID judul fisik untuk menyimpan posisi chapter dan milestone sumber selain sumber utama. Alias judul dan progres per sumber bersifat opsional pada cadangan schema v3.
 
 ## History
 

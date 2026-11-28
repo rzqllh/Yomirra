@@ -38,7 +38,7 @@ Yomirra adalah *web-first comic reader interface* modern yang dirancang untuk me
 
 | Kemampuan | Status | Catatan & Implementasi Teknis |
 |---|---|---|
-| **Penyimpanan Bookmark** | **Tersedia** | Satu klik untuk menyimpan ke Library pribadi tanpa memicu rating publik. |
+| **Penyimpanan Bookmark** | **Tersedia** | Library menyatukan entri yang terverifikasi sebagai judul yang sama. Tautan lama, keanggotaan koleksi, dan progres tiap sumber tetap tersimpan. |
 | **Koleksi Kustom (Custom Categories)** | **Tersedia** | Pengguna dapat membuat, mengubah nama, dan mengorganisasi komik ke dalam folder koleksi dinamis. |
 | **Smart Collections** | **Tersedia** | Koleksi terhitung otomatis: *Lanjut Dibaca*, *Belum Dibaca*, dan *Selesai*. |
 | **Persentase Progres Seri** | **Tersedia** | Estimasi berdasarkan metadata bab yang tersedia; indikator ini bukan bukti setiap bab selesai dibaca. |
@@ -67,7 +67,7 @@ Yomirra adalah *web-first comic reader interface* modern yang dirancang untuk me
 |---|---|---|
 | **Manajemen Sumber Aktif** | **Tersedia** | Toggle aktivasi sumber untuk mengatur keterlibatan dalam katalog Beranda, Jelajah, dan Populer. |
 | **Deteksi Status Layanan (Health Check)** | **Tersedia** | Indikator berdasarkan pemeriksaan sumber terakhir; status tidak menjamin ketersediaan real-time. |
-| **Pemilihan Sumber Alternatif (Relink)** | **Tersedia** | Fitur *Cari Sumber Alternatif* pada halaman pemulihan judul yang mati atau gagal muat, memungkinkan pemilihan sumber pengganti; pemetaan progres hanya dilakukan bila dapat diverifikasi. |
+| **Pemilihan Sumber Alternatif** | **Tersedia** | Detail judul tersimpan membuka alternatif terverifikasi atau menawarkan **Cari alternatif**. Gunakan **Jadikan utama** untuk mengganti pilihan sumber utama. |
 | **Isolasi Keamanan Sumber** | **Tersedia** | Sumber dijalankan di lapisan backend/API terisolasi tanpa eksekusi kode pihak ketiga di peramban pengguna. |
 
 ---

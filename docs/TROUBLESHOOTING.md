@@ -12,6 +12,8 @@ Jika satu sumber gagal tetapi yang lain bekerja, coba sumber lain atau judul alt
 
 Jika judul tersimpan kehilangan sumber, gunakan [pemulihan sumber](USER_GUIDE.md#saat-sumber-berhenti-bekerja). Periksa identitas dan chapter kandidat sebelum menghubungkannya.
 
+Jika detail judul tersimpan terbuka tetapi chapter terbaru kosong, buka daftar chapter pada sumber yang tersedia. Indikator terbaru bergantung pada data chapter dari sumber yang cocok dengan judul.
+
 ## Gambar Reader kosong atau chapter salah
 
 Periksa chapter lain pada sumber yang sama. Jika hanya satu chapter gagal, masalah dapat berasal dari gambar atau data chapter sumber. Jika seluruh sumber gagal, periksa statusnya. Muat ulang sekali saat online; hindari reset data sebagai langkah pertama.

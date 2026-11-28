@@ -30,32 +30,60 @@ export function MangaCover({
   iconSize = 32,
   onError,
 }: MangaCoverProps) {
-  const resolvedCover = useCoverCacheStore((s) =>
-    sourceId && mangaId ? s.resolutions[`${sourceId}::${mangaId}`]?.coverUrl : null
+  const resolution = useCoverCacheStore((state) =>
+    sourceId && mangaId ? state.resolutions[`${sourceId}::${mangaId}`] : undefined
   );
-  const effectiveSrc = resolvedCover || src;
-  const [failedSrc, setFailedSrc] = React.useState<string>();
+  const resolvedCover = resolution?.status === "RESOLVED" ? resolution.coverUrl : undefined;
+  const [failure, setFailure] = React.useState<{ original?: string; urls: string[] }>();
+  const failures = failure?.original === src ? failure?.urls ?? [] : [];
+  const hasAttemptedImage = failures.length > 0;
+  const effectiveSrc = [src, resolvedCover].find((url) => url && !failures.includes(url));
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (src || resolvedCover || hasAttemptedImage || !sourceId || !mangaId || !container) return;
+
+    const recover = () => void resolveMangaCover(sourceId, mangaId);
+    if (priority) {
+      recover();
+      return;
+    }
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      recover();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [hasAttemptedImage, mangaId, priority, resolvedCover, sourceId, src]);
 
   const markFailed = React.useCallback(() => {
-    setFailedSrc(effectiveSrc);
+    if (!effectiveSrc) return;
+    const failedUrls = [...(failure?.original === src ? failure?.urls ?? [] : []), effectiveSrc];
+    setFailure((previous) => ({
+      original: src,
+      urls: previous && previous.original === src ? [...previous.urls, effectiveSrc] : [effectiveSrc],
+    }));
     if (sourceId && mangaId) {
-      void resolveMangaCover(sourceId, mangaId, effectiveSrc);
+      void resolveMangaCover(sourceId, mangaId, failedUrls);
     }
     onError?.();
-  }, [effectiveSrc, onError, sourceId, mangaId]);
+  }, [effectiveSrc, failure, onError, sourceId, mangaId, src]);
 
   const checkCachedImage = React.useCallback(
     (img: HTMLImageElement | null) => {
-      if (img?.complete && img.naturalWidth === 0) markFailed();
+      if (img?.currentSrc && img.complete && img.naturalWidth === 0) markFailed();
     },
     [markFailed]
   );
-  const hasValidImage = Boolean(effectiveSrc && effectiveSrc !== failedSrc);
-
   return (
-    <div className={cn("relative w-full h-full overflow-hidden bg-surface-muted", className)}>
-      {hasValidImage ? (
+    <div ref={containerRef} className={cn("relative w-full h-full overflow-hidden bg-surface-muted", className)}>
+      {effectiveSrc ? (
         <img
+          key={effectiveSrc}
           src={effectiveSrc}
           alt={alt}
           className={cn("absolute inset-0 w-full h-full object-cover", imageClassName)}
@@ -69,14 +97,8 @@ export function MangaCover({
       ) : alt || fallbackTitle ? (
         <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-2 px-3 py-4 text-center">
           <ImageBroken size={Math.min(iconSize, 28)} aria-hidden="true" className="shrink-0 text-text-muted" />
-          {fallbackTitle && (
-            <>
-              <span className="line-clamp-3 text-xs font-semibold leading-relaxed text-text-secondary">
-                {fallbackTitle}
-              </span>
-              <span className="text-2xs text-text-muted">Sampul tidak tersedia</span>
-            </>
-          )}
+          {fallbackTitle && <span className="line-clamp-3 text-xs font-semibold leading-relaxed text-text-secondary">{fallbackTitle}</span>}
+          <span className="text-2xs text-text-muted">Sampul tidak tersedia</span>
         </div>
       ) : null}
     </div>

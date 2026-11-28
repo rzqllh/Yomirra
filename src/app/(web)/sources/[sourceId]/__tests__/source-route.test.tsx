@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type {} from "vitest/jsdom";
 import { apiClient } from "@/shared/api-client";
+import { sourceReadScope } from "@/shared/sources/content-policy";
 import { DEFAULT_CAPABILITIES } from "@/shared/sources/source-capabilities";
 import type { MangaItem, MangaPageResult, SourceMetadata } from "@/shared/sources/source-types";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -33,6 +34,14 @@ vi.mock("@/shared/api-client", () => ({
 
 function makeQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
+
+function catalogKey(sourceId: string, hideNsfw: boolean, manifestUrl: string | null = null) {
+  const { preferredLanguages, dataSaver } = useSettingsStore.getState();
+  return [
+    "sourceBrowse", sourceId, manifestUrl ? "browser" : "server", manifestUrl, "latest",
+    sourceReadScope({ hideNsfw, preferredLanguages, dataSaver }), 1,
+  ];
 }
 
 async function renderSource(sourceId: string, client = makeQueryClient()) {
@@ -178,10 +187,10 @@ describe("source detail route", () => {
       hasNextPage: true,
     };
     const client = makeQueryClient();
-    const catalogKey = ["sourceBrowse", source.id, "server", null, "latest", false, 1];
+    const optInKey = catalogKey(source.id, false);
     const restoreSources = installLocalProvider(source.id);
     client.setQueryData(["sources"], [source]);
-    client.setQueryData(catalogKey, catalog);
+    client.setQueryData(optInKey, catalog);
     vi.mocked(apiClient.getSources).mockResolvedValue([source]);
     vi.mocked(apiClient.getLatest).mockResolvedValue(catalog);
     mockVerifiedAccount();
@@ -206,7 +215,7 @@ describe("source detail route", () => {
       expect(screen.queryByRole("heading", { name: "Local Provider" })).toBeNull();
       expect(screen.queryByRole("checkbox")).toBeNull();
       expect(screen.queryByRole("link", { name: "Selanjutnya" })).toBeNull();
-      expect(client.getQueryData(catalogKey)).toEqual(catalog);
+      expect(client.getQueryData(optInKey)).toEqual(catalog);
 
       vi.mocked(apiClient.getLatest).mockClear();
       if (refreshResult === "filtered") {
@@ -243,7 +252,7 @@ describe("source detail route", () => {
       }],
       hasNextPage: true,
     };
-    const optInKey = ["sourceBrowse", sourceId, "server", null, "latest", false, 1];
+    const optInKey = catalogKey(sourceId, false);
     client.setQueryData(optInKey, optInCatalog);
     const safePage = Promise.withResolvers<MangaPageResult>();
     vi.mocked(apiClient.getSources).mockResolvedValue([{
@@ -333,7 +342,7 @@ describe("source detail route", () => {
       getSearchParams.mockReturnValue(new URLSearchParams("page=2"));
       refresh();
       expect(screen.queryByText("Local Comic")).toBeNull();
-      expect(client.getQueryData(["sourceBrowse", sourceId, "browser", localManifestUrl, "latest", true, 1]))
+      expect(client.getQueryData(catalogKey(sourceId, true, localManifestUrl)))
         .toEqual(localCatalog);
       serverCatalog.resolve({ mangas: [], hasNextPage: false });
       await screen.findByText("Belum ada komik yang ditemukan.");
@@ -356,7 +365,7 @@ describe("source detail route", () => {
       capabilities: DEFAULT_CAPABILITIES,
     };
     const client = makeQueryClient();
-    const catalogKey = ["sourceBrowse", source.id, "server", null, "latest", true, 1];
+    const safeKey = catalogKey(source.id, true);
     const catalog = {
       mangas: [{ id: "cached-comic", title: "Cached Comic", coverUrl: "/cover.jpg" }],
       hasNextPage: true,
@@ -365,7 +374,7 @@ describe("source detail route", () => {
     vi.mocked(apiClient.getLatest).mockResolvedValue(catalog);
     await renderSource(source.id, client);
     await screen.findByText("Cached Comic");
-    expect(client.getQueryData(catalogKey)).toEqual(catalog);
+    expect(client.getQueryData(safeKey)).toEqual(catalog);
 
     vi.mocked(apiClient.getLatest).mockClear();
     vi.mocked(apiClient.getSources).mockResolvedValue([{ ...source, ...update }]);
@@ -374,7 +383,7 @@ describe("source detail route", () => {
     expect(screen.queryByText("Cached Comic")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(screen.queryByRole("link", { name: "Selanjutnya" })).toBeNull();
-    expect(client.getQueryData(catalogKey)).toEqual(catalog);
+    expect(client.getQueryData(safeKey)).toEqual(catalog);
     expect(apiClient.getLatest).not.toHaveBeenCalled();
   });
 

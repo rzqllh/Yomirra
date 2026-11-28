@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { WarningCircle, ArrowUpRight } from "@phosphor-icons/react";
 import { EditorialCard } from "@/components/komik/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,15 +20,26 @@ import { groupVerifiedCatalogEntries } from "@/shared/lib/canonical-identity";
 import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import { MalPopularSection } from "./mal-popular-section";
 
-interface PopularPageViewProps {
+export interface PopularPageViewProps {
   mal?: MalPopularFeed;
   feeds: PopularSourceFeed[];
 }
 
 export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
-  const [mode, setMode] = React.useState<"local" | "mal">("local");
+  const searchParams = useSearchParams();
+  const mode = searchParams?.get("tab") === "mal" ? "mal" : "local";
   const localTabRef = React.useRef<HTMLButtonElement>(null);
-  const [selectedSourceId, setSelectedSourceId] = React.useState<string>("all");
+  const selectedSourceId = searchParams?.get("source") ?? "all";
+
+  const setUrlParam = (name: string, value?: string) => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set(name, value);
+    else url.searchParams.delete(name);
+    window.history.replaceState(null, "", url);
+  };
+  const setMode = (value: string) => setUrlParam("tab", value === "mal" ? value : undefined);
+  const setSelectedSourceId = (value: string) => setUrlParam("source", value === "all" ? undefined : value);
 
   const saved = useLibraryStore(state => state.items);
   const verifiedIndex = React.useMemo(() => indexDiscoveryCatalog(groupVerifiedCatalogEntries(Object.values(saved).filter(item => item.isBookmarked !== false))), [saved]);

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { HomeHero, HERO_COLLAGE_CACHE_KEY } from "@/components/home/home-hero";
 import { HeaderActions } from "@/components/chrome/header-actions";
 import { PageHeader } from "@/components/chrome/header";
+import { rememberNavigationParent } from "@/shared/lib/navigation-intent";
 
 const pushMock = vi.fn();
 const backMock = vi.fn();
@@ -263,6 +264,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
 
     it("prefers native browser history for logical back navigation", () => {
       window.history.pushState({}, "", "/library");
+      rememberNavigationParent("/manga/source-a/title-a?returnTo=%2Flibrary");
       window.history.pushState(
         {},
         "",
@@ -275,6 +277,18 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
 
       expect(backMock).toHaveBeenCalledTimes(1);
       expect(replaceMock).not.toHaveBeenCalled();
+    });
+
+    it("uses the requested catalog when the previous entry is unrelated", () => {
+      window.history.pushState({}, "", "/search");
+      rememberNavigationParent("/manga/source-a/title-b?returnTo=%2Flibrary");
+      window.history.pushState({}, "", "/manga/source-a/title-b?returnTo=%2Flibrary");
+      render(<PageHeader title="Detail" showBack backHref="/library" />);
+
+      fireEvent.click(screen.getByRole("button", { name: "Kembali" }));
+
+      expect(backMock).not.toHaveBeenCalled();
+      expect(replaceMock).toHaveBeenCalledWith("/library");
     });
 
     it("renders custom desktopActions on desktop banner when provided", () => {

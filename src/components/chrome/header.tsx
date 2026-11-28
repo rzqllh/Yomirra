@@ -11,6 +11,7 @@ import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
 import { transitions } from "@/shared/lib/motion/tokens"
+import { hasNavigationParent } from "@/shared/lib/navigation-intent"
 
 export interface PageHeaderProps {
   /** Main section title */
@@ -122,7 +123,7 @@ export function PageHeader({
   }, [detailTitleAnchorId, mode])
 
   const handleBack = () => {
-    if (backBehavior === "history" && typeof window !== "undefined" && window.history.length > 1) {
+    if (backBehavior === "history" && typeof window !== "undefined" && window.history.length > 1 && (!backHref || hasNavigationParent(backHref))) {
       // Prefer the browser history entry so Back/Forward keeps native scroll
       // restoration. Reader routes now replace their detail slot, so the
       // previous entry is the logical parent instead of a stale reader page.

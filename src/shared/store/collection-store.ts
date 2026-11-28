@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Collection, CollectionState, MangaKey, ReadingStatus } from "../types/collection";
 import { pushCustomCollections } from "@/shared/lib/sync-utils";
+import { libraryMembershipKeys } from "@/shared/lib/library-identity";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { isOutboxPathEnabled, enqueueCollectionsUpsert } from "@/shared/lib/outbox";
 
@@ -24,6 +25,15 @@ interface CollectionActions {
 }
 
 export type CollectionStore = CollectionState & CollectionActions;
+
+function membershipKeys(mangaKey: MangaKey): MangaKey[] {
+  const library = useLibraryStore.getState();
+  const separator = mangaKey.indexOf("::");
+  const item = library.getLibraryItemById(mangaKey) ?? (separator >= 0
+    ? library.resolveBySourceRef(mangaKey.slice(0, separator), mangaKey.slice(separator + 2))
+    : undefined);
+  return item ? libraryMembershipKeys(item) : [mangaKey];
+}
 
 export const useCollectionStore = create<CollectionStore>()(
   persist(
@@ -51,34 +61,13 @@ export const useCollectionStore = create<CollectionStore>()(
         readingStatusByManga: {},
 
         getMemberships: (mangaKey: MangaKey) => {
-          const state = get();
-          const legacyMemberships = state.membershipsByManga[mangaKey] || [];
-          
-          if (!mangaKey.includes("::")) return legacyMemberships;
-          
-          const [sourceId, mangaId] = mangaKey.split("::");
-          const canonicalId = useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id as MangaKey;
-          
-          if (canonicalId && canonicalId !== mangaKey) {
-            const canonicalMemberships = state.membershipsByManga[canonicalId] || [];
-            return Array.from(new Set([...legacyMemberships, ...canonicalMemberships]));
-          }
-          return legacyMemberships;
+          const memberships = get().membershipsByManga;
+          return [...new Set(membershipKeys(mangaKey).flatMap(key => memberships[key] ?? []))];
         },
 
         getResolvedReadingStatus: (mangaKey: MangaKey) => {
-          const state = get();
-          const legacyStatus = state.readingStatusByManga[mangaKey];
-          
-          if (!mangaKey.includes("::")) return legacyStatus;
-
-          const [sourceId, mangaId] = mangaKey.split("::");
-          const canonicalId = useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id as MangaKey;
-          
-          if (canonicalId && canonicalId !== mangaKey) {
-            return state.readingStatusByManga[canonicalId] || legacyStatus;
-          }
-          return legacyStatus;
+          const statuses = get().readingStatusByManga;
+          return membershipKeys(mangaKey).map(key => statuses[key]).find(Boolean);
         },
 
         clearCollections: () => set({ collections: [], membershipsByManga: {}, readingStatusByManga: {} }),
@@ -171,55 +160,41 @@ export const useCollectionStore = create<CollectionStore>()(
         },
 
         addMangaToCollection: (mangaKey: MangaKey, collectionId: string) => {
-          set((state) => {
-            const currentMemberships = state.membershipsByManga[mangaKey] || [];
-            if (currentMemberships.includes(collectionId)) return state;
-
-            return {
-              membershipsByManga: {
-                ...state.membershipsByManga,
-                [mangaKey]: [...currentMemberships, collectionId],
-              }
-            };
-          });
+          const [key] = membershipKeys(mangaKey);
+          if (get().getMemberships(mangaKey).includes(collectionId)) return;
+          set(state => ({
+            membershipsByManga: {
+              ...state.membershipsByManga,
+              [key]: [...(state.membershipsByManga[key] ?? []), collectionId],
+            },
+          }));
           syncCloud();
         },
 
         removeMangaFromCollection: (mangaKey: MangaKey, collectionId: string) => {
-          set((state) => {
-            const currentMemberships = state.membershipsByManga[mangaKey] || [];
-            if (!currentMemberships.includes(collectionId)) return state;
-
-            const newMemberships = currentMemberships.filter(id => id !== collectionId);
-
-            const nextMembershipsMap = { ...state.membershipsByManga };
-            if (newMemberships.length > 0) {
-              nextMembershipsMap[mangaKey] = newMemberships;
-            } else {
-              delete nextMembershipsMap[mangaKey];
+          if (!get().getMemberships(mangaKey).includes(collectionId)) return;
+          set(state => {
+            const membershipsByManga = { ...state.membershipsByManga };
+            for (const key of membershipKeys(mangaKey)) {
+              const remaining = membershipsByManga[key]?.filter(id => id !== collectionId) ?? [];
+              if (remaining.length) membershipsByManga[key] = remaining;
+              else delete membershipsByManga[key];
             }
-
-            return { membershipsByManga: nextMembershipsMap };
+            return { membershipsByManga };
           });
           syncCloud();
         },
 
         setReadingStatus: (mangaKey: MangaKey, status: ReadingStatus) => {
-          set((state) => ({
-            readingStatusByManga: {
-              ...state.readingStatusByManga,
-              [mangaKey]: status,
-            }
-          }));
+          const [key] = membershipKeys(mangaKey);
+          set(state => ({ readingStatusByManga: { ...state.readingStatusByManga, [key]: status } }));
         },
 
         clearReadingStatus: (mangaKey: MangaKey) => {
-          set((state) => {
-            if (!state.readingStatusByManga[mangaKey]) return state;
-
-            const nextStatuses = { ...state.readingStatusByManga };
-            delete nextStatuses[mangaKey];
-            return { readingStatusByManga: nextStatuses };
+          set(state => {
+            const readingStatusByManga = { ...state.readingStatusByManga };
+            for (const key of membershipKeys(mangaKey)) delete readingStatusByManga[key];
+            return { readingStatusByManga };
           });
         },
 

@@ -6,7 +6,8 @@ import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/re
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useHistoryStore } from "@/shared/store/history-store"
 import { PageItem } from "@/shared/types/source"
-import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes"
+import { getMangaDetailHref } from "@/shared/lib/routes"
+import { getReaderChapterHref } from "./reader-navigation"
 import { ReaderImage } from "./reader-image"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
@@ -487,8 +488,8 @@ export function ContinuousVerticalReader({
   const handleNextChapter = React.useCallback(() => {
     if (!nextChapterId) return;
 
-    const href = getReaderHref(sourceId, mangaId, nextChapterId);
-    if (!beginNavigationIntent(href)) return;
+    const href = getReaderChapterHref(sourceId, mangaId, nextChapterId);
+    if (!beginNavigationIntent(href, "replace")) return;
 
     if (isRestored && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
       markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
@@ -616,8 +617,8 @@ export function ContinuousVerticalReader({
                 variant="outline"
                 className="h-11 px-4 font-semibold text-xs sm:text-sm bg-surface-overlay hover:bg-surface-hover active:bg-surface-muted border-border-subtle text-text-secondary hover:text-text-primary flex-1 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer shadow-none"
                 onClick={() => {
-                  const href = getReaderHref(sourceId, mangaId, _prevChapterId);
-                  if (beginNavigationIntent(href)) router.replace(href);
+                  const href = getReaderChapterHref(sourceId, mangaId, _prevChapterId);
+                  if (beginNavigationIntent(href, "replace")) router.replace(href);
                 }}
               >
                 <CaretLeft size={16} weight="regular" />

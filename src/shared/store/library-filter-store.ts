@@ -16,7 +16,16 @@ interface LibraryFilterState {
   resetFilters: () => void;
 }
 
-// ponytail: use sessionStorage so filters clear on new session/tab and can be reset on refresh, but persist during back navigation from manga detail
+// Read the document navigation only during initial store hydration.
+// Route remounts within the document retain filters for back navigation.
+function readLibraryFilterStorage() {
+  if (typeof window === "undefined") throw new Error("Session storage is unavailable");
+  const storage = window.sessionStorage;
+  const navigation = window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  if (navigation?.type === "reload") storage.removeItem("yomirra-library-filters");
+  return storage;
+}
+
 export const useLibraryFilterStore = create<LibraryFilterState>()(
   persist(
     (set) => ({
@@ -44,7 +53,7 @@ export const useLibraryFilterStore = create<LibraryFilterState>()(
     }),
     {
       name: "yomirra-library-filters",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(readLibraryFilterStorage),
     }
   )
 );

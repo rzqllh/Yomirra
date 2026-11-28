@@ -37,6 +37,7 @@ import {
 import { CanonicalSourceDialog, eligibleCanonicalBindings } from "../canonical-source-dialog";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 import type { MangaKey } from "@/shared/types/collection";
+import type { MangaUpdateItem } from "@/shared/types/update";
 import type { BaseCardProps } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
@@ -81,6 +82,8 @@ export interface MangaCardProps extends BaseCardProps {
   variant?: MangaCardVariant;
   viewMode?: "grid" | "compact";
   showSourceBadge?: boolean;
+  savedLibraryCard?: boolean;
+  savedChapterUpdates?: MangaUpdateItem[];
   sourceBindings?: SourceBinding[];
   canonicalDetailHref?: string;
   resumeHref?: string;
@@ -106,6 +109,8 @@ export function MangaCard({
   priority = false,
   displayScore,
   showSourceBadge = false,
+  savedLibraryCard = false,
+  savedChapterUpdates,
   sourceBindings,
   canonicalDetailHref,
   resumeHref,
@@ -168,6 +173,18 @@ export function MangaCard({
   const cardSourceId = onlyBinding?.sourceId ?? sourceId;
   const cardMangaId = onlyBinding?.mangaId ?? manga.id;
   const cardManga = onlyBinding ? { ...manga, id: cardMangaId } : manga;
+  const shownRefIsPrimary = cardSourceId === sourceId && cardMangaId === manga.id;
+  const shownChapter = savedChapterUpdates?.find((update) =>
+    update.detectedMangaId
+      ? update.detectedSourceId === cardSourceId && update.detectedMangaId === cardMangaId
+      : shownRefIsPrimary && !update.isAlternateSource &&
+        (!update.detectedSourceId || update.detectedSourceId === sourceId)
+  );
+  const savedLatestChapter = shownChapter?.latestChapterTitle?.trim() ||
+    (Number.isFinite(shownChapter?.latestChapterNumber) ? `Ch. ${shownChapter?.latestChapterNumber}` : undefined);
+  const gridLatestChapter = savedLibraryCard
+    ? savedLatestChapter || (shownRefIsPrimary ? manga.latestChapter : undefined)
+    : manga.latestChapter;
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
   const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
@@ -830,7 +847,7 @@ export function MangaCard({
               </div>
             )}
 
-            {isMultiSource && (
+            {isMultiSource && !savedLibraryCard && (
               <div className="flex items-center gap-1 rounded-xs bg-surface-overlay/95 px-1.5 py-0.5 shadow-sm border border-border-default/40">
                 <span className="text-xs font-bold text-accent">
                   {availableBindings.length} Sumber
@@ -881,7 +898,7 @@ export function MangaCard({
             )}
           </div>
 
-          {noEligibleSource && (
+          {noEligibleSource && !savedLibraryCard && (
             <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
               <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
                 Sumber Nonaktif
@@ -906,8 +923,8 @@ export function MangaCard({
               ) : null,
               showSourceBadge && (sourceName || isMultiSource || noEligibleSource) ? (
                 noEligibleSource ? (
-                  <MangaCardMeta key="source" className="truncate font-semibold text-status-warning-fg" title={`${sourceDisplayName} (Nonaktif)`}>
-                    {sourceDisplayName} · Nonaktif
+                  <MangaCardMeta key="source" className="truncate font-semibold text-status-warning-fg">
+                    {savedLibraryCard ? "Sumber belum tersedia" : `${sourceDisplayName} · Nonaktif`}
                   </MangaCardMeta>
                 ) : isMultiSource ? (
                   <MangaCardMeta key="source" className="truncate font-semibold text-accent">
@@ -938,9 +955,11 @@ export function MangaCard({
 
           {/* Bottom Row - keep geometry stable when optional chapter/rating data is absent. */}
           <div className="mt-auto flex min-h-5 items-center justify-between">
-            <MangaCardMeta className="max-w-3/4 truncate font-semibold sm:text-sm">
-              {manga.latestChapter || "Bab terbaru belum tersedia"}
-            </MangaCardMeta>
+            {(gridLatestChapter || !savedLibraryCard) && (
+              <MangaCardMeta className="max-w-3/4 truncate font-semibold sm:text-sm">
+                {gridLatestChapter || "Bab terbaru belum tersedia"}
+              </MangaCardMeta>
+            )}
             {Number(scoreToDisplay) > 0 ? (
               <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
                 <Star weight="fill" className="text-semantic-warning text-sm" aria-hidden="true" />

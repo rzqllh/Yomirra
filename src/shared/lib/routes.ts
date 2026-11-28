@@ -51,12 +51,18 @@ export function getSafeMangaDetailBackHref(returnTo: string | null): string | un
 
   // Back targets are internal app routes only. Reader routes are explicitly
   // excluded so leaving detail never walks back into the reader stack.
-  const isInternalPath = returnTo.startsWith("/") && !returnTo.startsWith("//");
-  if (!isInternalPath || returnTo.includes("/read/")) {
+  if (!returnTo.startsWith("/") || returnTo.startsWith("//") || returnTo.includes("\\")) return undefined;
+
+  const appOrigin = "https://yomirra.invalid";
+  try {
+    const url = new URL(returnTo, appOrigin);
+    if (url.origin === appOrigin && !url.pathname.startsWith("//") && !url.pathname.includes("/read/")) {
+      return url.pathname + url.search + url.hash;
+    }
+  } catch {
     return undefined;
   }
-
-  return returnTo;
+  return undefined;
 }
 
 export function getReaderHref(sourceId: string, mangaId: string, chapterId: string, returnTo?: string): string {

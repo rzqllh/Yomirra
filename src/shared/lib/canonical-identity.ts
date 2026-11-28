@@ -10,6 +10,8 @@ export type ConfirmedSourceIdentity = CanonicalSourceIdentity & Readonly<{
 
 export interface CanonicalEvidenceEntry {
   id?: string;
+  canonicalWorkId?: string;
+  savedTitleAliases?: readonly string[];
   sourceId: string;
   mangaId: string;
   primarySourceId?: string;
@@ -29,7 +31,7 @@ export function canonicalSourceKey(sourceId: string, mangaId: string): string {
   return JSON.stringify([sourceId, mangaId]);
 }
 
-function provenReferences(item: CanonicalEvidenceEntry): CanonicalSourceIdentity[] {
+export function provenReferences(item: CanonicalEvidenceEntry): CanonicalSourceIdentity[] {
   const refs: CanonicalSourceIdentity[] = [
     { sourceId: item.sourceId, mangaId: item.mangaId },
   ];
@@ -51,6 +53,7 @@ export function groupVerifiedCatalogEntries<T extends CanonicalEvidenceEntry>(
   entries: readonly T[],
 ): VerifiedCatalogGroup<T>[] {
   const parents = entries.map((_, index) => index);
+  const workIds = entries.map(entry => entry.canonicalWorkId);
   const find = (index: number): number => {
     let current = index;
     while (parents[current] !== current) current = parents[current];
@@ -64,7 +67,9 @@ export function groupVerifiedCatalogEntries<T extends CanonicalEvidenceEntry>(
   const union = (left: number, right: number) => {
     const a = find(left);
     const b = find(right);
-    if (a !== b) parents[b] = a;
+    if (a === b || (workIds[a] && workIds[b] && workIds[a] !== workIds[b])) return;
+    parents[b] = a;
+    workIds[a] ??= workIds[b];
   };
   const firstByRef = new Map<string, number>();
   entries.forEach((entry, index) => {
@@ -143,7 +148,21 @@ export function canonicalGroupPreferenceAliases<T extends CanonicalEvidenceEntry
     canonicalGroupPreferenceKey(group),
     ...group.members.flatMap(member => [
       member.id,
+      ...(member.savedTitleAliases ?? []),
       `${member.sourceId}::${member.mangaId}`,
     ]).filter((id): id is string => Boolean(id)),
+    ...group.sourceBindings.map(ref => `${ref.sourceId}::${ref.mangaId}`),
   ]));
+}
+
+export function resolveCanonicalGroupPreference<T extends CanonicalEvidenceEntry>(
+  group: VerifiedCatalogGroup<T>,
+  preferences: Readonly<Record<string, string>>,
+) {
+  const key = canonicalGroupPreferenceKey(group);
+  const explicit = preferences[key];
+  if (explicit) return { key, sourceId: explicit, conflict: false };
+
+  const choices = new Set(canonicalGroupPreferenceAliases(group).map(alias => preferences[alias]).filter(Boolean));
+  return { key, sourceId: choices.size === 1 ? choices.values().next().value : undefined, conflict: choices.size > 1 };
 }

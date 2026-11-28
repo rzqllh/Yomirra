@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Library dan navigasi katalog
+
+- Satukan bookmark yang terverifikasi sebagai judul yang sama. Pertahankan tautan lama, koleksi, pilihan sumber utama, dan progres tiap sumber.
+- Buka detail judul tersimpan saat sumber utama nonaktif. Tampilkan sumber alternatif yang sudah terverifikasi dan sediakan pencarian kandidat bila diperlukan. Tampilkan chapter terbaru saat data tersedia untuk sumber dan judul yang cocok.
+- Pulihkan katalog asal saat kembali dari detail. Pertahankan tautan kembali ke judul tersimpan saat berpindah chapter di Reader. Letakkan judul dan aksi baca di atas sinopsis pada detail desktop, lalu coba URL sampul alternatif jika URL sebelumnya gagal.
+
 ## Unreleased — UX audit follow-up
 
 - Constrain shared menus to available viewport space, expose selected options as radio items, wrap long labels, and improve visible focus and horizontal-scroll affordances.

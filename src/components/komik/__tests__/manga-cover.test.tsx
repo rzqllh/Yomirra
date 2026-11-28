@@ -1,7 +1,13 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MangaCover } from "../manga-cover";
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { useCoverCacheStore } from "@/shared/store/cover-cache-store";
+
+afterEach(() => {
+  useCoverCacheStore.setState({ resolutions: {} });
+  vi.restoreAllMocks();
+});
 
 describe("MangaCover", () => {
   it("renders valid cover image with correct attributes", () => {
@@ -72,5 +78,33 @@ describe("MangaCover", () => {
 
     expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("No Cover Manga")).not.toBeNull();
+  });
+
+  it("uses a fresh provider cover before a previously recovered URL", () => {
+    const original = "https://images.example.com/fresh.jpg";
+    const cached = "https://images.example.com/recovered.jpg";
+    useCoverCacheStore.getState().setResolvedCover("source", "manga", cached);
+    render(<MangaCover src={original} sourceId="source" mangaId="manga" alt="Manga" />);
+
+    expect(screen.getByRole("img", { name: "Manga" }).getAttribute("src")).toBe(original);
+    fireEvent.error(screen.getByRole("img", { name: "Manga" }));
+    expect(screen.getByRole("img", { name: "Manga" }).getAttribute("src")).toBe(cached);
+  });
+
+  it("shows an unavailable-cover message when no visible fallback title was supplied", () => {
+    render(<MangaCover alt="Manga" />);
+    expect(screen.getByText("Sampul tidak tersedia")).not.toBeNull();
+  });
+
+  it("recovers a missing priority cover from the title provider", async () => {
+    const coverUrl = "https://images.example.com/recovered.jpg";
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { coverUrl } }),
+    } as Response);
+    render(<MangaCover sourceId="source" mangaId="missing-cover" alt="Manga" priority />);
+
+    expect((await screen.findByRole("img", { name: "Manga" })).getAttribute("src")).toBe(coverUrl);
+    expect(request).toHaveBeenCalledTimes(1);
   });
 });

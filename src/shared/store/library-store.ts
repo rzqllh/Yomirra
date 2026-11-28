@@ -5,6 +5,8 @@ import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
+import { libraryItemKey, librarySourceProgress, reconcileLibraryItem, reconcileStoredLibrary, updateLibrarySourceProgress } from "@/shared/lib/library-identity";
+import { canonicalSourceKey, type CanonicalSourceIdentity } from "@/shared/lib/canonical-identity";
 import { isOutboxPathEnabled, enqueueLibraryUpsert, enqueueLibraryDelete } from "@/shared/lib/outbox";
 
 /** A reference to a title on a specific manga provider. */
@@ -15,8 +17,19 @@ export type SourceRef = {
   matchConfidence: "CONFIRMED" | "HIGH_CONFIDENCE" | "AMBIGUOUS" | "NO_MATCH";
 };
 
-export type LibraryItem = {
+export type LibrarySourceProgress = {
+  lastReadChapterId?: string;
+  lastReadChapterTitle?: string;
+  lastReadAt?: string;
+  highestMilestoneChapterId?: string;
+  highestMilestoneChapterTitle?: string;
+  highestMilestoneIndex?: number;
+};
+
+export type LibraryItem = LibrarySourceProgress & {
   id?: string;                    // SavedTitleId — undefined on V0 items pre-migration
+  canonicalWorkId?: string;
+  savedTitleAliases?: string[];
   schemaVersion?: 2;              // marks item as migrated
   primarySourceId?: string;       // active reading provider
   primaryMangaId?: string;        // active reading manga ID
@@ -33,12 +46,7 @@ export type LibraryItem = {
   sourceName?: string;
   addedAt: string;
   updatedAt: string;
-  lastReadChapterId?: string;
-  lastReadChapterTitle?: string;
-  lastReadAt?: string;
-  highestMilestoneChapterId?: string;
-  highestMilestoneChapterTitle?: string;
-  highestMilestoneIndex?: number;
+  progressBySource?: Record<string, LibrarySourceProgress>;
   userRating?: number; // 1-10 rating
   isBookmarked?: boolean;
   isNsfw?: boolean;
@@ -57,6 +65,8 @@ interface LibraryState {
   getLibraryItemById: (savedTitleId: string) => LibraryItem | undefined;
   /** Resolve SavedTitleId for a given sourceId+mangaId pair by scanning linkedSources. */
   resolveBySourceRef: (sourceId: string, mangaId: string) => LibraryItem | undefined;
+  attachAlternateSource: (savedTitleId: string, sourceId: string, mangaId: string) => boolean;
+  recordVerifiedCatalogIdentity: (workId: string, refs: readonly CanonicalSourceIdentity[]) => void;
   /** Relink a title to a new primary source, preserving old source provenance in linkedSources as CONFIRMED. */
   relinkTitle: (
     savedTitleIdOrKey: string,
@@ -91,13 +101,21 @@ type MutationCheckpoint = {
   ownerUid: string | null;
 };
 
-function queueTitleWrite(id: string, operation: () => Promise<void>): Promise<void> {
-  const previous = pendingTitleWrites.get(id) ?? Promise.resolve();
-  const current = previous.catch(() => undefined).then(operation);
-  pendingTitleWrites.set(id, current);
+function queueTitleWrite(id: string, operation: () => Promise<void>, aliases: string[] = []): Promise<void> {
+  const prefix = id.slice(0, id.indexOf(":") + 1);
+  const ids = [id, ...aliases.map(alias => prefix + alias)];
+  const previous = ids.flatMap(key => {
+    const pending = pendingTitleWrites.get(key);
+    return pending ? [pending.catch(() => undefined)] : [];
+  });
+  const current = Promise.all(previous).then(operation);
+  for (const key of ids) pendingTitleWrites.set(key, current);
+  const release = () => {
+    for (const key of ids) if (pendingTitleWrites.get(key) === current) pendingTitleWrites.delete(key);
+  };
   void current.then(
-    () => { if (pendingTitleWrites.get(id) === current) pendingTitleWrites.delete(id); },
-    () => { if (pendingTitleWrites.get(id) === current) pendingTitleWrites.delete(id); }
+    release,
+    release,
   );
   return current;
 }
@@ -132,6 +150,12 @@ function rollbackMutation(
       checkpoint.ownerUid !== getLocalDataOwnerUid()) return false;
   let rolledBack = false;
   setItems((state) => {
+    const supersededMerge = [...checkpoint.versions.keys()].some(key => {
+      const item = checkpoint.applied[key];
+      return item?.savedTitleAliases?.some(alias => checkpoint.before[alias] && !checkpoint.applied[alias]) &&
+        titleMutationVersions.get(key) !== checkpoint.versions.get(key);
+    });
+    if (supersededMerge) return {};
     const next = { ...state.items };
     for (const [key, version] of checkpoint.versions) {
       if (onlyKeys && !onlyKeys.includes(key)) continue;
@@ -154,63 +178,30 @@ export const useLibraryStore = create<LibraryState>()(
 
       addToLibrary: (item) => {
         const previousState = get().items;
-        let itemToPush: LibraryItem = item;
-        set((state) => {
-          if (item.isNsfw === undefined) {
-            const source = dynamicSourceRegistry.get(item.sourceId) || sourceRegistry.find(s => s.id === item.sourceId);
-            if (source) item.isNsfw = source.isNsfw === true;
-            else item.isNsfw = false;
-          }
-          const legacyId = getLibraryId(item.sourceId, item.mangaId);
-          // Check if item already exists to prevent duplicate entries under different keys
-          const existingEntry = Object.entries(state.items).find(
-            ([k, i]) =>
-              k === legacyId ||
-              (item.id && (k === item.id || i.id === item.id)) ||
-              itemReferencesSource(i, item.sourceId, item.mangaId)
-          );
-
-          const existingKey = existingEntry?.[0];
-          const existingItem = existingEntry?.[1];
-
-          // Re-use existing ID if present, otherwise generate new SavedTitleId
-          const savedTitleId = existingItem?.id || item.id || (crypto.randomUUID ? crypto.randomUUID() : legacyId);
-          const existingLinked = existingItem?.linkedSources ?? [];
-          const incomingLinked = item.linkedSources ?? [];
-          const mergedLinked = [...existingLinked];
-          for (const inc of incomingLinked) {
-            if (!mergedLinked.some((l) => l.sourceId === inc.sourceId && l.mangaId === inc.mangaId)) {
-              mergedLinked.push(inc);
-            }
-          }
-
-          const enriched: LibraryItem = {
-            ...existingItem,
-            ...item,
-            isBookmarked: true,
-            id: savedTitleId,
-            schemaVersion: 2,
-            primarySourceId: item.primarySourceId ?? existingItem?.primarySourceId ?? item.sourceId,
-            primaryMangaId: item.primaryMangaId ?? existingItem?.primaryMangaId ?? item.mangaId,
-            linkedSources: mergedLinked,
-          };
-          itemToPush = enriched;
-          const key = existingKey || enriched.id!;
-          return {
-            items: { ...state.items, [key]: enriched }
-          };
-        });
+        const exact = get().getLibraryItem(item.sourceId, item.mangaId);
+        if (exact?.canonicalWorkId && item.canonicalWorkId && exact.canonicalWorkId !== item.canonicalWorkId) {
+          item = { ...item, canonicalWorkId: exact.canonicalWorkId, linkedSources: exact.linkedSources };
+        }
+        const legacyId = getLibraryId(item.sourceId, item.mangaId);
+        const source = dynamicSourceRegistry.get(item.sourceId) || sourceRegistry.find(s => s.id === item.sourceId);
+        const result = reconcileLibraryItem(previousState, {
+          ...item,
+          id: item.id ?? globalThis.crypto?.randomUUID?.() ?? legacyId,
+          isNsfw: item.isNsfw ?? source?.isNsfw === true,
+        }, "save");
+        const itemToPush = result.item;
+        set({ items: result.items });
 
         const checkpoint = captureMutation(previousState, get().items);
 
         // Q138 Outbox-First Dark Launch Branch
-        if (isOutboxPathEnabled()) {
+        if (isOutboxPathEnabled() && !itemToPush.savedTitleAliases?.length) {
           void enqueueLibraryUpsert(itemToPush);
           return;
         }
 
         void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${itemToPush.id ?? getLibraryId(item.sourceId, item.mangaId)}`, () =>
-          pushLibraryItem(itemToPush, checkpoint.ownerUid)
+          pushLibraryItem(itemToPush, checkpoint.ownerUid), itemToPush.savedTitleAliases
         ).catch(() => {
           if (rollbackMutation(checkpoint, set)) {
             toast.error("Gagal Menyimpan ke Akun", {
@@ -220,26 +211,9 @@ export const useLibraryStore = create<LibraryState>()(
         });
       },
 
-      _setItemLocal: (item) => set((state) => {
-        const legacyId = getLibraryId(item.sourceId, item.mangaId);
-        const targetKey = item.id ?? legacyId;
-        // ponytail: clean duplicate keys for same manga to prevent duplicate render in library
-        const newItems: Record<string, LibraryItem> = {};
-        for (const [k, existing] of Object.entries(state.items)) {
-          const isSame =
-            k === targetKey ||
-            k === legacyId ||
-            (item.id && (k === item.id || existing.id === item.id)) ||
-            itemReferencesSource(existing, item.sourceId, item.mangaId);
-          if (!isSame) {
-            newItems[k] = existing;
-          }
-        }
-        newItems[targetKey] = item;
-        return {
-          items: newItems
-        };
-      }),
+      _setItemLocal: (item) => set((state) => ({
+        items: reconcileLibraryItem(state.items, item, "sync").items,
+      })),
 
       removeFromLibrary: (sourceId, mangaId) => {
         const previousState = get().items;
@@ -320,7 +294,8 @@ export const useLibraryStore = create<LibraryState>()(
       },
 
       getLibraryItemById: (savedTitleId) => {
-        return get().items[savedTitleId] ?? Object.values(get().items).find((item) => item.id === savedTitleId);
+        return get().items[savedTitleId] ?? Object.values(get().items).find((item) =>
+          item.id === savedTitleId || item.savedTitleAliases?.includes(savedTitleId));
       },
 
       resolveBySourceRef: (sourceId, mangaId) => {
@@ -329,25 +304,72 @@ export const useLibraryStore = create<LibraryState>()(
         );
       },
 
+      recordVerifiedCatalogIdentity: (workId, refs) => {
+        const before = get().items;
+        if (!workId || refs.length < 2 || Object.values(before).some(item =>
+          refs.some(ref => itemReferencesSource(item, ref.sourceId, ref.mangaId)) &&
+          (item.isNsfw || (item.canonicalWorkId && item.canonicalWorkId !== workId)))) return;
+        const matches = Object.values(before).filter(item =>
+          (item.canonicalWorkId === workId || refs.some(ref => itemReferencesSource(item, ref.sourceId, ref.mangaId))) &&
+          (!item.canonicalWorkId || item.canonicalWorkId === workId));
+        const item = matches.find(match => match.isBookmarked !== false) ?? matches[0];
+        if (!item || (matches.length === 1 && item.canonicalWorkId === workId &&
+            refs.every(ref => itemReferencesSource(item, ref.sourceId, ref.mangaId)))) return;
+        const now = Date.now();
+        const result = reconcileLibraryItem(before, {
+          ...item, id: libraryItemKey(item), canonicalWorkId: workId,
+          linkedSources: [...(item.linkedSources ?? []), ...refs.map(ref => ({
+            ...ref, addedAt: now, matchConfidence: "CONFIRMED" as const,
+          }))],
+          updatedAt: new Date(now).toISOString(),
+        }, "attach");
+        set({ items: result.items });
+        const checkpoint = captureMutation(before, result.items);
+        void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${libraryItemKey(result.item)}`, () =>
+          pushLibraryItem(result.item, checkpoint.ownerUid), result.item.savedTitleAliases
+        ).catch(() => rollbackMutation(checkpoint, set));
+      },
+
+      attachAlternateSource: (savedTitleId, sourceId, mangaId) => {
+        const before = get().items;
+        const item = get().getLibraryItemById(savedTitleId);
+        if (!item || !sourceId || !mangaId) return false;
+        const conflictingRef = Object.values(before).some(other => other !== item &&
+          itemReferencesSource(other, sourceId, mangaId) &&
+          (Boolean(item.isNsfw) !== Boolean(other.isNsfw) ||
+            (item.canonicalWorkId && other.canonicalWorkId && item.canonicalWorkId !== other.canonicalWorkId)));
+        if (conflictingRef) return false;
+        if (itemReferencesSource(item, sourceId, mangaId)) return true;
+        const result = reconcileLibraryItem(before, {
+          ...item,
+          id: libraryItemKey(item),
+          linkedSources: [...(item.linkedSources ?? []), { sourceId, mangaId, addedAt: Date.now(), matchConfidence: "CONFIRMED" }],
+          updatedAt: new Date().toISOString(),
+        }, "attach");
+        set({ items: result.items });
+        const checkpoint = captureMutation(before, result.items);
+        void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${libraryItemKey(result.item)}`, () =>
+          pushLibraryItem(result.item, checkpoint.ownerUid), result.item.savedTitleAliases
+        ).catch(() => {
+          if (rollbackMutation(checkpoint, set)) toast.error("Gagal menyimpan sumber alternatif");
+        });
+        return true;
+      },
+
       relinkTitle: (savedTitleIdOrKey, newSourceId, newMangaId, extra) => {
         const previousState = get().items;
         let updatedItem: LibraryItem | null = null;
 
         set((state) => {
-          let itemKey = savedTitleIdOrKey;
-          let existing = state.items[itemKey];
+          let existing: LibraryItem | undefined = state.items[savedTitleIdOrKey];
 
           if (!existing) {
-            const foundEntry = Object.entries(state.items).find(
-              ([, i]) =>
-                i.id === savedTitleIdOrKey ||
+            existing = Object.values(state.items).find(
+              (i) =>
+                i.id === savedTitleIdOrKey || i.savedTitleAliases?.includes(savedTitleIdOrKey) ||
                 (i.primarySourceId === newSourceId && i.primaryMangaId === newMangaId) ||
                 getLibraryId(i.sourceId, i.mangaId) === savedTitleIdOrKey
             );
-            if (foundEntry) {
-              itemKey = foundEntry[0];
-              existing = foundEntry[1];
-            }
           }
 
           if (!existing) return state;
@@ -384,19 +406,34 @@ export const useLibraryStore = create<LibraryState>()(
             linkedSources: newLinked,
             updatedAt: new Date().toISOString(),
           };
+          if (currentPrimarySourceId !== newSourceId || currentPrimaryMangaId !== newMangaId) {
+            const oldKey = canonicalSourceKey(currentPrimarySourceId, currentPrimaryMangaId);
+            const newKey = canonicalSourceKey(newSourceId, newMangaId);
+            const previousProgress = Object.fromEntries(Object.entries(librarySourceProgress(existing))
+              .filter(([, value]) => value !== undefined));
+            const progressBySource = { ...existing.progressBySource, [oldKey]: previousProgress };
+            const newProgress = progressBySource[newKey];
+            delete progressBySource[newKey];
+            updatedItem = { ...updatedItem, ...librarySourceProgress({}), ...newProgress, progressBySource };
+          }
 
-          return {
-            items: {
-              ...state.items,
-              [itemKey]: updatedItem,
-            },
-          };
+          const conflict = Object.values(state.items).some(item => item !== existing &&
+            itemReferencesSource(item, newSourceId, newMangaId) &&
+            (Boolean(item.isNsfw) !== Boolean(existing.isNsfw) ||
+              (item.canonicalWorkId && existing.canonicalWorkId && item.canonicalWorkId !== existing.canonicalWorkId)));
+          if (conflict) {
+            updatedItem = null;
+            return state;
+          }
+          const result = reconcileLibraryItem(state.items, updatedItem, "attach");
+          updatedItem = result.item;
+          return { items: result.items };
         });
 
         if (updatedItem) {
           const checkpoint = captureMutation(previousState, get().items);
           void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${(updatedItem as LibraryItem).id ?? savedTitleIdOrKey}`, () =>
-            pushLibraryItem(updatedItem!, checkpoint.ownerUid)
+            pushLibraryItem(updatedItem!, checkpoint.ownerUid), (updatedItem as LibraryItem).savedTitleAliases
           ).catch(() => {
             if (rollbackMutation(checkpoint, set)) {
               toast.error("Gagal Memperbarui Sumber", {
@@ -431,7 +468,7 @@ export const useLibraryStore = create<LibraryState>()(
 
           updatedItem = {
             ...existing,
-            ...patch,
+            ...updateLibrarySourceProgress(existing, sourceId, mangaId, patch),
             isNsfw: patch.isNsfw !== undefined ? patch.isNsfw === true : isNsfw === true,
             updatedAt: new Date().toISOString(),
           };
@@ -459,83 +496,26 @@ export const useLibraryStore = create<LibraryState>()(
       },
 
       syncWithCloud: (cloudItems) => set((state) => {
-        const newItems = { ...state.items };
-        let hasChanges = false;
-
-        for (const cloudItem of cloudItems) {
-          const legacyId = getLibraryId(cloudItem.sourceId, cloudItem.mangaId);
-          const localEntry = Object.entries(newItems).find(
-            ([k, i]) =>
-              (cloudItem.id && (k === cloudItem.id || i.id === cloudItem.id)) ||
-              k === legacyId ||
-              itemReferencesSource(i, cloudItem.sourceId, cloudItem.mangaId)
-          );
-
-          if (!localEntry) {
-            const targetKey = cloudItem.id || legacyId;
-            newItems[targetKey] = cloudItem;
-            hasChanges = true;
-          } else {
-            const [localKey, localItem] = localEntry;
-            const localTime = new Date(localItem.updatedAt || localItem.addedAt).getTime();
-            const cloudTime = new Date(cloudItem.updatedAt || cloudItem.addedAt).getTime();
-
-            if (cloudTime > localTime) {
-              newItems[localKey] = { ...localItem, ...cloudItem };
-              hasChanges = true;
-            } else if (localTime > cloudTime) {
-              setTimeout(() => pushLibraryItem(localItem), 0);
-            }
+        let items = state.items;
+        for (const item of cloudItems) items = reconcileLibraryItem(items, item, "sync").items;
+        const cloudById = new Map(cloudItems.map(item => [libraryItemKey(item), item]));
+        const ownerUid = getLocalDataOwnerUid();
+        for (const item of Object.values(items)) {
+          const id = libraryItemKey(item);
+          const remote = cloudById.get(id);
+          if (JSON.stringify(item) !== JSON.stringify(remote)) {
+            void queueTitleWrite(`${ownerUid ?? "guest"}:${id}`, () => pushLibraryItem(item, ownerUid)).catch(() => undefined);
           }
         }
-
-        // Push any local items that don't exist in the cloud
-        const cloudKeys = new Set(cloudItems.map(item => getLibraryId(item.sourceId, item.mangaId)));
-        for (const cloudItem of cloudItems) {
-          if (cloudItem.id) cloudKeys.add(cloudItem.id);
-        }
-        for (const [id, localItem] of Object.entries(state.items)) {
-          const legacyId = getLibraryId(localItem.sourceId, localItem.mangaId);
-          if (!cloudKeys.has(id) && !cloudKeys.has(legacyId) && (!localItem.id || !cloudKeys.has(localItem.id))) {
-            setTimeout(() => pushLibraryItem(localItem), 0);
-          }
-        }
-
-        return hasChanges ? { items: newItems } : state;
+        return { items };
       }),
     }),
     {
       name: "yomirra-library",
       version: 1,
-      onRehydrateStorage: () => (state) => {
-        if (!state?.items) return;
-        // Clean up any duplicate items in local storage
-        const seen = new Map<string, string>();
-        const keysToRemove: string[] = [];
-        for (const [key, item] of Object.entries(state.items)) {
-          const compKey = `${item.primarySourceId ?? item.sourceId}::${item.primaryMangaId ?? item.mangaId}`;
-          if (seen.has(compKey)) {
-            const existingKey = seen.get(compKey)!;
-            const existing = state.items[existingKey];
-            const existingTime = new Date(existing.updatedAt || existing.addedAt).getTime();
-            const itemTime = new Date(item.updatedAt || item.addedAt).getTime();
-            if (itemTime > existingTime || (item.releaseDay !== undefined && existing.releaseDay === undefined)) {
-              keysToRemove.push(existingKey);
-              seen.set(compKey, key);
-            } else {
-              keysToRemove.push(key);
-            }
-          } else {
-            seen.set(compKey, key);
-          }
-        }
-        if (keysToRemove.length > 0) {
-          const cleaned = { ...state.items };
-          for (const k of keysToRemove) {
-            delete cleaned[k];
-          }
-          state.items = cleaned;
-        }
+      merge: (persisted, current) => {
+        const saved = persisted as { items?: Record<string, LibraryItem> } | undefined;
+        return { ...current, items: reconcileStoredLibrary(saved?.items ?? {}) };
       },
       partialize: (state) => ({
         items: Object.fromEntries(

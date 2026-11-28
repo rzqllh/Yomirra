@@ -31,10 +31,23 @@ export async function pushLibraryItem(item: LibraryItem, expectedOwnerUid?: stri
     throw new Error("Account changed before the library write. Cross-account sync blocked.");
   }
   try {
-    const { doc, setDoc } = await import("firebase/firestore");
+    const { doc, setDoc, writeBatch } = await import("firebase/firestore");
     const savedTitleId = item.id ?? `${item.sourceId}::${item.mangaId}`;
     const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
-    await setDoc(doc(db, `users/${user.uid}/libraryV2`, savedTitleId), cleanItem);
+    const path = `users/${user.uid}/libraryV2`;
+    const aliases = (item.savedTitleAliases ?? []).filter(id => id !== savedTitleId && !id.includes("/"));
+    if (!aliases.length) {
+      await setDoc(doc(db, path, savedTitleId), cleanItem);
+      return;
+    }
+    const batch = writeBatch(db);
+    batch.set(doc(db, path, savedTitleId), cleanItem);
+    for (const alias of aliases) {
+      batch.set(doc(db, path, alias), {
+        _deleted: true, _compacted: true, deletedAt: item.updatedAt, mergedInto: savedTitleId,
+      });
+    }
+    await batch.commit();
   } catch (e) {
     console.error("Failed to sync library item", e);
     throw e;

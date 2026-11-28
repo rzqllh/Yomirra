@@ -10,12 +10,14 @@ import { initFirebase } from '@/shared/lib/firebase';
 import { loadFirestore } from "@/shared/lib/firestore-runtime";
 import { pullSourcePreferences, pullLegacyLibraryData, pullCustomCollections } from '@/shared/lib/sync-utils';
 import { useCollectionStore } from '@/shared/store/collection-store';
+import { libraryItemKey, reconcileLibraryItem } from "@/shared/lib/library-identity";
 import { retainHistory } from '@/shared/lib/history-retention';
 import { nextSyncRetryDelayMs } from '@/shared/lib/sync-retry';
 
 type Tombstone = {
   _deleted: true;
   _compacted?: boolean;
+  mergedInto?: string;
   deletedAt: unknown;
   id?: string;
   sourceId?: string;
@@ -40,6 +42,15 @@ const getSafeTimestamp = (value: unknown): number => {
     return Number((value as { seconds: unknown }).seconds) * 1000 || 0;
   }
   return 0;
+};
+
+const sameLibraryRecord = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+  const ordered = (value: Record<string, unknown>) => JSON.stringify(Object.keys(value).sort().map(key =>
+    [key, key === "linkedSources" && Array.isArray(value[key])
+      ? value[key].map(link => [link.sourceId, link.mangaId, link.addedAt, link.matchConfidence])
+      : value[key]],
+  ));
+  return ordered(a) === ordered(b);
 };
 
 const removeLibraryItemLocal = (id: string, item?: Partial<LibraryItem>) => {
@@ -159,8 +170,8 @@ export function useSync(options = { autoSync: true }) {
       const libraryTombstones: Record<string, Tombstone> = {};
       remoteLibrarySnapshot.forEach((remoteDoc) => {
         const item = remoteDoc.data() as LibraryItem & Tombstone;
-        if (item._deleted) libraryTombstones[remoteDoc.id] = item;
-        else remoteLibrary[remoteDoc.id] = item;
+        if (item._deleted || item._compacted) libraryTombstones[remoteDoc.id] = item;
+        else remoteLibrary[remoteDoc.id] = { ...item, id: item.id ?? remoteDoc.id };
       });
 
       const migrationKey = `yomirra-libraryV2-migrated:${uid}`;
@@ -237,32 +248,34 @@ export function useSync(options = { autoSync: true }) {
         else remoteHistory[remoteDoc.id] = item;
       });
 
-      // Merge library with tombstone precedence.
-      const localLibrary = useLibraryStore.getState().items;
-      for (const localItem of Object.values(localLibrary)) {
-        const id = localItem.id ?? `${localItem.sourceId}::${localItem.mangaId}`;
+      let mergedLibrary = useLibraryStore.getState().items;
+      for (const item of Object.values(remoteLibrary)) {
+        mergedLibrary = reconcileLibraryItem(mergedLibrary, item, "sync").items;
+      }
+      for (const [key, item] of Object.entries(mergedLibrary)) {
+        const id = libraryItemKey(item);
         const tombstone = libraryTombstones[id];
-        if (tombstone) {
-          if (getSafeTimestamp(tombstone.deletedAt) >= getSafeTimestamp(localItem.updatedAt)) {
-            removeLibraryItemLocal(id, localItem);
-          } else {
-            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem)); syncedLibCount++;
-          }
+        if (tombstone && (tombstone.mergedInto ||
+            getSafeTimestamp(tombstone.deletedAt) >= getSafeTimestamp(item.updatedAt))) {
+          if (mergedLibrary === useLibraryStore.getState().items) mergedLibrary = { ...mergedLibrary };
+          delete mergedLibrary[key];
           continue;
         }
-        const remoteItem = remoteLibrary[id];
-        if (!remoteItem || getSafeTimestamp(localItem.updatedAt) > getSafeTimestamp(remoteItem.updatedAt)) {
-          pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem)); syncedLibCount++;
+        const remote = remoteLibrary[id];
+        const data = cleanRecord(item);
+        if (!remote || !sameLibraryRecord(data, cleanRecord(remote))) {
+          pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), data);
+          syncedLibCount++;
+        }
+        for (const alias of item.savedTitleAliases ?? []) {
+          if (alias !== id && remoteLibrary[alias] && !alias.includes("/")) {
+            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, alias), {
+              _deleted: true, _compacted: true, mergedInto: id, deletedAt: item.updatedAt,
+            });
+          }
         }
       }
-
-      for (const [id, remoteItem] of Object.entries(remoteLibrary)) {
-        if (!isCurrentUser()) return;
-        const localItem = useLibraryStore.getState().items[id];
-        if (!localItem || getSafeTimestamp(remoteItem.updatedAt) > getSafeTimestamp(localItem.updatedAt)) {
-          useLibraryStore.getState()._setItemLocal(remoteItem);
-        }
-      }
+      useLibraryStore.setState({ items: mergedLibrary });
 
       const mergedHistory = { ...useHistoryStore.getState().items };
       for (const [id, marker] of Object.entries(historyTombstones)) {
@@ -469,20 +482,25 @@ export function useSync(options = { autoSync: true }) {
         remoteSnapshot.docChanges().forEach((change) => {
           const data = change.doc.data() as LibraryItem & Tombstone;
           const localItem = findLibraryItemLocal(change.doc.id, data);
+          const alias = Object.values(useLibraryStore.getState().items).some(item =>
+            item.savedTitleAliases?.includes(change.doc.id));
+          if (data.mergedInto) {
+            if (!alias) removeLibraryItemLocal(change.doc.id);
+            return;
+          }
+          if (alias && (data._deleted || change.type === "removed")) return;
           if (change.type === "removed") {
             removeLibraryItemLocal(change.doc.id, data);
             return;
           }
-          if (data._deleted) {
+          if (data._deleted || data._compacted) {
             if (!localItem || getSafeTimestamp(data.deletedAt) >= getSafeTimestamp(localItem.updatedAt)) {
               removeLibraryItemLocal(change.doc.id, data);
             }
             return;
           }
           if (change.type !== "added" && change.type !== "modified") return;
-          if (!localItem || getSafeTimestamp(data.updatedAt) > getSafeTimestamp(localItem.updatedAt)) {
-            useLibraryStore.getState()._setItemLocal(data);
-          }
+          useLibraryStore.getState()._setItemLocal({ ...data, id: data.id ?? change.doc.id });
         });
       }, (error) => console.error("Library sync listener error:", error));
 

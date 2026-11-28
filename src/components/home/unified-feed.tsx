@@ -2,12 +2,13 @@ import { loadSourceCatalog } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import type { SourceReadOptions, SourceMetadata } from "@/shared/sources/source-types";
-import { HomeFeedClient } from "./home-feed-client";
+import { HomeCatalogSnapshot } from "./home-catalog-snapshot";
 import type { HomeFeedManga } from "./home-feed-selection";
 
 interface UnifiedFeedProps {
   activeSources: SourceMetadata[];
   options?: SourceReadOptions;
+  snapshotScope?: (string | undefined)[];
 }
 
 function interleaveArrays<T>(arrays: T[][]): T[] {
@@ -25,8 +26,8 @@ function interleaveArrays<T>(arrays: T[][]): T[] {
   return result;
 }
 
-export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedProps) {
-  if (activeSources.length === 0) return <HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} />;
+export async function UnifiedFeed({ activeSources, options = {}, snapshotScope }: UnifiedFeedProps) {
+  if (activeSources.length === 0) return <HomeCatalogSnapshot scope={snapshotScope} unifiedPopular={[]} unifiedLatest={[]} />;
 
   const fetchPromises = activeSources.map(async (sourceInfo) => {
     try {
@@ -80,7 +81,8 @@ export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedPr
   const unifiedLatest = interleaveArrays(latestArrays);
 
   return (
-    <HomeFeedClient
+    <HomeCatalogSnapshot
+      scope={snapshotScope}
       unifiedPopular={unifiedPopular}
       unifiedLatest={unifiedLatest}
       catalogState={validResults.length === 0 ? "unavailable" : validResults.length < activeSources.length ? "partial" : unifiedPopular.length + unifiedLatest.length === 0 ? "empty" : undefined}

@@ -32,7 +32,7 @@ describe("coverCacheStore and resolveMangaCover", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     useCoverCacheStore.getState().setResolvedCover("shinigami", "manga-tier1", "https://cdn.example.com/tier1.jpg");
 
-    const resolved = await resolveMangaCover("shinigami", "manga-tier1", "https://old.example.com/dead.jpg");
+    const resolved = await resolveMangaCover("shinigami", "manga-tier1", ["https://old.example.com/dead.jpg"]);
     expect(resolved).toBe("https://cdn.example.com/tier1.jpg");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -48,7 +48,7 @@ describe("coverCacheStore and resolveMangaCover", () => {
       },
     } as any);
 
-    const resolved = await resolveMangaCover("shinigami", "manga-lib", "https://old.example.com/stale.jpg");
+    const resolved = await resolveMangaCover("shinigami", "manga-lib", ["https://old.example.com/stale.jpg"]);
     expect(resolved).toBe("https://lib.example.com/fresh.jpg");
     expect(fetchSpy).not.toHaveBeenCalled();
 
@@ -56,6 +56,34 @@ describe("coverCacheStore and resolveMangaCover", () => {
     expect(useCoverCacheStore.getState().getResolvedCover("shinigami", "manga-lib")).toBe(
       "https://lib.example.com/fresh.jpg"
     );
+  });
+
+  it("does not return the failed URL when both the cache and refreshed details contain it", async () => {
+    const failed = "https://cdn.example.com/broken.jpg";
+    useCoverCacheStore.getState().setResolvedCover("shinigami", "broken", failed);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { coverUrl: failed } }),
+    } as Response);
+
+    await expect(resolveMangaCover("shinigami", "broken", [failed])).resolves.toBeNull();
+    expect(useCoverCacheStore.getState().getResolvedCover("shinigami", "broken")).toBeNull();
+  });
+
+  it("skips previously failed cache and Library covers and keeps a fresh upstream cover", async () => {
+    const cached = "https://cdn.example.com/broken.jpg";
+    const saved = "https://lib.example.com/broken.jpg";
+    const fresh = "https://cdn.example.com/fresh.jpg";
+    useCoverCacheStore.getState().setResolvedCover("shinigami", "healed", cached);
+    const library = useLibraryStore.getState();
+    vi.spyOn(useLibraryStore, "getState").mockReturnValue({
+      ...library,
+      getLibraryItem: () => ({ sourceId: "shinigami", mangaId: "healed", title: "Fixture", coverUrl: saved }) as ReturnType<typeof library.getLibraryItem>,
+    });
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json({ data: { coverUrl: fresh } }));
+
+    await expect(resolveMangaCover("shinigami", "healed", [cached, saved])).resolves.toBe(fresh);
+    expect(useCoverCacheStore.getState().getResolvedCover("shinigami", "healed")).toBe(fresh);
   });
 
   it("INVARIANT: Zero writes to historyStore or Firestore during cover resolution", async () => {
@@ -68,7 +96,7 @@ describe("coverCacheStore and resolveMangaCover", () => {
       json: async () => ({ data: { coverUrl: "https://cdn.example.com/healed.jpg" } }),
     } as any);
 
-    const resolved = await resolveMangaCover("shinigami", "manga-heal", "https://dead.example.com/broken.jpg");
+    const resolved = await resolveMangaCover("shinigami", "manga-heal", ["https://dead.example.com/broken.jpg"]);
     expect(resolved).toBe("https://cdn.example.com/healed.jpg");
 
     // History store MUST NEVER be called

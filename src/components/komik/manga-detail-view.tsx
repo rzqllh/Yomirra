@@ -344,7 +344,7 @@ function MangaDetailContent({
         }
         mobileCoverClassName="vt-cover-mobile"
         mobileCover={
-          <MangaCover src={coverUrl} alt={detail.title} priority />
+          <MangaCover src={coverUrl} sourceId={sourceId} mangaId={mangaId} alt={detail.title} priority />
         }
         mobileMeta={
           <>
@@ -398,39 +398,36 @@ function MangaDetailContent({
         }
         desktopCoverClassName="vt-cover-desktop"
         desktopCover={
-          <MangaCover src={coverUrl} alt={detail.title} priority />
+          <MangaCover src={coverUrl} sourceId={sourceId} mangaId={mangaId} alt={detail.title} priority />
         }
         desktopMeta={
           <>
-            <div>
-              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-snug text-text-primary drop-shadow-xs vt-title-desktop max-w-2xl pb-1.5">
+            <div className="min-w-0">
+              <h1 id="manga-detail-title-desktop" className="text-2xl lg:text-3xl font-bold tracking-tight leading-tight text-text-primary wrap-break-word vt-title-desktop max-w-4xl">
                 {detail.title}
               </h1>
-              {detail.originalTitle && (
-                <p className="text-sm font-medium text-text-secondary mt-1">
+              {detail.originalTitle && detail.originalTitle !== detail.title && (
+                <p className="mt-1 text-sm text-text-secondary wrap-break-word">
                   {detail.originalTitle}
                 </p>
               )}
+              {authorDisplay && <p className="mt-1 text-sm font-medium text-text-secondary wrap-break-word">{authorDisplay}</p>}
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               {detail.format && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
+                <span className="text-xs font-medium text-text-secondary">
                   {detail.format}
                 </span>
               )}
-              {Number(displayScore) > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-bold tracking-wide backdrop-blur-md border border-amber-500/30 bg-surface-raised/85 text-amber-500 shadow-xs">
-                  <Star weight="fill" size={12} className="text-amber-500" />
+              {Number(displayScore) > 0 && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-text-secondary">
+                  <Star weight="fill" size={12} className="text-semantic-warning" aria-hidden="true" />
                   <span suppressHydrationWarning>{Number(displayScore).toFixed(1)}</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-medium tracking-wide backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-muted shadow-xs">
-                  <span>Belum dinilai</span>
                 </span>
               )}
               {detail.status && detail.status !== "UNKNOWN" && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
+                <span className="text-xs font-medium text-text-secondary">
                   {detail.status}
                 </span>
               )}
@@ -441,31 +438,20 @@ function MangaDetailContent({
               />
             </div>
 
-            <div className="flex flex-col gap-0.5">
-              {authorDisplay && (
-                <p className="text-base font-semibold text-text-primary/90 drop-shadow-xs">
-                  {authorDisplay}
-                </p>
-              )}
-            </div>
           </>
         }
         mainAction={renderMainAction()}
         actions={renderActions()}
         synopsis={
           <>
-            {metadataHref && metadataReference && (
-              <p className="mb-3 text-xs text-text-secondary">
-                Referensi metadata: <a href={metadataHref} className="text-accent underline" rel="noreferrer">{metadataReference.title} (MangaUpdates)</a>.
-              </p>
-            )}
-            <div className="flex items-center justify-between mb-2.5">
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3">
               <h2 className="text-base font-bold tracking-tight text-text-primary">Sinopsis</h2>
-              {cleanedSynopsis.length > 280 && (
+              {cleanedSynopsis.length > 240 && (
                 <button
+                  type="button"
                   aria-expanded={isExpanded}
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-2xs font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                  className="inline-flex min-h-8 items-center gap-1 rounded-sm text-xs font-semibold text-accent transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   {isExpanded ? "Lebih sedikit" : "Selengkapnya"}
                   <MorphIcon
@@ -484,12 +470,17 @@ function MangaDetailContent({
             >
               <p className={cn(
                 "text-xs md:text-sm leading-relaxed text-text-secondary break-words",
-                !isExpanded && "line-clamp-4"
+                !isExpanded && cleanedSynopsis.length > 240 && "line-clamp-4"
               )}>
                 {cleanedSynopsis || "Sinopsis belum tersedia"}
               </p>
             </motion.div>
 
+            {metadataHref && metadataReference && (
+              <p className="mt-2 text-xs text-text-secondary">
+                Referensi metadata: <a href={metadataHref} className="text-accent underline" rel="noreferrer">{metadataReference.title} (MangaUpdates)</a>.
+              </p>
+            )}
             {detail.genres && detail.genres.length > 0 && (
               <div className="mt-3.5 flex flex-wrap gap-1.5">
                 {detail.genres.map((g) => (

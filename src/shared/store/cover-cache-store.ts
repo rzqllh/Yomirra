@@ -151,9 +151,9 @@ function releaseFetchSlot(): void {
 export async function resolveMangaCover(
   sourceId: string,
   mangaId: string,
-  initialCoverUrl?: string
+  failedCoverUrls: readonly string[] = []
 ): Promise<string | null> {
-  if (!sourceId || !mangaId) return initialCoverUrl || null;
+  if (!sourceId || !mangaId) return null;
 
   const store = useCoverCacheStore.getState();
 
@@ -164,15 +164,16 @@ export async function resolveMangaCover(
 
   // Tier 1: Local cover resolution cache
   const cached = store.getResolvedCover(sourceId, mangaId);
-  if (cached) {
+  if (cached && !failedCoverUrls.includes(cached)) {
     return cached;
   }
+  if (cached) store.markFailed(sourceId, mangaId);
 
   // Tier 2: Check libraryStore for fresh metadata
   try {
     const libState = useLibraryStore.getState();
     const libItem = libState.getLibraryItem?.(sourceId, mangaId);
-    if (libItem?.coverUrl && libItem.coverUrl !== initialCoverUrl) {
+    if (libItem?.coverUrl && !failedCoverUrls.includes(libItem.coverUrl)) {
       store.setResolvedCover(sourceId, mangaId, libItem.coverUrl, "library");
       return libItem.coverUrl;
     }
@@ -184,7 +185,8 @@ export async function resolveMangaCover(
   const key = `${sourceId}::${mangaId}`;
   const existingPromise = inFlightRequests.get(key);
   if (existingPromise) {
-    return existingPromise;
+    const candidate = await existingPromise;
+    return candidate && !failedCoverUrls.includes(candidate) ? candidate : null;
   }
 
   // Tier 3: Bounded Upstream Fetch
@@ -205,7 +207,7 @@ export async function resolveMangaCover(
       const data = (await res.json()) as { coverUrl?: string; data?: { coverUrl?: string } };
       const resolvedUrl = data.coverUrl || data.data?.coverUrl;
 
-      if (resolvedUrl && typeof resolvedUrl === "string") {
+      if (resolvedUrl && typeof resolvedUrl === "string" && !failedCoverUrls.includes(resolvedUrl)) {
         store.setResolvedCover(sourceId, mangaId, resolvedUrl, "upstream");
         return resolvedUrl;
       } else {

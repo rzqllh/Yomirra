@@ -622,6 +622,33 @@ describe("useSync cloud correctness", () => {
     expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBe("true");
   });
 
+  it("folds alternate cloud bookmarks and keeps retired aliases from resurrecting a deleted work", async () => {
+    const canonicalWorkId = 'tracker:["anilist","123","manga"]';
+    const anchor = { ...libraryItem(), id: "anchor", canonicalWorkId };
+    const alternate = { ...libraryItem("2026-10-08"), id: "retired", sourceId: "other", canonicalWorkId };
+    const path = "users/user-a/libraryV2";
+    mocks.snapshots.set(path, snapshot([[anchor.id, anchor], [alternate.id, alternate]]));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+
+    await act(async () => { await result.current.runFullSync(); });
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["anchor"]);
+    expect(useLibraryStore.getState().getLibraryItemById("retired")?.id).toBe("anchor");
+    expect(mocks.writes).toContainEqual({
+      path: `${path}/retired`,
+      data: expect.objectContaining({ _compacted: true, mergedInto: "anchor" }),
+    });
+
+    useLibraryStore.setState({ items: { [alternate.id]: alternate } });
+    mocks.writes.length = 0;
+    mocks.snapshots.set(path, snapshot([
+      ["anchor", { _deleted: true, deletedAt: "2026-10-10" }],
+      ["retired", { _deleted: true, _compacted: true, mergedInto: "anchor", deletedAt: "2026-10-08" }],
+    ]));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(useLibraryStore.getState().items).toEqual({});
+    expect(mocks.writes).toEqual([]);
+  });
+
   it("does not import pending legacy results after an account switch", async () => {
     let release!: (items: ReturnType<typeof libraryItem>[]) => void;
     vi.mocked(pullLegacyLibraryData).mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));

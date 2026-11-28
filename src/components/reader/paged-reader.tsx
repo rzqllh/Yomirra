@@ -11,7 +11,7 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers";
 import { PageItem, Chapter } from "@/shared/types/source";
 import { ReaderImage } from "./reader-image";
-import { getReaderHref } from "@/shared/lib/routes";
+import { getReaderChapterHref } from "./reader-navigation";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useVisibilityFlush } from "@/shared/hooks/use-visibility-flush";
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer";
@@ -188,8 +188,8 @@ export function PagedReader({
     if (currentPageIndex < totalPages - 1) {
       setCurrentPageIndex(prev => prev + 1);
     } else if (nextChapterId) {
-      const href = getReaderHref(sourceId, mangaId, nextChapterId);
-      if (beginNavigationIntent(href)) {
+      const href = getReaderChapterHref(sourceId, mangaId, nextChapterId);
+      if (beginNavigationIntent(href, "replace")) {
         if (canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) {
           markChapterProgress(sourceId, mangaId, chapterId, totalPages - 1, totalPages, 100);
         }
@@ -203,8 +203,8 @@ export function PagedReader({
     if (currentPageIndex > 0) {
       setCurrentPageIndex(prev => prev - 1);
     } else if (prevChapterId) {
-      const href = getReaderHref(sourceId, mangaId, prevChapterId);
-      if (beginNavigationIntent(href)) router.replace(href);
+      const href = getReaderChapterHref(sourceId, mangaId, prevChapterId);
+      if (beginNavigationIntent(href, "replace")) router.replace(href);
     }
   }, [currentPageIndex, prevChapterId, router, sourceId, mangaId]);
 

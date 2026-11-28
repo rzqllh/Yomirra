@@ -26,6 +26,8 @@ import {
 import { PageToolbar } from "@/components/ui/layout";
 import { cn } from "@/shared/utils/cn";
 import type { Collection } from "@/shared/types/collection";
+import type { MangaUpdateItem } from "@/shared/types/update";
+import { getUpdateKey, useUpdateStore } from "@/shared/store/update-store";
 import type {
   SmartCollection,
   SmartCollectionId,
@@ -105,6 +107,7 @@ export function CollectionTab({
   onRenameCollection,
   onDeleteCollection,
 }: CollectionTabProps) {
+  const chapterUpdates = useUpdateStore((state) => state.items);
   // Dialog states for collection management
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [isRenameOpen, setIsRenameOpen] = React.useState(false);
@@ -440,6 +443,13 @@ export function CollectionTab({
             {paginatedCollection.map((manga) => {
               const itemKey = `${manga.sourceId}::${manga.mangaId}`;
               const isSelected = selectedItems.has(itemKey);
+              const savedUpdate = manga.id ? chapterUpdates[manga.id] : undefined;
+              const legacyUpdate = chapterUpdates[getUpdateKey(manga.sourceId, manga.mangaId)];
+              const savedChapterUpdates = [savedUpdate, legacyUpdate].filter((update): update is MangaUpdateItem =>
+                update !== undefined && Boolean(update.latestChapterId) &&
+                update.sourceId === manga.sourceId &&
+                update.mangaId === manga.mangaId
+              );
 
               return (
                 <div key={itemKey} className="relative group h-full flex flex-col">
@@ -456,6 +466,8 @@ export function CollectionTab({
                       canonicalDetailHref={getCanonicalSavedDetailHref(manga.id ?? `${manga.sourceId}::${manga.mangaId}`)}
                       showBookmarkAction={false}
                       showSourceBadge={true}
+                      savedLibraryCard
+                      savedChapterUpdates={savedChapterUpdates}
                     />
                   </div>
 

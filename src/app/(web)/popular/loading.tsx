@@ -1,5 +1,5 @@
-import { PopularPageSkeleton } from "@/components/skeletons/popular-skeleton";
+import { PopularCatalogFallback } from "@/components/popular/popular-catalog-snapshot";
 
 export default function Loading() {
-  return <PopularPageSkeleton />;
+  return <PopularCatalogFallback />;
 }

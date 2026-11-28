@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {getPublicMetadataWork} from "@/server/lib/metadata/mangabaka";
+import { CatalogBackButton } from "@/components/komik/catalog-back-button";
 export const dynamic="force-dynamic";
 export const metadata={title:"Katalog metadata - Yomirra",robots:{index:false,follow:false}};
 export default async function MetadataWorkPage({params}:{params:Promise<{workId:string}>}){
@@ -9,7 +10,7 @@ export default async function MetadataWorkPage({params}:{params:Promise<{workId:
   const work=await getPublicMetadataWork(Number(workId));
   if(!work)notFound();
   return <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 pb-24">
-    <Link href="/search" className="text-sm text-accent underline">Kembali ke pencarian</Link>
+    <CatalogBackButton fallback="/search" />
     <section className="space-y-3 rounded-xl border border-border-subtle bg-surface-raised p-5">
       <h1 className="text-2xl font-bold text-text-primary">{work.title}</h1>
       <p className="text-sm text-text-secondary">{work.format}{work.authors?.length?` · ${work.authors.join(", ")}`:""}</p>

@@ -34,7 +34,10 @@ export const useUpdateStore = create<UpdateState>()(
 
         // Use savedTitleId if provided (Phase 1 UUID titles), else fall back to composite key
         const key = update.savedTitleId ?? getUpdateKey(update.sourceId, update.mangaId);
-        const existing = state.items[key];
+        const savedUpdate = state.items[key];
+        const existing = savedUpdate?.sourceId === update.sourceId && savedUpdate.mangaId === update.mangaId
+          ? savedUpdate
+          : undefined;
         const nowIso = new Date().toISOString();
 
         let finalDetectedAt = update.detectedAt;

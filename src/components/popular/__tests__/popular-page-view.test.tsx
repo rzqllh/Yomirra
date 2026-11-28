@@ -1,9 +1,34 @@
 import { act, render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { useSyncExternalStore } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PopularPageView } from "../popular-page-view";
 import { MalPopularSection } from "../mal-popular-section";
 import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
 import type { MalPopularFeed } from "@/shared/types/mal";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/populer",
+  useSearchParams() {
+    const query = useSyncExternalStore((notify) => {
+      window.addEventListener("test-search-change", notify);
+      return () => window.removeEventListener("test-search-change", notify);
+    }, () => window.location.search);
+    return new URLSearchParams(query);
+  },
+}));
+
+beforeEach(() => {
+  const replaceState = window.history.replaceState.bind(window.history);
+  vi.spyOn(window.history, "replaceState").mockImplementation((state, title, url) => {
+    replaceState(state, title, url);
+    window.dispatchEvent(new Event("test-search-change"));
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  window.history.replaceState(null, "", "/");
+});
 
 const mockFeeds: PopularSourceFeed[] = [
   {

@@ -4,9 +4,12 @@ import * as React from "react";
 import { MangaCard } from "./manga-card";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
+import type { MangaUpdateItem } from "@/shared/types/update";
 
 export interface ShelfCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
+  savedLibraryCard?: boolean;
+  savedChapterUpdates?: MangaUpdateItem[];
   sourceBindings?: SourceBinding[];
   canonicalDetailHref?: string;
   showBookmarkAction?: boolean;

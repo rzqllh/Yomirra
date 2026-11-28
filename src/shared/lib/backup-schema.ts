@@ -7,7 +7,7 @@ const isIsoDate = (val: string) => !isNaN(Date.parse(val));
 const sourceRefBackupSchema = z.object({
   sourceId: z.string().min(1),
   mangaId: z.string().min(1),
-  addedAt: z.number().positive().finite(),
+  addedAt: z.number().nonnegative().finite(),
   matchConfidence: z.enum(["CONFIRMED", "HIGH_CONFIDENCE", "AMBIGUOUS", "NO_MATCH"]),
 });
 
@@ -148,6 +148,12 @@ export const yomirraBackupSchemaV2 = z.object({
 
 // V3 library item schema — includes Phase 1 identity fields
 export const libraryItemV2BackupSchema = libraryItemBackupSchema.extend({
+  canonicalWorkId: z.string().optional(),
+  savedTitleAliases: z.array(z.string()).optional(),
+  progressBySource: z.record(z.string(), libraryItemBackupSchema.pick({
+    lastReadChapterId: true, lastReadChapterTitle: true, lastReadAt: true,
+    highestMilestoneChapterId: true, highestMilestoneChapterTitle: true, highestMilestoneIndex: true,
+  })).optional(),
   id: z.string().min(1).optional(), // SavedTitleId
   schemaVersion: z.literal(2).optional(),
   primarySourceId: z.string().min(1).optional(),

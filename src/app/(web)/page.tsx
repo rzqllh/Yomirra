@@ -8,7 +8,8 @@ import { cookies } from "next/headers";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { UnifiedFeed } from "@/components/home/unified-feed";
-import { SourceFeedSkeleton } from "@/components/home/source-feed-skeleton";
+import { HomeCatalogFallback } from "@/components/home/home-catalog-snapshot";
+import { catalogSnapshotScope } from "@/shared/lib/catalog-snapshot-scope";
 import { parseDisabledSourceIdsCookie, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 
 export const metadata: Metadata = {
@@ -33,8 +34,8 @@ export default async function HomePage() {
 
   return (
     <HomeView>
-      <Suspense fallback={<SourceFeedSkeleton />}>
-        <UnifiedFeed activeSources={activeSources} options={readOptions} />
+      <Suspense fallback={<HomeCatalogFallback />}>
+        <UnifiedFeed activeSources={activeSources} options={readOptions} snapshotScope={readOptions.hideNsfw !== false ? catalogSnapshotScope((name) => cookieStore.get(name)?.value) : undefined} />
       </Suspense>
 
       {activeSources.length === 0 && (

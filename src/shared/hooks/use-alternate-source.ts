@@ -23,6 +23,8 @@ interface UseAlternateSourceOptions {
   knownTitle?: string;
   knownAuthor?: string;
   currentChapterTitle?: string;
+  blockedSourceIds?: ReadonlySet<string>;
+  onConfirmed?: (candidate: AlternateSourceCandidate) => boolean;
 }
 
 export function useAlternateSource({
@@ -32,6 +34,8 @@ export function useAlternateSource({
   knownAuthor: initialAuthor,
   currentChapterId,
   currentChapterTitle,
+  blockedSourceIds,
+  onConfirmed,
 }: UseAlternateSourceOptions) {
   const router = useRouter();
 
@@ -66,6 +70,7 @@ export function useAlternateSource({
           s.isEnabled &&
           s.isInstalled &&
           !disabledSources.includes(s.id) &&
+          !blockedSourceIds?.has(s.id) &&
           s.status !== "in-fix" && s.status !== "in-dev" && !s.maintenance &&
           isSourceContentVisible(s, hideNsfw)
       );
@@ -117,24 +122,34 @@ export function useAlternateSource({
     } finally {
       setIsSearching(false);
     }
-  }, [sourceId, title, author, disabledSources, hideNsfw]);
+  }, [sourceId, title, author, disabledSources, hideNsfw, blockedSourceIds]);
 
   const handleConfirm = useCallback((candidate: AlternateSourceCandidate, chapterId?: string) => {
-    // Selecting another source is navigation, not proof of work/release
-    // equivalence. Preserve the original source, preference and cursors.
-    if (eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
+    if (blockedSourceIds?.has(candidate.sourceId) ||
+        eligibleCanonicalBindings([candidate], disabledSources, hideNsfw).length !== 1) {
       toast.error("Sumber tidak dapat dibuka");
+      return;
+    }
+    if (onConfirmed) {
+      if (onConfirmed(candidate)) {
+        setIsOpen(false);
+        toast.success("Sumber ditambahkan");
+      } else {
+        toast.error("Sumber tidak dapat ditambahkan ke komik ini");
+      }
       return;
     }
     setIsOpen(false);
     router.replace(chapterId ? getReaderHref(candidate.sourceId, candidate.mangaId, chapterId) : getMangaDetailHref(candidate.sourceId, candidate.mangaId));
-  }, [disabledSources, hideNsfw, router]);
+  }, [disabledSources, hideNsfw, router, blockedSourceIds, onConfirmed]);
 
   return {
     isOpen,
     setIsOpen,
     isSearching,
-    candidates,
+    candidates: blockedSourceIds
+      ? candidates.filter(candidate => !blockedSourceIds.has(candidate.sourceId))
+      : candidates,
     chapterMapResult,
     mappingChapterTitle,
     openAndSearch,

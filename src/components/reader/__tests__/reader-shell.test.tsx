@@ -6,7 +6,8 @@ import { useReaderStore } from "@/shared/store/reader-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { toast } from "sonner";
 import { noteCompletedChapter } from "@/shared/lib/bookmark-suggestion";
-import { endNavigationIntent } from "@/shared/lib/navigation-intent";
+import { beginNavigationIntent, commitNavigationParent, endNavigationIntent } from "@/shared/lib/navigation-intent";
+import { getReaderChapterHref } from "../reader-navigation";
 
 const mockRouterBack = vi.fn();
 const mockRouterPush = vi.fn();
@@ -103,6 +104,38 @@ describe("ReaderShell Header & Progress Bar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Kembali ke detail komik" }));
     expect(mockRouterBack).not.toHaveBeenCalled();
     expect(mockRouterReplace).toHaveBeenCalledWith("/manga/srcA/m1");
+  });
+
+  it("returns to the saved entry after replacing the reader chapter", () => {
+    const savedHref = "/catalog/saved/saved%3A%3Atitle";
+    const returnQuery = "?returnTo=%2Fcatalog%2Fsaved%2Fsaved%253A%253Atitle";
+    const readerHref = `/manga/srcA/m1/read/ch-1${returnQuery}`;
+    window.history.replaceState({}, "", savedHref);
+    beginNavigationIntent(readerHref);
+    window.history.pushState({}, "", readerHref);
+    commitNavigationParent();
+    endNavigationIntent();
+
+    const nextHref = getReaderChapterHref("srcA", "m1", "ch-2");
+    expect(nextHref).toBe(`/manga/srcA/m1/read/ch-2${returnQuery}`);
+    beginNavigationIntent(nextHref, "replace");
+    window.history.replaceState({}, "", nextHref);
+    commitNavigationParent();
+
+    render(<ReaderShell sourceId="srcA" mangaId="m1"><div>Content</div></ReaderShell>);
+    fireEvent.click(screen.getByRole("button", { name: "Kembali ke detail komik" }));
+    expect(mockRouterBack).toHaveBeenCalledOnce();
+    expect(mockRouterReplace).not.toHaveBeenCalled();
+  });
+
+  it("uses source detail when a direct reader link merely names a saved entry", () => {
+    const returnQuery = "?returnTo=%2Fcatalog%2Fsaved%2Fdirect-title";
+    window.history.replaceState({}, "", `/manga/srcA/m1/read/ch-1${returnQuery}`);
+
+    render(<ReaderShell sourceId="srcA" mangaId="m1"><div>Content</div></ReaderShell>);
+    fireEvent.click(screen.getByRole("button", { name: "Kembali ke detail komik" }));
+    expect(mockRouterBack).not.toHaveBeenCalled();
+    expect(mockRouterReplace).toHaveBeenCalledWith(`/manga/srcA/m1${returnQuery}`);
   });
 
   it("offers a bookmark once after four completed chapters and never toggles an existing save off", () => {

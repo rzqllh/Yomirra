@@ -36,6 +36,8 @@ route
 
 Cari, Jelajah, dan Library sudah memakai pola ini.
 
+Navigasi dari katalog ke detail membawa tujuan kembali yang divalidasi. Cache TanStack Query di browser memungkinkan pemakaian kembali data katalog yang masih sesuai dengan konteks penjelajahan. Snapshot Beranda dan Populer menyertakan cakupan pengaturan katalog. Redis menyimpan cache respons di server. Jika dikonfigurasi, Turso dapat menyimpan metadata dan identitas katalog.
+
 Ownership komponen lintas feature saat ini:
 
 ```text

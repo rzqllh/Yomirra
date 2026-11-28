@@ -17,6 +17,7 @@ export interface MangaUpdateItem {
   latestChapterTitle?: string;
 
   detectedSourceId?: string;
+  detectedMangaId?: string;
   detectedSourceName?: string;
   isAlternateSource?: boolean;
 

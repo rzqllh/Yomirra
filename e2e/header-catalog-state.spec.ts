@@ -138,17 +138,17 @@ for (const { id, heading } of [
     await openRoute(page, `/catalog/saved/${id}`);
 
     const main = page.getByRole("main");
-    const back = main.getByRole("link", { name: "Kembali ke Library", exact: true });
+    const back = main.getByRole("button", { name: "Kembali", exact: true });
     for (const width of [767, 768]) {
       await page.setViewportSize({ width, height: 640 });
       await expect(main).toHaveCount(1);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(main.getByRole("heading", { name: heading, level: 1, exact: true })).toBeVisible();
-      await expect(back).toHaveAttribute("href", "/bookmark");
+      await expect(back).toBeVisible();
     }
 
     await back.press("Enter");
-    await expect(page).toHaveURL(/\/bookmark(?:\?|$)/);
+    await expect(page).toHaveURL("/bookmark?tab=collection");
     await expect(main.getByRole("heading", { name: "Library", level: 1, exact: true })).toBeVisible();
   });
 }

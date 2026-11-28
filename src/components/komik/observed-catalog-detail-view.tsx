@@ -19,8 +19,10 @@ import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
 import { SourceQualitySort } from "./source-quality-sort";
 import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
-import { MangaCover } from "./manga-cover";
+import { CatalogDetailSummary } from "./catalog-detail-summary";
+import { CatalogBackButton } from "./catalog-back-button";
 import { Button } from "@/components/ui/button";
+import { BookmarkButton } from "./bookmark-button";
 
 export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceIdentity[];returnTo:string}) {
   const router=useRouter();
@@ -70,8 +72,8 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
       router.push(decision.chapterId?getReaderHref(ref.sourceId,ref.mangaId,decision.chapterId,returnTo):getMangaDetailHref(ref.sourceId,ref.mangaId,returnTo));
     }else setShowPicker(true);
   };
-  return <main className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
-    <Link href={returnTo} className="text-sm text-accent underline">Kembali</Link>
+  return <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-28 md:px-8">
+    <CatalogBackButton fallback={returnTo} />
     {query.isFetching && !query.data ? <p role="status" className="text-sm text-text-secondary">Memeriksa detail sumber…</p> :
     !primary ? <section className="space-y-3 rounded-xl border border-border-subtle bg-surface-raised p-5">
       <h1 className="text-xl font-bold">Katalog belum tersedia</h1>
@@ -79,24 +81,28 @@ export function ObservedCatalogDetailView({refs,returnTo}:{refs:CanonicalSourceI
       {available.length>0 && <Button variant="outline" onClick={()=>void query.refetch()}>Coba lagi</Button>}
     </section> :
     <>
-      <section className="flex flex-col sm:flex-row gap-5 rounded-xl border border-border-subtle bg-surface-raised p-4 sm:p-5">
-        <div className="w-32 sm:w-40 shrink-0 aspect-[2/3] overflow-hidden rounded-lg">
-          <MangaCover src={primary.detail.coverUrl} sourceId={primary.sourceId} mangaId={primary.mangaId} alt={primary.detail.title} fallbackTitle={primary.detail.title} />
+      <CatalogDetailSummary
+        title={primary.detail.title}
+        author={primary.detail.author}
+        coverUrl={primary.detail.coverUrl}
+        sourceId={primary.sourceId}
+        mangaId={primary.mangaId}
+        actions={<>
+          <Button variant="primary" onClick={resume}>Lanjut baca</Button>
+          <Button variant="outline" onClick={()=>setShowPicker(true)}>Pilih sumber</Button>
+          {result.workKey && <BookmarkButton sourceId={primary.sourceId} manga={{
+            ...primary.detail,
+            verifiedCatalogIdentity: { workId: result.workKey, refs },
+          }} />}
+        </>}
+      >
+        <div className="space-y-1 border-t border-border-default/70 pt-3">
+          <h2 className="font-bold text-text-primary">Sinopsis</h2>
+          <p>{primary.detail.description || "Sinopsis belum tersedia."}</p>
         </div>
-        <div className="min-w-0 flex-1 space-y-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-text-primary">{primary.detail.title}</h1>
-          {primary.detail.author && <p className="text-sm text-text-secondary">{primary.detail.author}</p>}
-          <p className="text-sm text-text-secondary">{primary.detail.description || "Sinopsis belum tersedia."}</p>
-          <p role="status" className="text-xs text-text-muted">{result.verified ?
-            "Identitas eksternal sumber cocok. Posisi membaca tetap terpisah." :
-            "Identitas semua sumber belum terverifikasi. Setiap detail ditampilkan terpisah; tidak ada penggabungan permanen."}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary" onClick={resume}>Lanjut baca</Button>
-            <Button variant="outline" onClick={()=>setShowPicker(true)}>Pilih sumber</Button>
-          </div>
-        </div>
-      </section>
-      <section aria-label="Sumber katalog" className="space-y-3">
+        {!result.verified && <p role="status" className="text-xs text-text-muted">Sebagian identitas sumber masih perlu diverifikasi.</p>}
+      </CatalogDetailSummary>
+      <section aria-label="Sumber katalog" className="space-y-3 border-t border-border-subtle pt-4">
         <h2 className="text-lg font-bold">Sumber bacaan</h2>
         {showPicker && <p role="status" className="text-sm text-text-secondary">Pilih sumber untuk membaca. Pilihan ini tidak mengganti sumber utama.</p>}
         {result.visible.length>1&&<SourceQualitySort value={qualitySort} onChange={setQualitySort}/>}

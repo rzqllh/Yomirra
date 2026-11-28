@@ -175,6 +175,39 @@ describe("MangaCard", () => {
     expect(screen.getByRole("dialog")).toBeDefined();
   });
 
+  it("preserves the cover and detail link for a saved card with an unavailable source", () => {
+    useSourcePreferencesStore.setState({ disabledSources: ["mangadex"] });
+    render(<MangaCard sourceId="mangadex" manga={{ id: "disabled", title: "Saved work", coverUrl: "" }}
+      canonicalDetailHref="/catalog/saved/saved-id" showSourceBadge savedLibraryCard />);
+
+    const link = screen.getByRole("link", { name: "Lihat katalog Saved work" });
+    expect(link.getAttribute("href")).toBe("/catalog/saved/saved-id");
+    expect(link.getAttribute("aria-disabled")).toBeNull();
+    expect(screen.getByText("Sumber belum tersedia")).toBeTruthy();
+    expect(screen.queryByText(/Cari alternatif|Sumber Nonaktif|Bab terbaru belum tersedia/)).toBeNull();
+  });
+
+  it("does not label a saved primary's latest chapter with the active alternate's provider", () => {
+    useSourcePreferencesStore.setState({ disabledSources: ["komiku"] });
+    render(<MangaCard sourceId="komiku" manga={{ id: "primary", title: "Saved work", coverUrl: "", latestChapter: "Chapter 42" }}
+      sourceBindings={[{ sourceId: "mangadex", mangaId: "alternate", title: "Saved work" }]}
+      canonicalDetailHref="/catalog/saved/saved-id" showSourceBadge savedLibraryCard />);
+    expect(screen.getByText("MangaDex")).toBeTruthy();
+    expect(screen.queryByText("Chapter 42")).toBeNull();
+  });
+
+  it.each([undefined, "previous-edition", "alternate"])("matches the displayed alternate's exact chapter identity (%s)", (detectedMangaId) => {
+    useSourcePreferencesStore.setState({ disabledSources: ["komiku"] });
+    render(<MangaCard sourceId="komiku" manga={{ id: "primary", title: "Saved work", coverUrl: "" }}
+      sourceBindings={[{ sourceId: "mangadex", mangaId: "alternate", title: "Saved work" }]}
+      savedChapterUpdates={[{
+        sourceId: "komiku", mangaId: "primary", mangaTitle: "Saved work", latestChapterId: "chapter-55",
+        latestChapterTitle: "Chapter 55", detectedSourceId: "mangadex", detectedMangaId, isAlternateSource: true,
+      }]}
+      canonicalDetailHref="/catalog/saved/saved-id" showSourceBadge savedLibraryCard />);
+    expect(Boolean(screen.queryByText("Chapter 55"))).toBe(detectedMangaId === "alternate");
+  });
+
   it.each(["grid", "compact", "rank"] as const)(
     "blocks navigation when the only non-aggregated source is disabled (%s)",
     (mode) => {

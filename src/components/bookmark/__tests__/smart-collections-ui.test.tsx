@@ -1,11 +1,27 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ShelfCard } from "@/components/komik/card";
 import { CollectionTab } from "../collection-tab";
+import type { MangaUpdateItem } from "@/shared/types/update";
 
 vi.mock("@/components/komik/card", () => ({
-  ShelfCard: ({ manga }: { manga: { title: string } }) => (
-    <div data-testid="shelf-card">{manga.title}</div>
-  ),
+  ShelfCard: vi.fn(({ manga }: { manga: { title: string } }) => <div>{manga.title}</div>),
+}));
+
+const { updates } = vi.hoisted(() => {
+  const updates: Record<string, MangaUpdateItem> = {
+    "saved-a": { sourceId: "source-a", mangaId: "a", mangaTitle: "A", latestChapterId: "ch-81", latestChapterTitle: "Chapter 81" },
+    "source-a::b": { sourceId: "source-a", mangaId: "b", mangaTitle: "B", latestChapterId: "ch-0", latestChapterNumber: 0 },
+    "saved-c": { sourceId: "source-a", mangaId: "c", mangaTitle: "C", latestChapterId: "ch-99", latestChapterNumber: 99, detectedSourceId: "source-b" },
+    "saved-d": { sourceId: "source-b", mangaId: "d", mangaTitle: "D", latestChapterId: "ch-999", latestChapterNumber: 999 },
+    "saved-e": { sourceId: "source-a", mangaId: "e", mangaTitle: "E", latestChapterId: "ch-999", latestChapterNumber: 999, error: "Unavailable" },
+  };
+  return { updates };
+});
+
+vi.mock("@/shared/store/update-store", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/shared/store/update-store")>(),
+  useUpdateStore: (selector: (state: { items: typeof updates }) => unknown) => selector({ items: updates }),
 }));
 
 describe("CollectionTab smart collections", () => {
@@ -28,10 +44,15 @@ describe("CollectionTab smart collections", () => {
         isDeleteDialogOpen={false}
         onOpenDeleteDialogChange={vi.fn()}
         onConfirmBulkDelete={vi.fn()}
-        totalItemsCount={3}
-        filteredCount={3}
+        totalItemsCount={6}
+        filteredCount={6}
         paginatedCollection={[
-          { sourceId: "source-a", mangaId: "a", title: "A" },
+          { id: "saved-a", sourceId: "source-a", mangaId: "a", title: "A" },
+          { sourceId: "source-a", mangaId: "b", title: "B" },
+          { id: "saved-c", sourceId: "source-a", mangaId: "c", title: "C" },
+          { id: "saved-d", sourceId: "source-a", mangaId: "d", title: "D" },
+          { id: "saved-e", sourceId: "source-a", mangaId: "e", title: "E" },
+          { sourceId: "source-a", mangaId: "f", title: "F" },
         ]}
         collectionPage={1}
         setCollectionPage={vi.fn()}
@@ -79,6 +100,17 @@ describe("CollectionTab smart collections", () => {
     expect(screen.getByRole("button", { name: "Lanjut Dibaca, 1 judul" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Lama Tidak Dibuka, 0 judul" })).toBeNull();
     expect(screen.getByRole("button", { name: "Favorit, 1 judul" })).toBeTruthy();
+    const chaptersByTitle = Object.fromEntries(vi.mocked(ShelfCard).mock.calls.map(([props]) => [
+      props.manga.title, props.savedChapterUpdates,
+    ]));
+    expect(chaptersByTitle).toEqual({
+      A: [updates["saved-a"]],
+      B: [updates["source-a::b"]],
+      C: [updates["saved-c"]],
+      D: [],
+      E: [updates["saved-e"]],
+      F: [],
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Lanjut Dibaca, 1 judul" }));
     expect(onSelectSmart).toHaveBeenCalledWith("continue-reading");

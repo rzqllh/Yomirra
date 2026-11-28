@@ -8,6 +8,7 @@ import {isDiscoverySourceSystemEligible} from "@/shared/sources/discovery-source
 import {classifyContent} from "@/shared/sources/content-policy";
 import {getMangaDetailHref} from "@/shared/lib/routes";
 import {ReviewedWorkBookmark} from "@/components/komik/reviewed-work-bookmark";
+import { CatalogBackButton } from "@/components/komik/catalog-back-button";
 import type {MangaDetail} from "@/shared/sources/source-types";
 
 export const dynamic="force-dynamic";
@@ -33,7 +34,7 @@ export default async function ReviewedWorkPage({params}:{params:Promise<{workId:
   }))).filter((row):row is {sourceId:string;mangaId:string;sourceName:string;detail:MangaDetail}=>row!==null);
   const primary=available[0];
   return <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 pb-24">
-    <Link href="/library" className="text-sm text-accent underline">Kembali ke Jelajah</Link>
+    <CatalogBackButton fallback="/library" />
     <section className="space-y-3 rounded-xl border border-border-subtle bg-surface-raised p-5">
       <h1 className="text-2xl font-bold text-text-primary">{primary?.detail.title??"Katalog belum tersedia"}</h1>
       {primary?<><p className="text-sm text-text-secondary">{primary.detail.author}</p><p className="text-sm text-text-secondary">{primary.detail.description}</p>

@@ -1,3 +1,4 @@
+import { getLibrarySourceProgress } from "@/shared/lib/library-identity";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory, PartialHistoryDeletionError } from "@/shared/lib/sync-utils";
@@ -153,18 +154,17 @@ function promoteVerifiedLibraryMilestone(item: HistoryItem): void {
   if (!hasObservedReadingProgress(item)) return;
   const library = useLibraryStore.getState();
   const saved = library.getLibraryItem(item.sourceId, item.mangaId);
-  if (!saved || saved.highestMilestoneChapterId === item.chapterId) return;
+  if (!saved) return;
+  const progress = getLibrarySourceProgress(saved, item.sourceId, item.mangaId);
+  if (progress.highestMilestoneChapterId === item.chapterId) return;
 
-  const primarySourceId = saved.primarySourceId ?? saved.sourceId;
-  if (primarySourceId !== item.sourceId) return;
-
-  if (saved.highestMilestoneChapterId) {
+  if (progress.highestMilestoneChapterId) {
     const currentNumber = item.chapterNumber ?? parseChapterNumber(item.chapterTitle ?? item.chapterId);
-    const highestNumber = parseChapterNumber(saved.highestMilestoneChapterTitle ?? saved.highestMilestoneChapterId);
+    const highestNumber = parseChapterNumber(progress.highestMilestoneChapterTitle ?? progress.highestMilestoneChapterId);
     if (currentNumber !== null && highestNumber !== null) {
       if (currentNumber <= highestNumber) return;
-    } else if (item.chapterIndex !== undefined && saved.highestMilestoneIndex !== undefined) {
-      if (item.chapterIndex <= saved.highestMilestoneIndex) return;
+    } else if (item.chapterIndex !== undefined && progress.highestMilestoneIndex !== undefined) {
+      if (item.chapterIndex <= progress.highestMilestoneIndex) return;
     } else {
       // No validated ordering; retain prior progress without guessing.
       return;
@@ -182,10 +182,11 @@ function promoteVerifiedLibraryMilestone(item: HistoryItem): void {
 function chooseReadingMilestone(items: HistoryItem[]): HistoryItem | undefined {
   if (items.length === 0) return undefined;
   const library = useLibraryStore.getState();
-  const observed = items.filter((item) =>
-    hasObservedReadingProgress(item) ||
-    library.getLibraryItem(item.sourceId, item.mangaId)?.highestMilestoneChapterId === item.chapterId
-  );
+  const observed = items.filter(item => {
+    const saved = library.getLibraryItem(item.sourceId, item.mangaId);
+    return hasObservedReadingProgress(item) || (saved &&
+      getLibrarySourceProgress(saved, item.sourceId, item.mangaId).highestMilestoneChapterId === item.chapterId);
+  });
   if (observed.length === 0) return undefined;
   return observed.reduce((best, item) => {
     const order = compareMilestone(item, best);
@@ -408,7 +409,7 @@ export const useHistoryStore = create<HistoryState>()(
         // for the continue target. A jump into a far-ahead chapter is not enough.
         const grouped = new Map<string, { items: HistoryItem[]; latestActivity: number }>();
         for (const item of allItems) {
-          const key = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? `${item.sourceId}::${item.mangaId}`;
+          const key = get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? item.savedTitleId ?? `${item.sourceId}::${item.mangaId}`;
           const group = grouped.get(key);
           if (group) {
             group.items.push(item);
@@ -554,16 +555,17 @@ export const useHistoryStore = create<HistoryState>()(
         const anyItem = Object.values(get().items).find(
           (i) => i.sourceId === sourceId && i.mangaId === mangaId
         );
-        if (anyItem?.savedTitleId) return anyItem.savedTitleId;
-
         if (typeof useLibraryStore.persist?.hasHydrated === "function" && !useLibraryStore.persist.hasHydrated()) {
-          return null;
+          return anyItem?.savedTitleId ?? null;
         }
 
         const libraryState = useLibraryStore.getState();
         if (libraryState?.resolveBySourceRef) {
           const match = libraryState.resolveBySourceRef(sourceId, mangaId);
           if (match?.id) return match.id;
+          if (anyItem?.savedTitleId) {
+            return libraryState.getLibraryItemById?.(anyItem.savedTitleId)?.id ?? anyItem.savedTitleId;
+          }
         }
 
         return null;

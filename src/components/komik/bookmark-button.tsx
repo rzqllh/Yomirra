@@ -16,21 +16,19 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
   const reducedMotion = useReducedMotion();
+  const identity = manga.verifiedCatalogIdentity;
+  const verified = identity?.refs.some(ref => ref.sourceId === sourceId && ref.mangaId === manga.id)
+    ? identity : undefined;
+
+  React.useEffect(() => {
+    if (isMounted && verified) {
+      useLibraryStore.getState().recordVerifiedCatalogIdentity(verified.workId, verified.refs);
+    }
+  }, [isMounted, verified]);
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const effectiveBindings = (manga as any)?.sourceBindings;
-    const linkedSources = Array.isArray(effectiveBindings) && effectiveBindings.length > 0
-      ? effectiveBindings
-          .filter((b: any) => b.sourceId !== sourceId)
-          .map((b: any) => ({
-            sourceId: b.sourceId,
-            mangaId: b.mangaId,
-            addedAt: Date.now(),
-            matchConfidence: "HIGH_CONFIDENCE" as const,
-          }))
-      : undefined;
 
     toggleLibrary({
       sourceId: sourceId,
@@ -41,7 +39,10 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       author: manga.author,
       status: manga.status,
       format: manga.format,
-      linkedSources,
+      canonicalWorkId: verified?.workId,
+      linkedSources: verified?.refs
+        .filter(ref => ref.sourceId !== sourceId || ref.mangaId !== manga.id)
+        .map(ref => ({ ...ref, addedAt: Date.now(), matchConfidence: "CONFIRMED" })),
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

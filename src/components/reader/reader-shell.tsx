@@ -12,7 +12,8 @@ import { cn } from "@/shared/utils/cn"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { transitions } from "@/shared/lib/motion/tokens"
 
-import { getMangaDetailHref, getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes"
+import { getMangaDetailHref } from "@/shared/lib/routes"
+import { getReaderChapterHref, getReaderReturnTo, isSavedReaderReturnTo } from "./reader-navigation"
 import { Chapter } from "@/shared/types/source"
 import dynamic from "next/dynamic"
 
@@ -30,7 +31,7 @@ import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
 import { useReaderDockGate } from "@/shared/hooks/use-reader-dock-gate"
 import { useMounted } from "@/shared/hooks/use-mounted"
 import { useMediaQuery } from "@/shared/hooks/use-media-query"
-import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
+import { beginNavigationIntent, hasNavigationParent } from "@/shared/lib/navigation-intent"
 
 interface ReaderShellProps {
   children: React.ReactNode
@@ -132,15 +133,13 @@ export function ReaderShell({
 
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const rawReturnTo =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("returnTo")
-        : null
-    const returnTo = getSafeMangaDetailBackHref(rawReturnTo)
+    const returnTo = getReaderReturnTo()
+    if (isSavedReaderReturnTo(returnTo) && hasNavigationParent(returnTo)) {
+      router.back()
+      return
+    }
     const href = getMangaDetailHref(sourceId, mangaId, returnTo)
-    beginNavigationIntent(href)
-
-    router.replace(href);
+    if (beginNavigationIntent(href, "replace")) router.replace(href)
   }
 
   const getResolvedCoverUrl = () => {
@@ -355,7 +354,7 @@ export function ReaderShell({
                     className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(event) => {
                       event.stopPropagation();
-                      if (beginNavigationIntent("/")) router.replace("/");
+                      if (beginNavigationIntent("/", "replace")) router.replace("/");
                     }}
                   >
                     <House size={18} weight="regular" />
@@ -487,8 +486,8 @@ export function ReaderShell({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (prevChapterId) {
-                        const href = getReaderHref(sourceId, mangaId, prevChapterId);
-                        if (beginNavigationIntent(href)) router.replace(href);
+                        const href = getReaderChapterHref(sourceId, mangaId, prevChapterId);
+                        if (beginNavigationIntent(href, "replace")) router.replace(href);
                       }
                     }}
                   >
@@ -518,8 +517,8 @@ export function ReaderShell({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (nextChapterId) {
-                        const href = getReaderHref(sourceId, mangaId, nextChapterId);
-                        if (beginNavigationIntent(href)) router.replace(href);
+                        const href = getReaderChapterHref(sourceId, mangaId, nextChapterId);
+                        if (beginNavigationIntent(href, "replace")) router.replace(href);
                       }
                     }}
                   >
