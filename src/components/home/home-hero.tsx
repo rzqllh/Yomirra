@@ -2,11 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlass, Sparkle, Compass, BookmarkSimple } from "@phosphor-icons/react";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { isDiscoverySourceSelected } from "@/shared/sources/discovery-source-policy";
+import { isSourceContentVisible } from "@/shared/sources/content-policy";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import type { MangaItem } from "@/shared/sources/source-types";
 import { cn } from "@/shared/utils/cn";
@@ -70,10 +76,23 @@ const coverCardStyles = [
 ] as const;
 
 const EMPTY_CANDIDATES: HeroCandidate[] = [];
+const EMPTY_DISABLED_SOURCES: string[] = [];
 
 export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroProps) {
   const mounted = useMounted();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const effectiveHideNsfw = mounted ? hideNsfw : true;
+  const disabledSources =
+    useSourcePreferencesStore((state) => state?.disabledSources) ?? EMPTY_DISABLED_SOURCES;
+  const { data: runtimeSources } = useQuery(sourceQueryOptions);
+  const activeSourceCount = React.useMemo(() => {
+    const sourceCandidates = runtimeSources ?? dynamicSourceRegistry.getAll();
+    return sourceCandidates.filter(
+      (source) =>
+        isDiscoverySourceSelected(source, disabledSources) &&
+        isSourceContentVisible(source, effectiveHideNsfw)
+    ).length;
+  }, [runtimeSources, disabledSources, effectiveHideNsfw]);
   const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
@@ -313,7 +332,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
             Katalog Multi-Sumber
           </span>
           <span className="hidden sm:inline-flex items-center rounded-md bg-surface-base/80 border border-border-subtle px-2 py-0.5 text-2xs font-semibold text-text-muted">
-            9 Sumber Aktif
+            {mounted && activeSourceCount > 0 ? `${activeSourceCount} Sumber Aktif` : "Sumber Aktif"}
           </span>
         </div>
 

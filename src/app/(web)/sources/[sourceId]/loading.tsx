@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/chrome/header";
 import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +11,20 @@ export default function Loading() {
   return (
     <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader title="Sumber" subtitle="Memuat katalog…" showBack />
+        <PageHeader
+          title="Sumber"
+          subtitle="Memuat katalog…"
+          showBack
+          backHref="/sources"
+          backBehavior="parent"
+          hideDesktop
+        />
+        <Button asChild variant="secondary" className="hidden self-start md:inline-flex">
+          <Link href="/sources">
+            <CaretLeft aria-hidden="true" />
+            Kembali ke Sumber
+          </Link>
+        </Button>
         <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised p-4">
           <div className="flex min-w-0 items-center gap-3">
             <Skeleton className="size-10 shrink-0 rounded-lg" />

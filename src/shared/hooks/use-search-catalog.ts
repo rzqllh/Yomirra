@@ -10,6 +10,7 @@ import {
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
 import {
@@ -128,26 +129,33 @@ export function useSearchCatalog() {
   }, [isMounted, sourcesData, localSources, hideNsfw]);
 
   const searchFilterStore = useSearchFilterStore();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const selectedSources = searchFilterStore.selectedSources;
   const hasCustomizedSources = searchFilterStore.hasCustomizedSources;
+
+  const defaultActiveSourceIds = React.useMemo(() => {
+    if (!searchableSources.length) return [];
+    const disabledSet = new Set(disabledSources);
+    const active = searchableSources
+      .filter((source) => !disabledSet.has(source.id))
+      .map((source) => source.id);
+    return active.length > 0 ? active : searchableSources.map((source) => source.id);
+  }, [searchableSources, disabledSources]);
 
   const activeSelectedSources = React.useMemo(() => {
     if (!searchableSources.length) return [];
     if (!hasCustomizedSources || selectedSources === null) {
-      return searchableSources.map((source) => source.id);
+      return defaultActiveSourceIds;
     }
     const filtered = selectedSources.filter((id) =>
       searchableSources.some((source) => source.id === id)
     );
     // Explicit zero-selected-source state: user intentionally unchecked all sources
     return filtered;
-  }, [hasCustomizedSources, selectedSources, searchableSources]);
+  }, [hasCustomizedSources, selectedSources, searchableSources, defaultActiveSourceIds]);
 
   const toggleSource = (id: string) => {
-    searchFilterStore.toggleSource(
-      id,
-      searchableSources.map((source) => source.id)
-    );
+    searchFilterStore.toggleSource(id, defaultActiveSourceIds);
   };
 
   const genres = searchFilterStore.genres;

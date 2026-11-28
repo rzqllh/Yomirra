@@ -13,10 +13,11 @@ import { motion, AnimatePresence } from "motion/react";
 
 export interface BackupRestoreViewProps {
   onBack?: () => void;
+  showIntro?: boolean;
   className?: string;
 }
 
-export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps) {
+export function BackupRestoreView({ onBack, className, showIntro = true }: BackupRestoreViewProps) {
   const { theme, setTheme } = useTheme();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
@@ -96,17 +97,19 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="p-4 rounded-xl bg-surface-raised border border-border-subtle flex items-start gap-3.5">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0">
-          <FileText size={22} weight="regular" />
+      {showIntro && (
+        <div className="p-4 rounded-xl bg-surface-raised border border-border-subtle flex items-start gap-3.5">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0">
+            <FileText size={22} weight="regular" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-text-primary">Cadangan data</h3>
+            <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
+              Simpan data riwayat dan koleksi ke file JSON atau pulihkan data dari file cadangan.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-text-primary">Cadangan data</h3>
-          <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
-            Simpan data riwayat dan koleksi ke file JSON atau pulihkan data dari file cadangan.
-          </p>
-        </div>
-      </div>
+      )}
 
       <AnimatePresence mode="wait">
         {!dryRun ? (

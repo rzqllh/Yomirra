@@ -1075,6 +1075,12 @@ body.reader-active section[aria-label*="Notifications" i] {
 }
 .reader-contrast-scope .reader-chrome-primary { color: var(--text-primary); }
 .reader-contrast-scope .reader-chrome-muted { color: var(--text-muted); }
+/* Apply the palette together so controls and labels never crossfade against
+   a surface from the opposite reader theme. */
+.reader-contrast-scope .reader-chrome-surface,
+.reader-contrast-scope .reader-chrome-control {
+  transition-property: none;
+}
 .reader-contrast-scope .reader-chrome-control {
   color: var(--text-primary);
   background: transparent;

@@ -328,6 +328,8 @@ function MangaDetailContent({
             title={detail.title}
             showBack={true}
             backHref={backHref}
+            desktopPresentation="compact"
+            headingOwner="content"
             mode="detail"
             variant="auto"
             detailTitleAnchorId="manga-detail-title-mobile"

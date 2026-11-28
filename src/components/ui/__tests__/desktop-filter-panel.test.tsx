@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FilterDrawerShell } from "../filter-drawer-shell";
+import { FilterDrawerShell, FilterSection } from "../filter-drawer-shell";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
@@ -20,5 +20,36 @@ describe("desktop filters", () => {
     await waitFor(() => {
       expect(screen.queryByText("Genre controls")).toBeNull();
     });
+  });
+
+  it("renders primary apply button, supports FilterSection className, and returns focus on Escape", async () => {
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList)));
+    render(
+      <>
+        <div id="test-filter-panel" />
+        <FilterDrawerShell title="Filter Jelajah" description="Filters" activeCount={0} onApply={vi.fn()} onReset={vi.fn()} desktopPortalId="test-filter-panel">
+          <FilterSection title="Genre" layout="wrap" className="col-span-full">
+            <span>Action</span>
+          </FilterSection>
+        </FilterDrawerShell>
+      </>
+    );
+
+    const trigger = screen.getByRole("button", { name: /^Filter$/ });
+    fireEvent.click(trigger);
+
+    const applyButton = screen.getByRole("button", { name: "Terapkan Filter" });
+    expect(applyButton.className).toContain("bg-accent");
+
+    const genreHeading = screen.getByRole("heading", { name: "Genre" });
+    expect(genreHeading.parentElement?.className).toContain("col-span-full");
+
+    applyButton.focus();
+    fireEvent.keyDown(applyButton, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("region", { name: "Filter Jelajah" })).toBeNull();
+    });
+    expect(document.activeElement).toBe(trigger);
   });
 });

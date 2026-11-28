@@ -41,7 +41,15 @@ import type { BaseCardProps } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
+import { normalizePublicationStatus } from "@/shared/lib/schedule-policy";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
+
+function formatComicFormat(value?: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+}
 import { toast } from "sonner";
 import {
   MangaCardCoverFrame,
@@ -58,6 +66,14 @@ import {
 } from "./manga-card-parts";
 
 export { CollapsibleBadgeRow, type CollapsibleBadgeRowProps };
+
+const publicationStatusLabels = {
+  ongoing: "Sedang terbit",
+  completed: "Tamat",
+  hiatus: "Hiatus",
+  cancelled: "Dibatalkan",
+  unknown: null,
+};
 
 export type MangaCardVariant = "discovery" | "rank" | "progress";
 
@@ -106,6 +122,8 @@ export function MangaCard({
   index,
   className,
 }: MangaCardProps) {
+  const publicationStatus = normalizePublicationStatus(manga.status);
+  const publicationStatusLabel = publicationStatusLabels[publicationStatus];
   const pathname = usePathname() || "";
   const searchParams = useSearchParams();
   const reducedMotion = useReducedMotion();
@@ -508,14 +526,14 @@ export function MangaCard({
               maxVisible={2}
               className="mb-2"
               badges={[
-                manga.status ? (
+                publicationStatusLabel ? (
                   <span key="status" className="text-3xs font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
-                    {manga.status}
+                    {publicationStatusLabel}
                   </span>
                 ) : null,
-                manga.format ? (
+                formatComicFormat(manga.format) ? (
                   <span key="format" className="text-3xs font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md shrink-0">
-                    {manga.format}
+                    {formatComicFormat(manga.format)}
                   </span>
                 ) : null,
               ]}
@@ -531,7 +549,7 @@ export function MangaCard({
             </MangaCardTitle>
 
             <div className="mt-1.5 flex items-center justify-between">
-              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
+              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Bab terbaru belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-2xs text-text-muted">{timeText}</MangaCardMeta>}
             </div>
             {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>}
@@ -576,10 +594,9 @@ export function MangaCard({
 
   // Discovery variant for compact and list view
   if (viewMode === "compact") {
-    const mangaFormat = manga.format || (manga as any).type;
-    const rawStatus = manga.status ? String(manga.status).toUpperCase() : "";
-    const isOngoing = rawStatus.includes("ONGOING") || rawStatus.includes("RELEASING");
-    const isCompleted = rawStatus.includes("COMPLETED");
+    const mangaFormat = formatComicFormat(manga.format || (manga as any).type);
+    const isOngoing = publicationStatus === "ongoing";
+    const isCompleted = publicationStatus === "completed";
 
     const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
     const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)) : "";
@@ -588,7 +605,7 @@ export function MangaCard({
       noEligibleSource ? (
         <span key="unavailable" className="text-2xs font-semibold text-status-error-fg">Sumber tidak tersedia</span>
       ) : null,
-      manga.status ? (
+      publicationStatusLabel ? (
         <span
           key="status"
           className={cn(
@@ -598,7 +615,7 @@ export function MangaCard({
             !isOngoing && !isCompleted && "border-border-subtle bg-surface-base text-text-secondary"
           )}
         >
-          {manga.status}
+          {publicationStatusLabel}
         </span>
       ) : null,
       mangaFormat ? (
@@ -882,9 +899,9 @@ export function MangaCard({
             maxVisible={2}
             className="mb-1.5"
             badges={[
-              manga.format ? (
+              formatComicFormat(manga.format) ? (
                 <MangaCardMeta key="format" className="shrink-0 font-semibold">
-                  {manga.format}
+                  {formatComicFormat(manga.format)}
                 </MangaCardMeta>
               ) : null,
               showSourceBadge && (sourceName || isMultiSource || noEligibleSource) ? (
@@ -902,9 +919,9 @@ export function MangaCard({
                   </MangaCardMeta>
                 ) : null
               ) : null,
-              manga.status ? (
+              publicationStatusLabel ? (
                 <MangaCardMeta key="status" className="shrink-0 text-text-muted font-medium">
-                  {manga.status}
+                  {publicationStatusLabel}
                 </MangaCardMeta>
               ) : null,
             ]}

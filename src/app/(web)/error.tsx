@@ -51,9 +51,9 @@ export default function GlobalError({
         transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className="space-y-3 z-10 max-w-xs md:max-w-md"
       >
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary">
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary">
           Yomirra mengalami kendala
-        </h2>
+        </h1>
         <p className="text-sm md:text-base text-text-secondary leading-relaxed font-medium">
           Coba muat ulang halaman{isHome ? "." : " atau kembali ke Beranda."}
         </p>

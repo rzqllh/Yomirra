@@ -101,16 +101,23 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId,ref.mangaId)))??[],
     mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline&&Boolean(group?.members.some(member=>mayShow(member.sourceId,member.isNsfw))));
 
-  if (!mounted) return <main className="mx-auto max-w-3xl p-5 text-text-muted">Memuat katalog…</main>;
+  if (!mounted) {
+    return (
+      <div className="mx-auto max-w-3xl p-5 text-text-muted">
+        <h1 className="sr-only">Detail katalog</h1>
+        <p role="status">Memuat katalog…</p>
+      </div>
+    );
+  }
 
   const visibleMembers = group?.members.filter(member => mayShow(member.sourceId, member.isNsfw)) ?? [];
   if (!group || visibleMembers.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-10 space-y-3">
+      <div className="mx-auto max-w-3xl px-4 py-10 space-y-3">
         <h1 className="text-xl font-semibold text-text-primary">Katalog tidak tersedia</h1>
         <p className="text-sm text-text-secondary">Judul tidak ditemukan pada Library di perangkat ini atau tidak dapat ditampilkan dengan filter konten saat ini.</p>
-        <Link className="text-sm text-accent underline" href="/library">Kembali ke Library</Link>
-      </main>
+        <Link className="inline-flex min-h-11 items-center text-sm text-accent underline focus-visible:outline-2 focus-visible:outline-accent" href="/bookmark">Kembali ke Library</Link>
+      </div>
     );
   }
 
@@ -175,9 +182,9 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
-      <Link href="/library" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary">
-        <ArrowLeft size={18} /> Kembali ke Library
+    <div className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
+      <Link href="/bookmark" className="inline-flex min-h-11 items-center gap-2 text-sm text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent">
+        <ArrowLeft size={18} aria-hidden="true" /> Kembali ke Library
       </Link>
       <section className="flex flex-col sm:flex-row gap-5 rounded-xl border border-border-subtle bg-surface-raised p-4 sm:p-5">
         <div className="w-32 sm:w-40 shrink-0 aspect-[2/3] overflow-hidden rounded-lg border border-border-default">
@@ -258,6 +265,6 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
           })}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

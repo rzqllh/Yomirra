@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { WarningCircle, ArrowUpRight } from "@phosphor-icons/react";
 import { EditorialCard } from "@/components/komik/card";
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { ChipRail } from "@/components/ui/chip-rail";
 import { EmptyState } from "@/components/states/empty-state";
@@ -26,16 +26,12 @@ interface PopularPageViewProps {
 
 export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
   const [mode, setMode] = React.useState<"local" | "mal">("local");
+  const localTabRef = React.useRef<HTMLButtonElement>(null);
   const [selectedSourceId, setSelectedSourceId] = React.useState<string>("all");
 
   const saved = useLibraryStore(state => state.items);
   const verifiedIndex = React.useMemo(() => indexDiscoveryCatalog(groupVerifiedCatalogEntries(Object.values(saved).filter(item => item.isBookmarked !== false))), [saved]);
   const aggregated = React.useMemo(() => aggregatePopularFeeds(feeds, verifiedIndex), [feeds, verifiedIndex]);
-  const successfulFeeds = React.useMemo(
-    () => feeds.filter((feed) => !feed.loadFailed && feed.mangas.length > 0),
-    [feeds]
-  );
-
   const selectedFeed = React.useMemo(() => {
     if (selectedSourceId === "all") return null;
     return feeds.find((feed) => feed.sourceId === selectedSourceId) ?? null;
@@ -52,37 +48,44 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
     );
   }
 
-  const segmentOptions = [
-    { value: "local", label: "Populer di Yomirra" },
-    { value: "mal", label: "Tren MyAnimeList" },
-  ];
+  const heading = selectedFeed ? `Populer di ${selectedFeed.sourceName}` : "Peringkat lintas sumber";
+
+  const ranking = selectedFeed
+    ? selectedFeed.mangas.map((manga) => ({ manga, sourceId: selectedFeed.sourceId, sourceBindings: undefined }))
+    : aggregated;
+  const emptyTitle = selectedFeed
+    ? selectedFeed.loadFailed
+      ? `Peringkat dari ${selectedFeed.sourceName} belum bisa dimuat.`
+      : `Belum ada data populer dari ${selectedFeed.sourceName}.`
+    : "Peringkat belum bisa dimuat";
 
   return (
-    <div className="space-y-6 sm:space-y-7">
-      {/* Top Mode Segmented Control */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SegmentedControl
-          value={mode}
-          onChange={(value) => setMode(value as "local" | "mal")}
-          options={segmentOptions}
-          layoutId="popular-primary-mode"
-          fullWidth
-          className="sm:w-auto"
-        />
-        {mode === "local" && (
-          <p className="text-xs leading-relaxed text-text-muted sm:max-w-md sm:text-right">
-            Peringkat gabungan menggunakan posisi komik di setiap sumber aktif.
-          </p>
-        )}
-      </div>
+    <Tabs value={mode} onValueChange={(value) => setMode(value as "local" | "mal")} className="space-y-4">
+      <TabsList aria-label="Peringkat populer" className="grid h-auto w-full grid-cols-2 rounded-xl sm:inline-grid sm:w-auto">
+        <TabsTrigger value="local" ref={localTabRef} className="min-h-11 whitespace-normal">Populer di Yomirra</TabsTrigger>
+        <TabsTrigger value="mal" className="min-h-11 whitespace-normal">Tren MyAnimeList</TabsTrigger>
+      </TabsList>
 
-      {mode === "mal" ? (
-        <MalPopularSection feed={mal} onSwitchToLocal={() => setMode("local")} />
-      ) : (
-        <div className="space-y-6">
-          {/* Source Filter Pills Rail */}
+      <TabsContent value="mal">
+        <MalPopularSection feed={mal} onSwitchToLocal={() => {
+          setMode("local");
+          localTabRef.current?.focus();
+        }} />
+      </TabsContent>
+      <TabsContent value="local">
+        <section aria-labelledby="popular-local-heading" className="space-y-4">
+          <div>
+            <h2 id="popular-local-heading" className="text-lg font-bold tracking-tight text-text-primary sm:text-xl">
+              {heading}
+            </h2>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {selectedFeed
+                ? `Peringkat komik paling ramai dibaca di ${selectedFeed.sourceName}.`
+                : "Komik dari beberapa sumber digabung hanya jika identitas karyanya terverifikasi."}
+            </p>
+          </div>
           {feeds.length > 0 && (
-            <ChipRail bleed={false} role="group" aria-label="Filter sumber komik">
+            <ChipRail bleed={false} className="px-1 pt-1" role="group" aria-label="Filter sumber komik">
               <FilterChip
                 label={`Semua Sumber (${aggregated.length})`}
                 selected={selectedSourceId === "all"}
@@ -92,9 +95,16 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
               {feeds.map((feed) => (
                 <FilterChip
                   key={feed.sourceId}
-                  label={`${feed.sourceName}${feed.mangas.length > 0 ? ` (${feed.mangas.length})` : ""}`}
+                  label={
+                    feed.loadFailed ? (
+                      <>
+                        {feed.sourceName}
+                        <span className="text-2xs text-status-error-fg">Gagal dimuat</span>
+                      </>
+                    ) : `${feed.sourceName}${feed.mangas.length > 0 ? ` (${feed.mangas.length})` : ""}`
+                  }
                   selected={selectedSourceId === feed.sourceId}
-                  showDownBadge={feed.loadFailed}
+                  aria-label={feed.loadFailed ? `${feed.sourceName}, gagal dimuat` : undefined}
                   onClick={() => setSelectedSourceId(feed.sourceId)}
                   variant={selectedSourceId === feed.sourceId ? "accent-subtle" : "default"}
                 />
@@ -102,113 +112,40 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
             </ChipRail>
           )}
 
-          {/* Aggregated (All Sources) View */}
-          {selectedSourceId === "all" ? (
-            aggregated.length > 0 ? (
-              <section aria-labelledby="popular-combined-heading">
-                <div className="mb-5">
-                  <h2
-                    id="popular-combined-heading"
-                    className="text-lg sm:text-xl font-bold tracking-tight text-text-primary"
-                  >
-                    Peringkat lintas sumber
-                  </h2>
-                  <p className="mt-0.5 text-xs text-text-muted">
-                    Komik dari beberapa sumber digabung hanya jika identitas karyanya terverifikasi.
-                  </p>
-                </div>
-
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                  {aggregated.slice(0, 36).map((item, index) => (
-                    <EditorialCard
-                      key={`${item.sourceId}::${item.manga.id}`}
-                      manga={{ ...item.manga, rank: index + 1 }}
-                      rank={index + 1}
-                      sourceId={item.sourceId}
-                      sourceBindings={item.sourceBindings}
-                      priority={index < 4}
-                      index={index}
-                      animateReveal
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : (
-              <div className="py-16">
-                <EmptyState
-                  icon={<WarningCircle size={40} weight="duotone" />}
-                  title="Peringkat belum bisa dimuat"
-                  description="Sumber aktif belum memberikan data populer saat ini. Coba muat ulang atau periksa status sumber."
-                />
-              </div>
-            )
-          ) : selectedFeed ? (
-            /* Single Selected Source View */
-            <section aria-labelledby={`popular-${selectedFeed.sourceId}`}>
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <div>
-                  <h2
-                    id={`popular-${selectedFeed.sourceId}`}
-                    className="text-lg sm:text-xl font-bold tracking-tight text-text-primary"
-                  >
-                    Populer di {selectedFeed.sourceName}
-                  </h2>
-                  <p className="mt-0.5 text-xs text-text-muted">
-                    Peringkat komik paling ramai dibaca langsung dari server {selectedFeed.sourceName}.
-                  </p>
-                </div>
-                {!selectedFeed.loadFailed && selectedFeed.mangas.length > 0 && (
-                  <Link
-                    href={`/sources/${selectedFeed.sourceId}?sort=popular`}
-                    className="inline-flex min-h-11 items-center gap-1 px-2 text-sm font-bold text-accent transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-accent"
-                  >
-                    <span>Katalog lengkap</span>
-                    <ArrowUpRight size={14} weight="bold" />
-                  </Link>
-                )}
-              </div>
-
-              {selectedFeed.mangas.length > 0 ? (
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                  {selectedFeed.mangas.slice(0, 36).map((manga, index) => (
-                    <EditorialCard
-                      key={manga.id}
-                      manga={{ ...manga, rank: index + 1 }}
-                      rank={index + 1}
-                      sourceId={selectedFeed.sourceId}
-                      priority={index < 4}
-                      index={index}
-                      animateReveal
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-border-subtle bg-surface-raised p-6 text-center sm:text-left">
-                  <p className="text-sm font-bold text-text-primary">
-                    {selectedFeed.loadFailed
-                      ? `Peringkat dari ${selectedFeed.sourceName} belum bisa dimuat.`
-                      : `Belum ada data populer dari ${selectedFeed.sourceName}.`}
-                  </p>
-                  <p className="mt-1.5 text-xs text-text-muted leading-relaxed">
-                    Server sumber mungkin sedang dalam pemeliharaan atau pembatasan permintaan. Kamu dapat memilih sumber lain dari daftar di atas.
-                  </p>
-                </div>
-              )}
-            </section>
-          ) : null}
-
-          {/* Global Empty State if absolutely zero feeds have manga */}
-          {successfulFeeds.length === 0 && aggregated.length === 0 && (
-            <div className="py-12">
-              <EmptyState
-                icon={<WarningCircle size={40} weight="duotone" />}
-                title="Semua sumber belum memberikan data peringkat"
-                description="Daftar populer belum tersedia. Kamu masih bisa mencari judul secara langsung."
-              />
-            </div>
+          {selectedFeed && !selectedFeed.loadFailed && selectedFeed.mangas.length > 0 && (
+            <Link
+              href={`/sources/${selectedFeed.sourceId}?sort=popular`}
+              className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-accent transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              Katalog lengkap
+              <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+            </Link>
           )}
-        </div>
-      )}
-    </div>
+
+          {ranking.length > 0 ? (
+            <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {ranking.slice(0, 36).map(({ manga, sourceId, sourceBindings }, index) => (
+                <EditorialCard
+                  key={`${sourceId}::${manga.id}`}
+                  manga={manga}
+                  rank={index + 1}
+                  sourceId={sourceId}
+                  sourceBindings={sourceBindings}
+                  priority={index < 4}
+                  index={index}
+                  animateReveal
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<WarningCircle size={40} weight="duotone" />}
+              title={emptyTitle}
+              description="Coba muat ulang atau pilih sumber lain."
+            />
+          )}
+        </section>
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -103,7 +103,7 @@ export default function AccountPage() {
       <PageContainer hasMobileHeader>
         <DestinationHeader destination="account" />
 
-        <main className="w-full space-y-6 md:space-y-8">
+        <div className="w-full space-y-6 md:space-y-8">
           {/* Profile Card */}
           {user ? (
             <div className="rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
@@ -369,7 +369,7 @@ export default function AccountPage() {
               </Button>
             </div>
           )}
-        </main>
+        </div>
       </PageContainer>
     </div>
   );

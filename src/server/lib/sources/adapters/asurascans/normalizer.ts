@@ -29,6 +29,12 @@ export function normalizeAsuraStatus(status?: string): "ONGOING" | "COMPLETED" |
   return "UNKNOWN";
 }
 
+export function formatComicType(type?: string): string | undefined {
+  const trimmed = type?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function normalizeAsuraMangaItem(item: AsuraSeriesItem): MangaItem {
   const latestCh = Array.isArray(item.latest_chapters) && item.latest_chapters.length > 0
     ? item.latest_chapters[0]
@@ -39,7 +45,7 @@ export function normalizeAsuraMangaItem(item: AsuraSeriesItem): MangaItem {
     title: item.title,
     coverUrl: item.cover,
     status: normalizeAsuraStatus(item.status),
-    format: item.type ? item.type.toUpperCase() : undefined,
+    format: formatComicType(item.type),
     latestChapter: latestCh?.number != null ? `Chapter ${latestCh.number}` : undefined,
     latestChapterTime: latestCh?.published_at || item.last_chapter_at || undefined,
     rank: typeof item.popularity_rank === "number" ? item.popularity_rank : undefined,

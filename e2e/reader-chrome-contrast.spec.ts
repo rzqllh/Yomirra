@@ -11,14 +11,21 @@ test.describe.configure({retries:0});
 const fixtureImage=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAFAAAAB4AQAAAABNlUhbAAAAGklEQVR42mP8zwADTAyjzFHmKHOUOcrEYAIAkioB78sU6ikAAAAASUVORK5CYII=","base64");
 // Exercise the actual ReaderView/ReaderShell with disposable CI Redis
 // fixtures. No upstream requests, public user data or production cache writes.
-for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["black","light",393,"paged"],["deepLagoon","light",1440,"paged"],["black","dark",393,"vertical"]] as const){
-  test("reader chrome contrast: "+background+" / "+width+" / "+mode,async({page,baseURL})=>{
+for(const [background,appTheme,width,mode,paletteTransition] of [
+  ["mist","dark",320,"paged",false],
+  ["black","light",393,"paged",false],
+  ["deepLagoon","light",1440,"paged",false],
+  ["black","dark",393,"vertical",false],
+  ["mist","dark",320,"paged",true],
+] as const){
+  test("reader chrome contrast: "+background+" / "+width+" / "+mode+(paletteTransition?" / palette transition":""),async({page,baseURL})=>{
     const redisUrl=process.env.REDIS_URL;
     const host=redisUrl?new URL(redisUrl).hostname:"";
     test.skip(process.env.CI!=="true"||process.env.E2E_PRODUCTION_BUILD!=="1"||
       !baseURL||new URL(baseURL).hostname!=="localhost"||!["redis","localhost","127.0.0.1"].includes(host),
       "Requires isolated production-build CI Redis fixture");
     test.setTimeout(60000);
+    if(paletteTransition) await page.emulateMedia({reducedMotion:"no-preference"});
     const redis=new Redis(redisUrl!,{
       maxRetriesPerRequest:1,
       connectTimeout:2000,
@@ -48,12 +55,13 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
     await page.route("**/api/sources/mangadex/manga/"+id+"/chapters/"+after+"/pages?**",route=>route.fulfill({contentType:"application/json",body:JSON.stringify({data:nextPages})}));
     await page.route("https://example.test/**",route=>route.fulfill({contentType:"image/png",body:fixtureImage}));
     await page.goto("/manga/mangadex/"+id+"/read/"+chapter);
-    const header=page.locator(".reader-contrast-scope header.reader-chrome-surface");
-    const dock=page.getByRole("group",{name:"Kontrol pembaca"});
+    const reader=page.getByRole("main").locator(".reader-contrast-scope");
+    const header=reader.locator("header.reader-chrome-surface");
+    const dock=reader.getByRole("group",{name:"Kontrol pembaca"});
     await expect(header.getByText(title,{exact:true})).toBeVisible({timeout:20000});
     await expect(dock).toBeVisible();
     await expect(dock.getByRole("button",{name:"Chapter berikutnya"})).toBeEnabled();
-    const measurements=async()=>page.evaluate(()=>{
+    const measurements=async(switchPalette=false)=>reader.evaluate(async(root,switchPalette)=>{
       function rgb(value:string){
         const c=document.createElement("canvas");c.width=c.height=1;
         const ctx=c.getContext("2d")!;ctx.clearRect(0,0,1,1);ctx.fillStyle=value;ctx.fillRect(0,0,1,1);
@@ -61,26 +69,57 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       }
       function lum(v:number[]){const a=v.slice(0,3).map(x=>x/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);return .2126*a[0]+.7152*a[1]+.0722*a[2];}
       function ratio(a:number[],b:number[]){return (Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);}
-      const items=Array.from(document.querySelectorAll(".reader-contrast-scope header.reader-chrome-surface,.reader-contrast-scope .yomirra-reader-dock"));
+      const items=Array.from(root.querySelectorAll("header.reader-chrome-surface,.yomirra-reader-dock"));
+      if(switchPalette){
+        if(!matchMedia("(prefers-reduced-motion: no-preference)").matches || !root.classList.replace("light","dark")){
+          throw new Error("Palette regression requires normal motion and an initially light reader");
+        }
+        // Settle the dark starting palette even when the original CSS transitions are present.
+        for(const item of items) item.getBoundingClientRect();
+        const paletteElements=items.flatMap(item=>[item,...item.querySelectorAll(".reader-chrome-control")]);
+        await Promise.all(paletteElements.flatMap(el=>el.getAnimations().map(animation=>animation.finished)));
+        if(!root.classList.replace("dark","light")) throw new Error("Dark reader palette changed before sampling");
+        // Read the first light styles in this callback, before another frame can advance transitions.
+      }
       return items.map(el=>{
         const style=getComputedStyle(el),bg=rgb(style.backgroundColor),rect=el.getBoundingClientRect();
-        const text=[...el.querySelectorAll(".reader-chrome-primary,.reader-chrome-muted")].map(x=>ratio(rgb(getComputedStyle(x).color),bg));
+        const text=[...el.querySelectorAll(".reader-chrome-primary,.reader-chrome-muted")].map(x=>({
+          name:x.textContent?.trim(),
+          ratio:ratio(rgb(getComputedStyle(x).color),bg),
+        }));
         const controls=[...el.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")].map(x=>{
           const s=getComputedStyle(x),b=rgb(s.backgroundColor),r=x.getBoundingClientRect();
-          return {ratio:ratio(rgb(s.color),b[3]===255?b:bg),width:r.width,height:r.height};
+          return {name:x.getAttribute("aria-label") ?? x.textContent?.trim(),ratio:ratio(rgb(s.color),b[3]===255?b:bg),width:r.width,height:r.height};
         });
         return {alpha:bg[3],filter:style.backdropFilter||"none",left:rect.left,right:rect.right,text,controls,viewport:innerWidth};
       });
-    });
+    },switchPalette);
+    if(paletteTransition){
+      const values=await measurements(true);
+      expect(values).toHaveLength(2);
+      const [headerValues,dockValues]=values;
+      const titleContrast=headerValues.text.find(entry=>entry.name===title);
+      expect(titleContrast?.ratio,"Reader title contrast on the palette switch").toBeGreaterThanOrEqual(4.5);
+      for(const [surface,names] of [
+        [headerValues,["Simpan ke Library"]],
+        [dockValues,["Chapter sebelumnya","Daftar chapter","Chapter berikutnya","Pengaturan pembaca"]],
+      ] as const){
+        for(const name of names){
+          const control=surface.controls.find(entry=>entry.name===name);
+          expect(control?.ratio,name+" contrast on the palette switch").toBeGreaterThanOrEqual(4.5);
+        }
+      }
+      return;
+    }
     for(const backdrop of ["#000000","#ffffff"]){
       // The real chrome is rendered above this controlled image/canvas
       // backdrop; no claim that a provider image is being fetched live.
-      await page.locator(".reader-contrast-scope").evaluate((el,color)=>(el as HTMLElement).style.backgroundColor=color,backdrop);
+      await reader.evaluate((el,color)=>(el as HTMLElement).style.backgroundColor=color,backdrop);
       const values=await measurements();expect(values).toHaveLength(2);
       for(const v of values){
         expect(v.alpha).toBe(255);expect(v.filter).toBe("none");
         expect(v.left).toBeGreaterThanOrEqual(0);expect(v.right).toBeLessThanOrEqual(v.viewport+1);
-        for(const ratio of v.text)expect(ratio).toBeGreaterThanOrEqual(4.5);
+        for(const entry of v.text)expect(entry.ratio).toBeGreaterThanOrEqual(4.5);
         for(const c of v.controls){expect(c.ratio).toBeGreaterThanOrEqual(4.5);expect(c.width).toBeGreaterThanOrEqual(43.5);expect(c.height).toBeGreaterThanOrEqual(43.5);}
       }
     }
@@ -90,18 +129,17 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     await page.screenshot({path:test.info().outputPath("reader-"+background+"-"+mode+".png")});
     if(mode==="paged"){
-      const tap=page.getByRole("button",{name:"Buka kontrol menu"});
+      const tap=reader.getByRole("button",{name:"Buka kontrol menu"});
       await tap.click();await expect(header).toHaveCount(0);await expect(dock).toHaveCount(0);
       await tap.click();await expect(header).toBeVisible();await expect(dock).toBeVisible();
     }else{
-      const end=page.locator("[data-reader-end-controls]");
-      await expect.poll(()=>page.locator(".reader-page-container img").first().evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([80,120]);
+      const end=reader.locator("[data-reader-end-controls]");
+      await expect.poll(()=>reader.locator(".reader-page-container img").first().evaluate((img:HTMLImageElement)=>[img.naturalWidth,img.naturalHeight])).toEqual([80,120]);
       await end.scrollIntoViewIfNeeded();await expect(end).toBeInViewport();await expect(dock).toHaveCount(0);
-      await expect(page.getByTestId("reader-page-scrubber")).toHaveCount(0);
+      await expect(reader.getByTestId("reader-page-scrubber")).toHaveCount(0);
       // Settle the actual virtual layout before starting another movement.
       // WebKit may defer compensation of virtual row measurements.
-      const position=()=>page.evaluate(async()=>{
-        const card=document.querySelector("[data-reader-end-controls]")!;
+      const position=()=>end.evaluate(async card=>{
         const read=()=>({y:window.scrollY,top:card.getBoundingClientRect().top,height:document.documentElement.scrollHeight});
         const first=read();
         // Observe a quiet 200ms window, not just two frames in the middle of momentum.
@@ -113,7 +151,10 @@ for(const [background,appTheme,width,mode] of [["mist","dark",320,"paged"],["bla
       // Explicit keyboard toggle must still expose header at chapter end.
       if(!await header.isVisible())await page.keyboard.press("m");
       await expect(header).toBeVisible();await expect(dock).toHaveCount(0);
-      const origin=await position();expect(origin.stable).toBe(true);expect(origin.y).toBeGreaterThan(60);
+      await expect.poll(async()=>{
+        const origin=await position();
+        return {stable:origin.stable,scrolled:origin.y>60,headerVisible:await header.isVisible()};
+      },{timeout:5000,message:"Chapter-end origin must settle with the header visible"}).toEqual({stable:true,scrolled:true,headerVisible:true});
       // Exercise actual upward scroll and verify the viewport moved before
       // checking chrome. A failed navigation is not mislabeled as a chrome bug.
       await page.evaluate(()=>window.scrollTo(0,0));

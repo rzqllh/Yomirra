@@ -1,5 +1,45 @@
 import type { FilterList, SourceFilter } from "@/shared/sources/source-types";
-import { canonicalizeFilterValue, type SearchTagCategory } from "@/shared/lib/search-intelligence";
+import {
+  canonicalizeFilterValue,
+  resolveSearchTag,
+  type SearchTagCategory,
+} from "@/shared/lib/search-intelligence";
+import { normalizeTitle } from "@/shared/lib/title-matcher";
+
+const CATCH_ALL_TOKENS = new Set([
+  "all",
+  "alltypes",
+  "alltype",
+  "allstatus",
+  "semua",
+  "semuatipe",
+  "semuastatus",
+]);
+
+function isCatchAllOption(id: string, label: string): boolean {
+  const normId = normalizeTitle(id).replace(/\s+/g, "");
+  const normLabel = normalizeTitle(label).replace(/\s+/g, "");
+  return CATCH_ALL_TOKENS.has(normId) || CATCH_ALL_TOKENS.has(normLabel);
+}
+
+const SORT_ALIASES = [
+  { id: "popular", label: "Populer", terms: ["popular", "populer", "popularity"] },
+  { id: "latest", label: "Terbaru", terms: ["latest update", "latest", "update", "terbaru"] },
+  { id: "rating", label: "Rating Tertinggi", terms: ["highest rating", "rating tertinggi", "rating"] },
+  { id: "alphabetical", label: "A-Z", terms: ["a-z", "az", "alphabetical", "alphabet", "title asc"] },
+  { id: "reverse-alphabetical", label: "Z-A", terms: ["z-a", "za", "title desc"] },
+];
+
+function canonicalizeSortOption(id: string, name: string): { id: string; label: string } {
+  const raw = `${id} ${name}`.toLowerCase();
+  const spaced = raw.replace(/[_-]+/g, " ");
+  const normalized = normalizeTitle(spaced);
+  const match = SORT_ALIASES.find((alias) =>
+    alias.terms.some((term) => raw.includes(term) || normalized.includes(normalizeTitle(term)))
+  );
+  if (match) return { id: match.id, label: match.label };
+  return { id, label: name };
+}
 
 export interface MergedFilter {
   id: string;
@@ -29,13 +69,17 @@ export function mergeFilters(sourceFilters: { sourceId: string; filters: FilterL
     map: Map<string, MergedFilter>,
     items: SourceFilter[] | undefined,
     sourceId: string,
-    category?: SearchTagCategory
+    category?: SearchTagCategory | "sort"
   ) => {
     if (!items) return;
     for (const item of items) {
-      const canonical = category
-        ? canonicalizeFilterValue(category, item.id, item.name)
-        : { id: item.id, label: item.name };
+      if (isCatchAllOption(item.id, item.name)) continue;
+      const canonical =
+        category === "sort"
+          ? canonicalizeSortOption(item.id, item.name)
+          : category
+            ? canonicalizeFilterValue(category, item.id, item.name)
+            : { id: item.id, label: item.name };
       const canonicalId = canonical.id.toLowerCase();
       if (map.has(canonicalId)) {
         const existing = map.get(canonicalId)!;
@@ -58,12 +102,23 @@ export function mergeFilters(sourceFilters: { sourceId: string; filters: FilterL
     processCategory(genresMap, filters.genres, sourceId, "genre");
     processCategory(formatsMap, filters.formats, sourceId, "format");
     processCategory(statusesMap, filters.statuses, sourceId, "status");
-    processCategory(sortsMap, filters.sorts, sourceId);
+    processCategory(sortsMap, filters.sorts, sourceId, "sort");
   }
 
   const toArray = (map: Map<string, MergedFilter>) => Array.from(map.values());
 
-  const genres = toArray(genresMap).sort((a, b) => a.label.localeCompare(b.label));
+  const allGenres = toArray(genresMap).sort((a, b) => a.label.localeCompare(b.label));
+  const genreIds = new Set(allGenres.map((genre) => genre.id.toLowerCase()));
+  const genres = allGenres.filter((genre) => {
+    const words = normalizeTitle(genre.label).split(" ").filter(Boolean);
+    if (words.length < 2) return true;
+    const resolved = words
+      .map((word) => resolveSearchTag(word))
+      .filter((tag) => tag?.category === "genre")
+      .map((tag) => tag!.id.toLowerCase());
+    const unique = Array.from(new Set(resolved));
+    return unique.length < 2 || !unique.every((id) => genreIds.has(id));
+  });
   const formats = toArray(formatsMap);
   const statuses = toArray(statusesMap);
   const sorts = toArray(sortsMap);

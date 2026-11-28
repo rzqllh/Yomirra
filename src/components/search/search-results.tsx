@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/states/empty-state";
 import { MangaGrid } from "@/components/komik/manga-grid";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
-import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -213,7 +212,6 @@ export function SearchResults({
                 <span className="text-xs font-semibold text-text-muted">
                   {searchMangas.length} {query.trim().length === 0 ? "judul" : "hasil"}
                 </span>
-                <ViewModeToggle />
               </div>
             </div>
 

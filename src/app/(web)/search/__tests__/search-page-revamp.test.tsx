@@ -163,4 +163,34 @@ describe('Search Page Revamp Unit Tests', () => {
       expect(screen.getByText('Shinigami tidak dapat dimuat')).toBeDefined();
     }, { timeout: 10000 });
   });
+
+  it('places a single ViewModeToggle inside SearchToolbar before the filter drawer', async () => {
+    (apiClient.search as any).mockImplementation(async (sourceId: string) => {
+      if (sourceId === 'source1') {
+        return { sourceId: 'source1', query: 'test', page: 1, results: [{ id: 'm1', title: 'Overgeared', coverUrl: '/c.jpg' }] };
+      }
+      return { sourceId, query: 'test', page: 1, results: [] };
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <SearchPage />
+        </React.Suspense>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Overgeared')).toBeDefined();
+    }, { timeout: 3000 });
+
+    const viewButtons = screen.getAllByRole('button', { name: 'Tampilan Card Grid' });
+    expect(viewButtons).toHaveLength(1);
+    const viewToggleContainer = viewButtons[0].parentElement!;
+    const drawerStub = screen.getByTestId('drawer-stub');
+    expect(viewToggleContainer.parentElement).toBe(drawerStub.parentElement);
+    expect(
+      Boolean(viewToggleContainer.compareDocumentPosition(drawerStub) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ).toBe(true);
+  });
 });

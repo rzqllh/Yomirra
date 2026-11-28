@@ -81,11 +81,12 @@ export function MangaDetailLayout({
           <div className="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/80 to-transparent" />
         </div>
 
-        {/* Page Header */}
-        {header}
+        <div className="relative mx-auto w-full max-w-7xl md:px-8 md:pt-6">
+          {header}
+        </div>
 
         {/* Hero Content Container */}
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-[calc(var(--safe-top,0px)+72px)] md:pt-20 pb-5 md:pb-8 relative z-10">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-[calc(var(--safe-top,0px)+72px)] md:pt-4 pb-5 md:pb-8 relative z-10">
           {/* Mobile Hero Flow */}
           <div className="flex flex-col gap-4 md:hidden">
             <div className="flex gap-3.5 relative items-end min-[360px]:gap-5">

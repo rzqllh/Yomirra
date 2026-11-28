@@ -22,6 +22,11 @@ export interface SearchResponse {
   hasNextPage?: boolean;
 }
 
+interface CatalogRequestOptions {
+  /** Pass null for a registered provider. Omitting this uses the browser registry. */
+  manifestUrl?: string | null;
+}
+
 class ApiClient {
   private async fetcher<T>(url: string, options?: RequestInit): Promise<T> {
     const res = await fetch(url, options);
@@ -85,12 +90,12 @@ class ApiClient {
     });
   }
 
-  private appendManifest(url: string, sourceId: string): string {
+  private appendManifest(url: string, sourceId: string, manifestUrl?: string | null): string {
     url = this.appendReadPreferences(url);
-    const customSource = dynamicSourceRegistry.get(sourceId);
-    if (customSource?.manifestUrl) {
+    const resolvedManifestUrl = manifestUrl === undefined ? dynamicSourceRegistry.get(sourceId)?.manifestUrl : manifestUrl;
+    if (resolvedManifestUrl) {
       const sep = url.includes("?") ? "&" : "?";
-      return `${url}${sep}manifestUrl=${encodeURIComponent(customSource.manifestUrl)}`;
+      return `${url}${sep}manifestUrl=${encodeURIComponent(resolvedManifestUrl)}`;
     }
     return url;
   }
@@ -109,12 +114,12 @@ class ApiClient {
     return this.fetchSource<FilterList>(sourceId, this.appendManifest(`/api/sources/${sourceId}/filters`, sourceId));
   }
 
-  getPopular(sourceId: string, page: number = 1) {
-    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId));
+  getPopular(sourceId: string, page: number = 1, options?: CatalogRequestOptions) {
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId, options?.manifestUrl));
   }
 
-  getLatest(sourceId: string, page: number = 1) {
-    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
+  getLatest(sourceId: string, page: number = 1, options?: CatalogRequestOptions) {
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId, options?.manifestUrl));
   }
 
   search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, options?: { signal?: AbortSignal }) {

@@ -3,7 +3,10 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Books, CalendarBlank, CaretLeft, Compass, Download, Fire, Gear, HardDrives, MagnifyingGlass, Question, UserCircle } from "@phosphor-icons/react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { motion, AnimatePresence, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react"
+import { Button } from "@/components/ui/button"
+import { navigationLabels } from "./navigation-labels"
+import { useSearchAnchorPastHeader } from "./use-search-anchor-past-header"
 import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
@@ -20,8 +23,10 @@ export interface PageHeaderProps {
   icon?: React.ReactNode
   /** Show back button on mobile header */
   showBack?: boolean
-  /** Back button navigation target */
+  /** Fallback destination when browser history is unavailable. */
   backHref?: string
+  /** Navigate directly to backHref when the page provides a parent control. */
+  backBehavior?: "history" | "parent"
   /** Mobile header action elements (buttons, links, triggers; defaults to <HeaderActions />) */
   actions?: React.ReactNode
   /** Optional custom action elements for desktop header banner (e.g. filter buttons, refresh) */
@@ -38,6 +43,10 @@ export interface PageHeaderProps {
   heroSearchAnchorId?: string
   /** Hide desktop banner when desktop has separate editorial header (e.g. Beranda) */
   hideDesktop?: boolean
+  /** Compact desktop controls and semantic heading for destination layouts. */
+  desktopPresentation?: "banner" | "compact"
+  /** Use content when the page already supplies its primary heading. */
+  headingOwner?: "header" | "content"
   /** Outer wrapper className override */
   className?: string
 }
@@ -53,6 +62,7 @@ export function PageHeader({
   icon,
   showBack = false,
   backHref,
+  backBehavior = "history",
   actions = <HeaderActions />,
   desktopActions,
   meta,
@@ -61,66 +71,19 @@ export function PageHeader({
   detailTitleAnchorId,
   heroSearchAnchorId,
   hideDesktop = false,
+  desktopPresentation = "banner",
+  headingOwner = "header",
   className,
 }: PageHeaderProps) {
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [detailTitleVisible, setDetailTitleVisible] = React.useState(false)
-  const [heroSearchPast, setHeroSearchPast] = React.useState(false)
+  const heroSearchPast = useSearchAnchorPastHeader(heroSearchAnchorId, 56)
   const sub = subtitle ?? description
 
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 12)
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    handleScroll()
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  React.useEffect(() => {
-    if (!heroSearchAnchorId) {
-      setHeroSearchPast(false)
-      return
-    }
-
-    const updateVisibility = () => {
-      const el = document.getElementById(heroSearchAnchorId)
-      if (!el) {
-        setHeroSearchPast(window.scrollY > 100)
-        return
-      }
-      const rect = el.getBoundingClientRect()
-      // Mobile header is 56px tall. When hero search scrolls past the top bar, show search pill.
-      const isPast = rect.bottom < 56 && window.scrollY > 40
-      setHeroSearchPast(isPast)
-    }
-
-    let observer: IntersectionObserver | null = null
-    const el = document.getElementById(heroSearchAnchorId)
-    if (el && typeof IntersectionObserver !== "undefined") {
-      observer = new IntersectionObserver(
-        () => {
-          updateVisibility()
-        },
-        {
-          threshold: 0,
-          rootMargin: "-56px 0px 0px 0px",
-        }
-      )
-      observer.observe(el)
-    }
-
-    window.addEventListener("scroll", updateVisibility, { passive: true })
-    updateVisibility()
-
-    return () => {
-      observer?.disconnect()
-      window.removeEventListener("scroll", updateVisibility)
-    }
-  }, [heroSearchAnchorId])
+  const { scrollY } = useScroll()
+  useMotionValueEvent(scrollY, "change", (value) => setIsScrolled(value > 12))
 
   React.useEffect(() => {
     if (mode !== "detail") {
@@ -159,7 +122,7 @@ export function PageHeader({
   }, [detailTitleAnchorId, mode])
 
   const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
+    if (backBehavior === "history" && typeof window !== "undefined" && window.history.length > 1) {
       // Prefer the browser history entry so Back/Forward keeps native scroll
       // restoration. Reader routes now replace their detail slot, so the
       // previous entry is the logical parent instead of a stale reader page.
@@ -177,6 +140,9 @@ export function PageHeader({
 
   // Glass reacts to scroll, while detail-title visibility is tied to the actual
   // hero title leaving the viewport rather than a viewport-specific magic number.
+  const compact = desktopPresentation === "compact"
+  const DesktopTitle = headingOwner === "header" ? "h1" : "p"
+  const MobileTitle = compact || hideDesktop || headingOwner === "content" ? "p" : "h2"
   const isTitleVisible = mode === "detail" ? detailTitleVisible : true
   const isGlass =
     variant === "glass" ||
@@ -212,9 +178,9 @@ export function PageHeader({
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      window.dispatchEvent(new CustomEvent("open-command-menu"))
-                    }
+                    onClick={() => {
+                      if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("open-command-menu"))
+                    }}
                     className="flex items-center gap-2.5 h-10 w-full px-3 rounded-sm border border-border-subtle bg-surface-raised/90 text-text-muted hover:text-text-primary text-xs font-semibold backdrop-blur-md shadow-xs active:scale-[0.98] transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-accent select-none"
                     aria-label="Cari komik"
                   >
@@ -272,9 +238,9 @@ export function PageHeader({
                     )}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <h2 title={title} className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
+                      <MobileTitle title={title} className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
                         {title}
-                      </h2>
+                      </MobileTitle>
                       {meta && (
                         <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
                           {meta}
@@ -305,11 +271,23 @@ export function PageHeader({
         </div>
       </header>
 
-      {/* When desktop banner is hidden, preserve accessible H1 landmark */}
-      {hideDesktop && <h1 className="sr-only text-text-primary">{title}</h1>}
+      {headingOwner === "header" && (hideDesktop || compact) && (
+        <h1 className="sr-only text-text-primary">{title}</h1>
+      )}
 
-      {/* Skipped for mode="detail" or hideDesktop — detail pages have their own hero, and unified destination pages match Beranda layout */}
-      {mode !== "detail" && !hideDesktop && (
+      {(compact || hideDesktop || mode === "detail") && ((compact && showBack) || desktopActions != null) && (
+        <div className="hidden w-full items-center gap-3 md:flex">
+          {compact && showBack && (
+            <Button type="button" variant="ghost" size="sm" onClick={handleBack}>
+              <CaretLeft aria-hidden="true" />
+              Kembali
+            </Button>
+          )}
+          {desktopActions != null && <div className="ml-auto">{desktopActions}</div>}
+        </div>
+      )}
+
+      {mode !== "detail" && !hideDesktop && !compact && (
         <div
           className={cn(
             "hidden md:block relative border-b border-border-subtle px-0 pt-1 pb-4 mb-5",
@@ -325,9 +303,9 @@ export function PageHeader({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h1 title={title} className="text-2xl lg:text-3xl font-bold tracking-tight text-text-primary truncate">
+                  <DesktopTitle title={title} className="text-2xl lg:text-3xl font-bold tracking-tight text-text-primary truncate">
                     {title}
-                  </h1>
+                  </DesktopTitle>
                   {meta && (
                     <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
                       {meta}
@@ -354,16 +332,16 @@ export function PageHeader({
  * Home and manga detail retain their specialized PageHeader contracts.
  */
 const destinationHeaders = {
-  search: { title: "Cari", subtitle: "Cari komik dari sumber yang dipilih.", Icon: MagnifyingGlass },
-  library: { title: "Jelajah", subtitle: "Jelajahi katalog dari sumber yang kamu pilih.", Icon: Compass },
-  bookmark: { title: "Library", subtitle: "Bacaan dan komik yang kamu simpan.", Icon: Books },
-  popular: { title: "Populer", subtitle: "Peringkat komik teratas dari sumber aktif dan tren global.", Icon: Fire },
-  sources: { title: "Sumber", subtitle: "Atur sumber yang digunakan saat menjelajah.", Icon: HardDrives },
-  settings: { title: "Pengaturan", subtitle: "Atur akun, tampilan, bacaan, dan penyimpanan Yomirra.", Icon: Gear },
-  downloads: { title: "Unduhan", subtitle: "Kelola chapter yang tersimpan untuk dibaca offline.", Icon: Download },
-  account: { title: "Akun & Sinkronisasi", subtitle: "Kelola akun dan sinkronisasi bacaanmu.", Icon: UserCircle, showBack: true, backHref: "/settings" },
-  updates: { title: "Jadwal Mingguan", subtitle: "Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan.", Icon: CalendarBlank, showBack: true },
-  help: { title: "Pusat Bantuan", subtitle: "Panduan singkat saat mencari, membaca, dan menyimpan komik.", Icon: Question, showBack: true, backHref: "/" },
+  search: { title: navigationLabels.search, subtitle: "Cari komik dari sumber yang dipilih.", Icon: MagnifyingGlass },
+  library: { title: navigationLabels.library, subtitle: "Jelajahi katalog dari sumber yang kamu pilih.", Icon: Compass },
+  bookmark: { title: navigationLabels.bookmark, subtitle: "Bacaan dan komik yang kamu simpan.", Icon: Books },
+  popular: { title: navigationLabels.popular, subtitle: "Peringkat komik teratas dari sumber aktif dan tren global.", Icon: Fire },
+  sources: { title: navigationLabels.sources, subtitle: "Atur sumber yang digunakan saat menjelajah.", Icon: HardDrives },
+  settings: { title: navigationLabels.settings, subtitle: "Atur akun, tampilan, bacaan, dan penyimpanan Yomirra.", Icon: Gear },
+  downloads: { title: navigationLabels.downloads, subtitle: "Kelola chapter yang tersimpan untuk dibaca offline.", Icon: Download },
+  account: { title: navigationLabels.account, subtitle: "Kelola akun dan sinkronisasi bacaanmu.", Icon: UserCircle, showBack: true, backHref: "/settings" },
+  updates: { title: navigationLabels.updates, subtitle: "Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan.", Icon: CalendarBlank, showBack: true, backHref: "/bookmark" },
+  help: { title: navigationLabels.help, subtitle: "Panduan singkat saat mencari, membaca, dan menyimpan komik.", Icon: Question, showBack: true, backHref: "/" },
 } satisfies Record<string, {
   title: string
   subtitle: string
@@ -381,5 +359,5 @@ export function DestinationHeader({
   destination: Destination
 }) {
   const { Icon, ...preset } = destinationHeaders[destination]
-  return <PageHeader {...preset} {...props} icon={<Icon size={24} weight="regular" />} />
+  return <PageHeader desktopPresentation="compact" {...preset} {...props} icon={<Icon size={24} weight="regular" />} />
 }

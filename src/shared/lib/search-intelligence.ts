@@ -87,12 +87,13 @@ const TAGS: SearchTagDefinition[] = [
   { id: "mystery", label: "Mystery", category: "genre", aliases: ["mystery", "misteri"] },
   { id: "psychological", label: "Psychological", category: "genre", aliases: ["psychological", "psikologis"] },
   { id: "romance", label: "Romance", category: "genre", aliases: ["romance", "romansa"] },
-  { id: "school", label: "School", category: "genre", aliases: ["school", "sekolah"] },
+  { id: "school", label: "School", category: "genre", aliases: ["school", "school-life", "schoollife", "sekolah"] },
   { id: "sci-fi", label: "Sci-Fi", category: "genre", aliases: ["scifi", "sci-fi", "sciencefiction", "fiksiilmiah"] },
   { id: "slice-of-life", label: "Slice of Life", category: "genre", aliases: ["sliceoflife", "slice-of-life", "sol", "kehidupanseharihari"] },
   { id: "sports", label: "Sports", category: "genre", aliases: ["sports", "sport", "olahraga"] },
   { id: "supernatural", label: "Supernatural", category: "genre", aliases: ["supernatural", "supranatural"] },
   { id: "thriller", label: "Thriller", category: "genre", aliases: ["thriller"] },
+  { id: "webtoon", label: "Webtoon", category: "genre", aliases: ["webtoon", "webtoons", "webcomic", "webcomics"] },
   { id: "manga", label: "Manga", category: "format", aliases: ["manga"] },
   { id: "manhwa", label: "Manhwa", category: "format", aliases: ["manhwa"] },
   { id: "manhua", label: "Manhua", category: "format", aliases: ["manhua"] },
@@ -184,7 +185,12 @@ export function canonicalizeFilterValue(
   const fallbackId = normalizeTitle(id || label)
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "");
-  return { id: fallbackId || id, label: label || id };
+  const rawLabel = (label || id).trim();
+  const displayLabel =
+    rawLabel && rawLabel === rawLabel.toLowerCase()
+      ? rawLabel.replace(/\b([a-z])/g, (char) => char.toUpperCase())
+      : rawLabel;
+  return { id: fallbackId || id, label: displayLabel };
 }
 
 export function suggestSearchTags(

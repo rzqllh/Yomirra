@@ -133,7 +133,7 @@ export default function DownloadsPage() {
     <button
       type="button"
       onClick={() => {
-        if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
+        if (typeof window !== "undefined" && window.confirm("Yakin ingin menghapus semua unduhan?")) {
           clearDownloads();
           toast.info("Semua unduhan dihapus", {
             description: "Seluruh chapter offline di perangkat telah dihapus.",
@@ -145,7 +145,7 @@ export default function DownloadsPage() {
       <Trash size={16} />
       <span>Hapus Semua</span>
     </button>
-  ) : undefined;
+  ) : null;
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 B";
@@ -158,10 +158,11 @@ export default function DownloadsPage() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="focused" hasMobileHeader>
-        <DestinationHeader destination="downloads" actions={clearAllAction} desktopActions={clearAllAction} />
+        <DestinationHeader destination="downloads" actions={clearAllAction} />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
 
+          {clearAllAction && <div className="hidden justify-end md:flex">{clearAllAction}</div>}
           <StorageWarningBanner />
 
         {/* Device Storage Status */}
@@ -183,8 +184,8 @@ export default function DownloadsPage() {
               </div>
               <div className="w-full bg-surface-base border border-border-subtle/80 rounded-full h-2 overflow-hidden shadow-inner">
                 <div
-                  className="bg-accent h-full rounded-full motion-safe:transition-all motion-safe:duration-500 shadow-xs"
-                  style={{ width: `${Math.min(100, Math.max(1, (storageInfo.usage / (storageInfo.quota || 1)) * 100))}%` }}
+                  className="bg-accent h-full w-(--download-progress) rounded-full motion-safe:transition-all motion-safe:duration-500 shadow-xs"
+                  style={{ "--download-progress": `${Math.min(100, Math.max(1, (storageInfo.usage / (storageInfo.quota || 1)) * 100))}%` } as React.CSSProperties}
                 />
               </div>
             </div>
@@ -202,11 +203,11 @@ export default function DownloadsPage() {
           </div>
         ) : (
           <Tabs defaultValue={queuedItems.length > 0 ? "queue" : "completed"} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 sm:max-w-xs rounded-xl p-1 bg-surface-raised/80 border border-border-subtle shadow-xs">
-              <TabsTrigger value="queue" className="rounded-lg text-xs font-bold data-[state=active]:bg-surface-base data-[state=active]:text-text-primary data-[state=active]:shadow-xs transition-all">
+            <TabsList aria-label="Status unduhan" className="mb-4 grid h-auto w-full grid-cols-2 rounded-xl sm:max-w-xs">
+              <TabsTrigger value="queue" className="min-h-11">
                 Antrean ({queuedItems.length})
               </TabsTrigger>
-              <TabsTrigger value="completed" className="rounded-lg text-xs font-bold data-[state=active]:bg-surface-base data-[state=active]:text-text-primary data-[state=active]:shadow-xs transition-all">
+              <TabsTrigger value="completed" className="min-h-11">
                 Selesai ({completedItems.length})
               </TabsTrigger>
             </TabsList>
@@ -259,14 +260,14 @@ export default function DownloadsPage() {
                           </div>
                           <div className="w-full bg-surface-base border border-border-subtle/60 rounded-full h-2 overflow-hidden shadow-inner">
                             <div
-                              className={`h-full rounded-full motion-safe:transition-all motion-safe:duration-300 shadow-xs ${
+                              className={`h-full w-(--download-progress) rounded-full motion-safe:transition-all motion-safe:duration-300 shadow-xs ${
                                 item.status === "failed"
                                   ? "bg-semantic-error"
                                   : item.status === "paused"
                                   ? "bg-text-muted"
                                   : "bg-accent"
                               }`}
-                              style={{ width: `${clampedProgress}%` }}
+                              style={{ "--download-progress": `${clampedProgress}%` } as React.CSSProperties}
                             />
                           </div>
                           {item.error && (

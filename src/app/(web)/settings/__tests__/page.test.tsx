@@ -58,6 +58,20 @@ describe("SettingsPage - Update Checker UI", () => {
     return view;
   };
 
+  it("moves focus to the backup back button and restores it on return", async () => {
+    await renderWithMount();
+    fireEvent.click(screen.getByRole("button", { name: "Kelola cadangan" }));
+
+    const back = screen.getByRole("button", { name: "Kembali ke pengaturan" });
+    expect(document.activeElement).toBe(back);
+    expect(screen.getAllByRole("heading", { name: "Cadangan data" })).toEqual([
+      screen.getByRole("heading", { level: 1, name: "Cadangan data" }),
+    ]);
+
+    fireEvent.click(back);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Kelola cadangan" }));
+  });
+
   it("keeps Tampilkan NSFW off by default and inverts only the displayed toggle", async () => {
     useSettingsStore.setState({ hideNsfw: true });
     await renderWithMount();
@@ -144,5 +158,14 @@ describe("SettingsPage - Update Checker UI", () => {
     expect(screen.queryByRole("checkbox", { name: "Tampilkan konten 18+" })).toBeNull();
     expect(screen.getByText("Terkunci")).toBeDefined();
     expect(screen.getByRole("link", { name: /Masuk/i })).toBeDefined();
+  });
+
+  it("spans the footer utility container across both grid columns from lg breakpoint", async () => {
+    await renderWithMount();
+
+    const guideButton = screen.getByRole("button", { name: "Tampilkan panduan saat ke Beranda" });
+    const footer = guideButton.parentElement;
+    expect(footer?.className).toContain("lg:col-span-2");
+    expect(footer?.className).not.toContain("xl:col-span-2");
   });
 });

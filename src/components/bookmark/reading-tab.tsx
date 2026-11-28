@@ -101,6 +101,7 @@ export function ReadingTab({
           onChange={(e) => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery("")}
           placeholder="Cari bacaan aktif…"
+          variant="raised"
           aria-label="Cari bacaan aktif di riwayat"
         />
       </div>

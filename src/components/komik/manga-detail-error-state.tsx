@@ -51,10 +51,10 @@ export function MangaDetailErrorState({
     : `${sourceName} sedang tidak dapat digunakan. Coba lagi beberapa saat lagi.`;
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-24">
+    <div className="min-h-screen flex flex-col w-full relative pb-24">
       <div className="md:hidden">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
-          <PageHeader title={title} showBack={true} />
+          <PageHeader title={title} showBack headingOwner="content" />
         </div>
       </div>
 
@@ -125,6 +125,6 @@ export function MangaDetailErrorState({
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

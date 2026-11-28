@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { PageHeader } from "@/components/chrome/header";
 import { ShelfCard } from "@/components/komik/card";
@@ -9,9 +9,19 @@ import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { useSearchParams } from "next/navigation";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useVerifiedAge } from "@/shared/hooks/use-verified-age";
+import { isContentVisible, isSourceContentVisible } from "@/shared/sources/content-policy";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import type { SourceMetadata } from "@/shared/sources/source-types";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { House } from "@phosphor-icons/react/dist/ssr";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
@@ -30,25 +40,70 @@ export default function SourceBrowsePage({
   const pageStr = searchParams?.get("page") || "1";
   const currentPage = parseInt(pageStr, 10) || 1;
 
-  const { data: sourceInfo } = useQuery({
-    queryKey: ["source", sourceId],
-    queryFn: async () => {
-      const sources = await apiClient.getSources();
-      return sources.find(s => s.id === sourceId);
-    }
+  const { user } = useAuth();
+  const verifiedAge = useVerifiedAge(user);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const effectiveHideNsfw = hideNsfw || verifiedAge !== "verified";
+  const [localSources, setLocalSources] = React.useState<SourceMetadata[] | null>(null);
+  const [restrictedServerIds, setRestrictedServerIds] = React.useState(() => new Set<string>());
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const loadLocalSources = () => setLocalSources(dynamicSourceRegistry.getAll());
+    loadLocalSources();
+    window.addEventListener("sources_updated", loadLocalSources);
+    return () => window.removeEventListener("sources_updated", loadLocalSources);
+  }, []);
+
+  const { data: serverSource, status: sourceStatus } = useQuery({
+    ...sourceQueryOptions,
+    select: (sources) => sources.find((source) => source.id === sourceId) ?? null,
   });
+  const wasRestrictedOnServer = restrictedServerIds.has(sourceId);
+  if (serverSource && (serverSource.isNsfw === true) !== wasRestrictedOnServer) {
+    // A safe-mode registry response can omit this ID without releasing its server identity.
+    const next = new Set(restrictedServerIds);
+    if (serverSource.isNsfw === true) next.add(sourceId);
+    else next.delete(sourceId);
+    setRestrictedServerIds(next);
+  }
+
+  const hasServerIdentity = serverSource != null || wasRestrictedOnServer;
+  const localSource = localSources?.find((source) => source.id === sourceId);
+  const resolvedSource = hasServerIdentity ? serverSource : sourceStatus !== "pending" ? localSource : undefined;
+  const sourceInfo = resolvedSource && isDiscoverySourceSystemEligible(resolvedSource) &&
+    isSourceContentVisible(resolvedSource, effectiveHideNsfw)
+    ? resolvedSource
+    : undefined;
+  const isMissing = !sourceInfo && (serverSource != null || (wasRestrictedOnServer && effectiveHideNsfw) ||
+    (sourceStatus === "success" && localSources !== null));
+  const hasSourceError = !sourceInfo && sourceStatus === "error" && localSources !== null;
+  const provider = hasServerIdentity ? "server" : "browser";
+  const manifestUrl = hasServerIdentity ? null : localSource?.manifestUrl ?? null;
 
   const {
     data,
-    isLoading,
     status
   } = useQuery({
-    queryKey: ["sourceBrowse", sourceId, sort, currentPage],
-    queryFn: () =>
-      sort === "popular"
-        ? apiClient.getPopular(sourceId, currentPage)
-        : apiClient.getLatest(sourceId, currentPage),
-    placeholderData: keepPreviousData,
+    queryKey: ["sourceBrowse", sourceId, provider, manifestUrl, sort, effectiveHideNsfw, currentPage],
+    queryFn: async () => {
+      const catalog = await (sort === "popular"
+        ? apiClient.getPopular(sourceId, currentPage, { manifestUrl })
+        : apiClient.getLatest(sourceId, currentPage, { manifestUrl }));
+      if (!effectiveHideNsfw) return catalog;
+      return { ...catalog, mangas: catalog.mangas.filter((manga) => isContentVisible(manga)) };
+    },
+    placeholderData: (previousData, previousQuery) => {
+      const [, previousSourceId, previousProvider, previousManifestUrl, previousSort, previousHideNsfw] =
+        previousQuery?.queryKey ?? [];
+      if (previousSourceId === sourceId && previousProvider === provider &&
+        previousManifestUrl === manifestUrl && previousSort === sort &&
+        previousHideNsfw === effectiveHideNsfw) {
+        return previousData;
+      }
+    },
+    enabled: !!sourceInfo,
   });
 
   const sourceName = sourceInfo?.name || "Sumber";
@@ -63,25 +118,40 @@ export default function SourceBrowsePage({
           title={sourceName}
           subtitle="Jelajahi komik dari sumber ini."
           showBack
+          backHref="/sources"
+          backBehavior="parent"
+          hideDesktop
         />
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised/70 p-3 sm:p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-accent/10 rounded-lg text-accent">
-              <House size={24} weight="regular" />
+        <Button asChild variant="secondary" className="hidden self-start md:inline-flex">
+          <Link href="/sources">
+            <CaretLeft aria-hidden="true" />
+            Kembali ke Sumber
+          </Link>
+        </Button>
+        {sourceInfo && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised/70 p-3 sm:p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <House size={24} weight="regular" />
+              </div>
+              <div>
+                <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
+                <p className="text-xs text-text-muted">Sertakan komik dari sumber ini di rekomendasi Beranda.</p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
-              <p className="text-xs text-text-muted">Sertakan komik dari sumber ini di rekomendasi Beranda.</p>
-            </div>
+            <ToggleSwitch
+              checked={!isHiddenFromHome}
+              onCheckedChange={() => toggleHomeSource(sourceId)}
+              label="Tampilkan di Beranda"
+            />
           </div>
-          <ToggleSwitch
-            checked={!isHiddenFromHome}
-            onCheckedChange={() => toggleHomeSource(sourceId)}
-            label="Tampilkan di Beranda"
-          />
-        </div>
+        )}
 
-        {status === "pending" || isLoading ? (
+        {isMissing ? (
+          <p className="py-20 text-center text-text-primary">Sumber tidak ditemukan.</p>
+        ) : hasSourceError ? (
+          <p role="alert" className="py-20 text-center text-text-primary">Gagal memuat daftar sumber. Coba lagi nanti.</p>
+        ) : !sourceInfo || status === "pending" ? (
           <MangaGridSkeleton
             count={12}
             className="gap-y-6 sm:gap-y-8 md:gap-y-10"

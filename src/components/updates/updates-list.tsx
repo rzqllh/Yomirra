@@ -12,9 +12,10 @@ import {
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-import { useUpdateStore } from "@/shared/store/update-store";
-import { useLibraryStore } from "@/shared/store/library-store";
+import { getUpdateKey, useUpdateStore } from "@/shared/store/update-store";
+import { useLibraryStore, type SourceRef } from "@/shared/store/library-store";
 import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
+import type { MangaUpdateItem } from "@/shared/types/update";
 import { useUpdateChecker } from "@/shared/hooks/use-update-checker";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -51,6 +52,7 @@ export const WEEKDAYS = [
 
 export interface WeeklyMangaItem {
   key: string;
+  updateRecordKey?: string;
   sourceId: string;
   mangaId: string;
   mangaTitle: string;
@@ -59,6 +61,7 @@ export interface WeeklyMangaItem {
   latestChapterId?: string;
   latestChapterNumber?: number;
   latestChapterTitle?: string;
+  latestChapterSource?: { sourceId: string; mangaId: string } | null;
   detectedAt?: string;
   seenAt?: string;
   error?: string;
@@ -75,13 +78,44 @@ export interface UpdateCardProps {
   onMarkSeen?: (sourceId: string, mangaId: string) => void;
 }
 
+function getWeeklyChapter(update?: MangaUpdateItem, linkedSources?: SourceRef[]) {
+  const sourceId = update?.detectedSourceId;
+  let latestChapterSource: WeeklyMangaItem["latestChapterSource"];
+  if (update && sourceId && sourceId !== update.sourceId) {
+    latestChapterSource = null;
+    const mangaIds = new Set(linkedSources?.flatMap((ref) =>
+      ref.sourceId === sourceId && ref.matchConfidence === "CONFIRMED" && ref.mangaId
+        ? [ref.mangaId]
+        : []
+    ));
+    if (mangaIds.size === 1) {
+      const [mangaId] = mangaIds;
+      latestChapterSource = { sourceId, mangaId };
+    }
+  } else if (update) {
+    latestChapterSource = { sourceId: update.sourceId, mangaId: update.mangaId };
+  }
+
+  return {
+    latestChapterId: update?.latestChapterId,
+    latestChapterNumber: update?.latestChapterNumber,
+    latestChapterTitle: update?.latestChapterTitle,
+    latestChapterSource,
+    detectedAt: update?.detectedAt,
+    seenAt: update?.seenAt,
+  };
+}
+
 export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: UpdateCardProps) {
   const hasHistory = Boolean(historyItem);
-  const targetChapterId = historyItem?.chapterId || item.latestChapterId;
   const detailHref = getMangaDetailHref(item.sourceId, item.mangaId, "/updates");
-  const readerHref = targetChapterId
-    ? getReaderHref(item.sourceId, item.mangaId, targetChapterId, "/updates")
-    : detailHref;
+  const chapterSource = item.latestChapterSource === undefined ? item : item.latestChapterSource;
+  let readerHref = detailHref;
+  if (historyItem?.chapterId) {
+    readerHref = getReaderHref(historyItem.sourceId, historyItem.mangaId, historyItem.chapterId, "/updates");
+  } else if (item.latestChapterId && chapterSource) {
+    readerHref = getReaderHref(chapterSource.sourceId, chapterSource.mangaId, item.latestChapterId, "/updates");
+  }
   const isUnread = Boolean(item.latestChapterId && !item.seenAt);
   const isWithin24h = item.detectedAt
     ? Date.now() - new Date(item.detectedAt).getTime() < 24 * 60 * 60 * 1000
@@ -235,7 +269,8 @@ function ErrorBanner({
                 <ArrowsClockwise
                   size={12}
                   weight="regular"
-                  className={isScanning ? "animate-spin" : ""}
+                  aria-hidden="true"
+                className={isScanning ? "motion-safe:animate-spin" : undefined}
                 />
                 Coba lagi
               </button>
@@ -283,11 +318,141 @@ export interface UpdatesListProps {
   hideHeader?: boolean;
 }
 
+function buildWeeklyMangaItems(
+  libraryItems: ReturnType<typeof useLibraryStore.getState>["items"],
+  updateItems: Record<string, MangaUpdateItem>,
+): WeeklyMangaItem[] {
+  const validLibEntries = Object.values(libraryItems).filter(
+    (lib) =>
+      Boolean(lib && lib.sourceId && lib.mangaId) &&
+      lib.isBookmarked !== false &&
+      isWeeklyScheduleEligibleStatus(lib.status)
+  );
+
+  if (validLibEntries.length > 0) {
+    const mapped = validLibEntries.map((lib) => {
+      const updateKey = getUpdateKey(lib.sourceId, lib.mangaId);
+      const legacy = updateItems[updateKey];
+      const updateRecordKey = lib.id && updateItems[lib.id] ? lib.id : updateKey;
+      const upd = updateItems[updateRecordKey];
+      const usesLegacyChapter = !upd?.latestChapterId && Boolean(legacy?.latestChapterId);
+      const chapter = getWeeklyChapter(usesLegacyChapter ? legacy : upd, lib.linkedSources);
+
+      const inferredDay = (() => {
+        if (chapter.detectedAt) return new Date(chapter.detectedAt).getDay();
+        if (lib.updatedAt) return new Date(lib.updatedAt).getDay();
+        // SCH-05: Never guess based on addedAt - categorize as flexible (-2)
+        return -2;
+      })();
+
+      const effectiveDay = lib.releaseDay !== undefined ? lib.releaseDay : inferredDay;
+
+      // Clean up title: if lib.title is missing, fallback to upd.mangaTitle or humanized mangaId
+      const rawTitle = lib.title?.trim() || upd?.mangaTitle?.trim() || "";
+      const mangaTitle =
+        rawTitle ||
+        lib.mangaId.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+      return {
+        key: updateKey,
+        updateRecordKey,
+        sourceId: lib.sourceId,
+        mangaId: lib.mangaId,
+        mangaTitle,
+        coverUrl: lib.coverUrl || upd?.coverUrl,
+        sourceName: lib.sourceName || upd?.sourceName || lib.sourceId,
+        ...chapter,
+        detectedAt: chapter.detectedAt || lib.updatedAt || lib.addedAt,
+        error: upd?.error,
+        releaseDay: lib.releaseDay,
+        inferredDay,
+        effectiveDay,
+        publicationStatus: normalizePublicationStatus(lib.status),
+      };
+    });
+
+    // Deduplicate by updateKey (sourceId::mangaId) to ensure uniqueness
+    const dedupedMap = new Map<string, WeeklyMangaItem>();
+    for (const item of mapped) {
+      if (!dedupedMap.has(item.key)) {
+        dedupedMap.set(item.key, item);
+      } else {
+        // If collision occurs, pick the one with manual releaseDay or latest detectedAt
+        const existing = dedupedMap.get(item.key)!;
+        const existingTime = existing.detectedAt ? new Date(existing.detectedAt).getTime() : 0;
+        const newTime = item.detectedAt ? new Date(item.detectedAt).getTime() : 0;
+        if (item.releaseDay !== undefined && existing.releaseDay === undefined) {
+          dedupedMap.set(item.key, item);
+        } else if (newTime > existingTime) {
+          dedupedMap.set(item.key, item);
+        }
+      }
+    }
+
+    const dedupedItems = Array.from(dedupedMap.values());
+
+    // Sort by detectedAt descending with deterministic tie-breaking by key
+    return dedupedItems.sort((a, b) => {
+      const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
+      const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return a.key.localeCompare(b.key);
+    });
+  }
+
+  // Fallback: If library store is empty (e.g. unit tests with mocked update-store), use updateItems
+  const validUpdates = Object.entries(updateItems).filter(
+    ([, upd]) => Boolean(upd && upd.sourceId && upd.mangaId)
+  );
+  const fallbackUpdates = new Map<string, [string, MangaUpdateItem]>();
+  for (const [recordKey, upd] of validUpdates) {
+    const updateKey = getUpdateKey(upd.sourceId, upd.mangaId);
+    const existing = fallbackUpdates.get(updateKey);
+    if (!existing || (existing[0] === updateKey && recordKey !== updateKey)) {
+      fallbackUpdates.set(updateKey, [recordKey, upd]);
+    }
+  }
+
+  const updateEntries = Array.from(fallbackUpdates, ([updateKey, [updateRecordKey, upd]]) => {
+    const legacy = updateItems[updateKey];
+    const usesLegacyChapter = !upd.latestChapterId && Boolean(legacy?.latestChapterId);
+    const linkedSources = libraryItems[upd.savedTitleId ?? updateRecordKey]?.linkedSources;
+    const chapter = getWeeklyChapter(usesLegacyChapter ? legacy : upd, linkedSources);
+    const inferredDay = chapter.detectedAt ? new Date(chapter.detectedAt).getDay() : 1;
+    const rawTitle = upd.mangaTitle?.trim() || "";
+    const mangaTitle =
+      rawTitle ||
+      upd.mangaId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return {
+      key: updateKey,
+      updateRecordKey,
+      sourceId: upd.sourceId,
+      mangaId: upd.mangaId,
+      mangaTitle,
+      coverUrl: upd.coverUrl,
+      sourceName: upd.sourceName || upd.sourceId,
+      ...chapter,
+      error: upd.error,
+      releaseDay: undefined,
+      inferredDay,
+      effectiveDay: inferredDay,
+    };
+  });
+
+  return updateEntries.sort((a, b) => {
+    const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
+    const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return a.key.localeCompare(b.key);
+  });
+}
+
 export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = false }: UpdatesListProps = {}) {
   const isMounted = useMounted();
   const libraryItems = useLibraryStore((state) => state.items || {});
   const updateLibraryItem = useLibraryStore((state) => state.updateLibraryItem);
-  const { items: updateItems, markAllAsSeen, markAsSeen } = useUpdateStore();
+  const { items: updateItems, markAllAsSeen, markAsSeenById } = useUpdateStore();
   const { isScanning, triggerScan } = useUpdateChecker();
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const todayKey = useMemo(() => String(new Date().getDay()), []);
@@ -296,128 +461,10 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 // Q118: Retain unread badges across route transitions until user actually interacts with or marks them seen
 
   // Combine library bookmarks with update store data
-  const allItems = useMemo<WeeklyMangaItem[]>(() => {
-    const validLibEntries = Object.values(libraryItems).filter(
-      (lib) =>
-        Boolean(lib && lib.sourceId && lib.mangaId) &&
-        lib.isBookmarked !== false &&
-        isWeeklyScheduleEligibleStatus(lib.status)
-    );
-
-    if (validLibEntries.length > 0) {
-      const mapped = validLibEntries.map((lib) => {
-        const updateKey = `${lib.sourceId}::${lib.mangaId}`;
-        const upd = updateItems[updateKey];
-
-        const inferredDay = (() => {
-          if (upd?.detectedAt) return new Date(upd.detectedAt).getDay();
-          if (lib.updatedAt) return new Date(lib.updatedAt).getDay();
-          // SCH-05: Never guess based on addedAt - categorize as flexible (-2)
-          return -2;
-        })();
-
-        const effectiveDay = lib.releaseDay !== undefined ? lib.releaseDay : inferredDay;
-
-        // Clean up title: if lib.title is missing, fallback to upd.mangaTitle or humanized mangaId
-        const rawTitle = lib.title?.trim() || upd?.mangaTitle?.trim() || "";
-        const mangaTitle =
-          rawTitle ||
-          lib.mangaId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-        return {
-          key: updateKey,
-          sourceId: lib.sourceId,
-          mangaId: lib.mangaId,
-          mangaTitle,
-          coverUrl: lib.coverUrl || upd?.coverUrl,
-          sourceName: lib.sourceName || upd?.sourceName || lib.sourceId,
-          latestChapterId: upd?.latestChapterId,
-          latestChapterNumber: upd?.latestChapterNumber,
-          latestChapterTitle: upd?.latestChapterTitle,
-          detectedAt: upd?.detectedAt || lib.updatedAt || lib.addedAt,
-          seenAt: upd?.seenAt,
-          error: upd?.error,
-          releaseDay: lib.releaseDay,
-          inferredDay,
-          effectiveDay,
-          publicationStatus: normalizePublicationStatus(lib.status),
-        };
-      });
-
-      // Deduplicate by updateKey (sourceId::mangaId) to ensure uniqueness
-      const dedupedMap = new Map<string, WeeklyMangaItem>();
-      for (const item of mapped) {
-        if (!dedupedMap.has(item.key)) {
-          dedupedMap.set(item.key, item);
-        } else {
-          // If collision occurs, pick the one with manual releaseDay or latest detectedAt
-          const existing = dedupedMap.get(item.key)!;
-          const existingTime = existing.detectedAt ? new Date(existing.detectedAt).getTime() : 0;
-          const newTime = item.detectedAt ? new Date(item.detectedAt).getTime() : 0;
-          if (item.releaseDay !== undefined && existing.releaseDay === undefined) {
-            dedupedMap.set(item.key, item);
-          } else if (newTime > existingTime) {
-            dedupedMap.set(item.key, item);
-          }
-        }
-      }
-
-      const dedupedItems = Array.from(dedupedMap.values());
-
-      // Sort by detectedAt descending with deterministic tie-breaking by key
-      return dedupedItems.sort((a, b) => {
-        const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
-        const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
-        if (timeB !== timeA) return timeB - timeA;
-        return a.key.localeCompare(b.key);
-      });
-    }
-
-    // Fallback: If library store is empty (e.g. unit tests with mocked update-store), use updateItems
-    const validUpdates = Object.values(updateItems).filter(
-      (upd) => Boolean(upd && upd.sourceId && upd.mangaId)
-    );
-    const updateEntries = validUpdates.map((upd) => {
-      const updateKey = `${upd.sourceId}::${upd.mangaId}`;
-      const inferredDay = upd.detectedAt ? new Date(upd.detectedAt).getDay() : 1;
-      const rawTitle = upd.mangaTitle?.trim() || "";
-      const mangaTitle =
-        rawTitle ||
-        upd.mangaId.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-      return {
-        key: updateKey,
-        sourceId: upd.sourceId,
-        mangaId: upd.mangaId,
-        mangaTitle,
-        coverUrl: upd.coverUrl,
-        sourceName: upd.sourceName || upd.sourceId,
-        latestChapterId: upd.latestChapterId,
-        latestChapterNumber: upd.latestChapterNumber,
-        latestChapterTitle: upd.latestChapterTitle,
-        detectedAt: upd.detectedAt,
-        seenAt: upd.seenAt,
-        error: upd.error,
-        releaseDay: undefined,
-        inferredDay,
-        effectiveDay: inferredDay,
-      };
-    });
-
-    const dedupedFallbackMap = new Map<string, WeeklyMangaItem>();
-    for (const item of updateEntries) {
-      if (!dedupedFallbackMap.has(item.key)) {
-        dedupedFallbackMap.set(item.key, item);
-      }
-    }
-
-    return Array.from(dedupedFallbackMap.values()).sort((a, b) => {
-      const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
-      const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
-      if (timeB !== timeA) return timeB - timeA;
-      return a.key.localeCompare(b.key);
-    });
-  }, [libraryItems, updateItems]);
+  const allItems = useMemo<WeeklyMangaItem[]>(
+    () => buildWeeklyMangaItems(libraryItems, updateItems),
+    [libraryItems, updateItems]
+  );
 
   const errorItems = useMemo(() => allItems.filter((i) => i.error), [allItems]);
 
@@ -447,9 +494,9 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 
   return (
     <div className="w-full space-y-6">
-      {!hideHeader && (
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {!hideHeader && (
+          <div className="mr-auto">
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
               Jadwal Mingguan
             </h2>
@@ -457,30 +504,31 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
               Perkiraan jadwal chapter baru dari komik yang kamu simpan.
             </p>
           </div>
+        )}
 
-          {renderRefreshButton ? (
-            renderRefreshButton({
-              isScanning,
-              onRefresh: () => triggerScan({ forceRefresh: true }),
-            })
-          ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => triggerScan({ forceRefresh: true })}
-              disabled={isScanning}
-              className="gap-2 rounded-xl shrink-0"
-            >
-              <ArrowsClockwise
-                size={15}
-                weight="regular"
-                className={isScanning ? "animate-spin" : ""}
-              />
-              <span className="hidden sm:inline">Perbarui</span>
-            </Button>
-          )}
-        </div>
-      )}
+        {renderRefreshButton ? (
+          renderRefreshButton({
+            isScanning,
+            onRefresh: () => triggerScan({ forceRefresh: true }),
+          })
+        ) : (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => triggerScan({ forceRefresh: true })}
+            disabled={isScanning}
+            className="gap-2 rounded-xl shrink-0"
+          >
+            <ArrowsClockwise
+              size={15}
+              weight="regular"
+              aria-hidden="true"
+              className={isScanning ? "motion-safe:animate-spin" : undefined}
+            />
+            <span>{isScanning ? "Memperbarui…" : "Perbarui"}</span>
+          </Button>
+        )}
+      </div>
 
       {errorItems.length > 0 && (
         <ErrorBanner
@@ -577,7 +625,19 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                     key={item.key}
                     item={item}
                     historyItem={historyItem}
-                    onMarkSeen={markAsSeen}
+                    onMarkSeen={() => {
+                      const recordKey = item.updateRecordKey ?? item.key;
+                      markAsSeenById(recordKey);
+                      const legacy = updateItems[item.key];
+                      if (
+                        recordKey !== item.key &&
+                        legacy?.sourceId === item.sourceId &&
+                        legacy.mangaId === item.mangaId &&
+                        (!legacy.savedTitleId || legacy.savedTitleId === item.key || legacy.savedTitleId === recordKey)
+                      ) {
+                        markAsSeenById(item.key);
+                      }
+                    }}
                     onScheduleChange={(value) => {
                       const releaseDay = value === "" ? undefined : Number(value);
                       updateLibraryItem(item.sourceId, item.mangaId, { releaseDay });
