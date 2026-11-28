@@ -16,12 +16,12 @@ describe("accessibility cleanup contracts", () => {
     expect(css).toContain("animation-duration: 0s !important");
   });
 
-  it("keeps reader panel motion reduced and exposes modal semantics", () => {
+  it("keeps reader panel motion reduced and exposes modal semantics when not docked", () => {
     const source = read("src/components/reader/reader-panel-shell.tsx");
 
     expect(source).toContain("useReducedMotion");
     expect(source).toContain('role="dialog"');
-    expect(source).toContain('aria-modal="true"');
+    expect(source).toContain("aria-modal={isDockedSidePanel ? undefined : true}");
     expect(source).toContain("reducedMotion ? { duration: 0 }");
   });
 

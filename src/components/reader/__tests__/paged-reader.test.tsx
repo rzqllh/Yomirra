@@ -483,5 +483,20 @@ describe("PagedReader Component & Integration", () => {
       const historyItem = useHistoryStore.getState().items["src1::manga1::ch1"];
       expect(historyItem?.progressPercent).toBe(100);
     });
+
+    it("ignores ArrowRight/ArrowLeft page shortcuts while a modal dialog is open", () => {
+      renderWithClient(
+        <>
+          <PagedReader sourceId="src1" mangaId="manga1" chapterId="ch1" pages={mockPages} />
+          <div role="dialog" aria-modal="true">Modal Terbuka</div>
+        </>
+      );
+
+      expect(screen.getByText("1 / 3")).toBeDefined();
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(screen.getByText("1 / 3")).toBeDefined();
+      fireEvent.keyDown(window, { key: "ArrowLeft" });
+      expect(screen.getByText("1 / 3")).toBeDefined();
+    });
   });
 });

@@ -5,6 +5,8 @@ import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
 import { getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
+import { discoverLocalMetadataWorks } from "@/server/lib/metadata/local-catalog-index";
+import { isTursoCatalogEnabled, lookupTursoCatalog } from "@/server/lib/metadata/turso-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -79,9 +81,13 @@ export async function POST(request: NextRequest) {
   }
 
   const hideNsfw = (await getVerifiedRequestReadOptions(request)).hideNsfw !== false;
-  const [result, metadataWorks] = await Promise.all([
+  const useTurso=isTursoCatalogEnabled();
+  const [result,remote,localMatches] = await Promise.all([
     rankSearchIntelligence({ ...parsed.data, hideNsfw }),
-    matchMangaBakaWorks(parsed.data.query),
+    useTurso?lookupTursoCatalog(parsed.data.query,undefined,true):Promise.resolve(null),
+    useTurso?Promise.resolve([]):matchMangaBakaWorks(parsed.data.query),
   ]);
-  return applyRateLimitHeaders(NextResponse.json({ data: { ...result, ...(metadataWorks.length ? { metadataWorks } : {}) } }), rateLimit);
+  const metadataWorks=useTurso?(remote&&remote.works.length<=3&&remote.works.every(w=>w.contentRating==="safe")?remote.works:[]):localMatches;
+  const metadataDiscovery=useTurso?(remote?.discovery??[]):discoverLocalMetadataWorks(parsed.data.query);
+  return applyRateLimitHeaders(NextResponse.json({ data: { ...result, ...(metadataWorks.length ? { metadataWorks } : {}), ...(metadataDiscovery.length?{metadataDiscovery}:{}) } }), rateLimit);
 }

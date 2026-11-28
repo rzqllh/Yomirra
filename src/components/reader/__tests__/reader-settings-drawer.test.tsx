@@ -198,4 +198,34 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     expect(useReaderStore.getState().preferences.background).toBe("black");
   });
 
+  it("omits aria-modal and avoids trapping Tab when docked as desktop side panel", () => {
+    const originalMatchMedia = window.matchMedia;
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("768px"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    });
+
+    try {
+      render(<ReaderSettingsDrawer isOpen={false} onClose={vi.fn()} />);
+      const panel = screen.getByRole("dialog", { name: /Pengaturan pembaca/i });
+      expect(panel.getAttribute("aria-modal")).toBeNull();
+
+      const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      window.dispatchEvent(tabEvent);
+      expect(tabEvent.defaultPrevented).toBe(false);
+    } finally {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        writable: true,
+        value: originalMatchMedia,
+      });
+    }
+  });
+
 });

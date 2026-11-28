@@ -4,6 +4,7 @@ import { UnifiedFilterDrawer, isNsfwGenre } from "../unified-filter-drawer";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
@@ -74,6 +75,7 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     queryClient.clear();
     vi.clearAllMocks();
     useSettingsStore.setState({ hideNsfw: true });
+    useSourcePreferencesStore.setState({ disabledSources: [] });
     useSearchFilterStore.setState({
       hasCustomizedSources: false,
       selectedSources: null,
@@ -289,5 +291,35 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     await waitFor(() => {
       expect(screen.getByText("Status Rilis")).toBeDefined();
     });
+  });
+
+  it("excludes disabledSources from search filter fetching by default", async () => {
+    const { apiClient } = await import("@/shared/api-client");
+    useSourcePreferencesStore.setState({ disabledSources: ["disabled-src"] });
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "active-src",
+        name: "Active Source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: true },
+        isNsfw: false,
+      } as any,
+      {
+        id: "disabled-src",
+        name: "Disabled Source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: true },
+        isNsfw: false,
+      } as any,
+    ]);
+
+    render(<UnifiedFilterDrawer context="search" />, { wrapper });
+
+    await waitFor(() => {
+      expect(apiClient.getFilters).toHaveBeenCalledWith("active-src");
+    });
+    expect(apiClient.getFilters).not.toHaveBeenCalledWith("disabled-src");
   });
 });

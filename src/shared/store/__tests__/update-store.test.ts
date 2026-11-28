@@ -276,3 +276,11 @@ describe("UpdateStore (Slice 1.1)", () => {
     });
   });
 });
+
+it("preserves release timestamps when a scan supplies only status",()=>{
+  const state=useUpdateStore.getState();
+  const detectedAt="2026-11-24T00:00:00.000Z";
+  state.upsertUpdate({sourceId:"status-fixture",mangaId:"work",mangaTitle:"Fixture",latestChapterId:"ch1",detectedAt,seenAt:detectedAt});
+  state.upsertUpdate({sourceId:"status-fixture",mangaId:"work",mangaTitle:"Fixture",error:"Unavailable"});
+  expect(useUpdateStore.getState().getUpdate("status-fixture","work")).toMatchObject({latestChapterId:"ch1",detectedAt,seenAt:detectedAt,error:"Unavailable"});
+});

@@ -37,6 +37,7 @@ import { morphIconPairs } from "@/shared/lib/motion/morph-icons";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { motion, useReducedMotion } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
+import { mangaUpdatesReferenceHref, type MangaUpdatesReference } from "@/shared/lib/manga-updates-reference";
 import {
   resolveChapterAnchorIndex,
   resolveContinueChapterId,
@@ -74,6 +75,7 @@ interface MangaDetailViewProps {
   detail: MangaDetail;
   chapters: Chapter[];
   chapterLoadError?: string;
+  metadataReference?: MangaUpdatesReference;
 }
 
 export function MangaDetailView(props: MangaDetailViewProps) {
@@ -86,6 +88,7 @@ function MangaDetailContent({
   detail,
   chapters,
   chapterLoadError,
+  metadataReference,
 }: MangaDetailViewProps) {
   const router = useRouter();
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -95,6 +98,7 @@ function MangaDetailContent({
   const isMounted = useMounted();
   const reducedMotion = useReducedMotion();
 
+  const metadataHref = metadataReference && mangaUpdatesReferenceHref(metadataReference.id);
   const authorDisplay = useMemo(() => formatAuthor(detail.author), [detail.author]);
   const cleanedSynopsis = useMemo(() => normalizeSynopsis(detail.description || ""), [detail.description]);
 
@@ -324,6 +328,8 @@ function MangaDetailContent({
             title={detail.title}
             showBack={true}
             backHref={backHref}
+            desktopPresentation="compact"
+            headingOwner="content"
             mode="detail"
             variant="auto"
             detailTitleAnchorId="manga-detail-title-mobile"
@@ -448,6 +454,11 @@ function MangaDetailContent({
         actions={renderActions()}
         synopsis={
           <>
+            {metadataHref && metadataReference && (
+              <p className="mb-3 text-xs text-text-secondary">
+                Referensi metadata: <a href={metadataHref} className="text-accent underline" rel="noreferrer">{metadataReference.title} (MangaUpdates)</a>.
+              </p>
+            )}
             <div className="flex items-center justify-between mb-2.5">
               <h2 className="text-base font-bold tracking-tight text-text-primary">Sinopsis</h2>
               {cleanedSynopsis.length > 280 && (

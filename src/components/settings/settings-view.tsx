@@ -92,6 +92,18 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
   }, []);
 
   const [subView, setSubView] = React.useState<"main" | "backup">("main");
+  const backupTriggerRef = React.useRef<HTMLButtonElement>(null);
+  const backupBackRef = React.useRef<HTMLButtonElement>(null);
+  const hasOpenedBackup = React.useRef(false);
+
+  React.useEffect(() => {
+    if (subView === "backup") {
+      hasOpenedBackup.current = true;
+      backupBackRef.current?.focus();
+    } else if (hasOpenedBackup.current) {
+      backupTriggerRef.current?.focus();
+    }
+  }, [subView]);
   const [isClearDataDialogOpen, setIsClearDataDialogOpen] = React.useState(false);
   const [isClearDownloadsDialogOpen, setIsClearDownloadsDialogOpen] = React.useState(false);
   const [isSharedDeviceDialogOpen, setIsSharedDeviceDialogOpen] = React.useState(false);
@@ -665,6 +677,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
             description="Simpan salinan data komik ke berkas cadangan JSON atau pulihkan riwayat dan koleksi."
             right={
               <Button
+                ref={backupTriggerRef}
                 onClick={() => setSubView("backup")}
                 variant="outline"
                 className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-accent-on min-h-11 rounded-sm font-bold text-xs px-3.5 transition-colors"
@@ -716,7 +729,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
       </div>
 
       {/* Footer Utility Actions */}
-      <div className="xl:col-span-2 flex flex-col items-center gap-3 pt-2 pb-6">
+      <div className="lg:col-span-2 flex flex-col items-center gap-3 pt-2 pb-6">
         <Button
           variant="outline"
           size="sm"
@@ -750,29 +763,20 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
                   title="Cadangan data"
                   subtitle="Ekspor atau pulihkan riwayat baca, bookmark, dan koleksi lokal."
                   icon={<FileText size={24} weight="regular" />}
-                  actions={
-                    <Button
-                      variant="secondary"
-                      onClick={() => setSubView("main")}
-                      className="min-h-11 rounded-sm font-bold text-xs"
-                    >
-                      <CaretLeft size={16} weight="regular" className="mr-1" />
-                      Kembali ke pengaturan
-                    </Button>
-                  }
-                  desktopActions={
-                    <Button
-                      variant="secondary"
-                      onClick={() => setSubView("main")}
-                      className="min-h-11 rounded-sm font-bold text-xs"
-                    >
-                      <CaretLeft size={16} weight="regular" className="mr-1" />
-                      Kembali ke pengaturan
-                    </Button>
-                  }
+                  desktopPresentation="compact"
+                  actions={null}
                 />
                 <ContentLane variant="focused" className="flex flex-col gap-4">
-                  <BackupRestoreView onBack={() => setSubView("main")} />
+                  <Button
+                    ref={backupBackRef}
+                    variant="secondary"
+                    onClick={() => setSubView("main")}
+                    className="self-start"
+                  >
+                    <CaretLeft aria-hidden="true" />
+                    Kembali ke pengaturan
+                  </Button>
+                  <BackupRestoreView onBack={() => setSubView("main")} showIntro={false} />
                 </ContentLane>
               </>
             ) : (

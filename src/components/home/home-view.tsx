@@ -25,7 +25,8 @@ export function HomeView({ children }: HomeViewProps) {
           icon={<House size={20} weight="regular" />}
           actions={<HeaderActions />}
           heroSearchAnchorId="home-hero-search"
-          hideDesktop
+          desktopPresentation="compact"
+          headingOwner="content"
         />
         <PageContainer hasMobileHeader>
           <div className="flex flex-col gap-8 md:gap-10">

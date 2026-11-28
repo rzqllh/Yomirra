@@ -69,6 +69,16 @@ describe("formatHealthDigestWithCoverage", () => {
     expect(message).not.toContain("belum terukur");
   });
 
+  it("distinguishes successful catalogue probes from verified page references", () => {
+    const message = formatHealthDigestWithCoverage(["shinigami","komikindo","mangadex"], {
+      shinigami: {...healthySnapshot("shinigami"),metadata:{probeType:"lightweight"}},
+      komikindo: {...healthySnapshot("komikindo"),stage:"chapters",metadata:{probeType:"deep",pagesSkipped:"locked"}},
+      mangadex: {...healthySnapshot("mangadex"),stage:"pages",metadata:{probeType:"deep",sampleChapterId:"fixture"}},
+    },NOW);
+    expect(message).toContain("Referensi halaman terverifikasi: 1/3 source");
+    expect(message).toContain("Probe katalog bukan uji baca lengkap");
+  });
+
   it("does not claim health when no active sources are registered", () => {
     const message = formatHealthDigestWithCoverage([], {}, NOW);
     expect(message).toContain("Belum ada source aktif");

@@ -32,6 +32,7 @@ export function useReaderScroll({
   onPageChange,
 }: UseReaderScrollOptions) {
   const lastActiveChapter = React.useRef(chapterId);
+  const prefetchAttempt = React.useRef<string | null>(null);
   const scrollStopTimer = React.useRef<NodeJS.Timeout>(undefined);
   const pendingProgressSave = React.useRef<{ chapterId: string; pageIndex: number; offset: number } | null>(null);
   
@@ -47,33 +48,35 @@ export function useReaderScroll({
   useVisibilityFlush(flushProgress);
 
   React.useEffect(() => {
-    let ticking = false;
-    let hasPrefetched = false;
+    let frame: number | null = null;
+    const prefetchKey = JSON.stringify([sourceId,mangaId,chapterId,nextChapterId]);
     let lastScrollY = window.scrollY;
     let lastScrollTime = performance.now();
 
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
+      if (frame === null) {
+        frame=window.requestAnimationFrame(() => {
+          frame=null;
           const currentScrollY = window.scrollY;
           const now = performance.now();
           const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
           
           // Calculate velocity (pixels per ms)
           const dt = now - lastScrollTime;
-          const velocity = dt > 0 ? Math.abs(currentScrollY - lastScrollY) / dt : 0;
+          const delta=currentScrollY-lastScrollY;
+          const velocity = dt > 0 ? delta / dt : 0;
           
           lastScrollY = currentScrollY;
           lastScrollTime = now;
           
           // Preload trigger (~2 viewport heights before end AND velocity is positive or already prefetched)
           // We only prefetch if scrolling down reasonably fast (>0.5px/ms) or very close to bottom (< 1 viewport)
-          if (!hasPrefetched && nextChapterId && navigator.onLine) {
+          if (prefetchAttempt.current!==prefetchKey && isReadyToTrack && delta>0 && nextChapterId && navigator.onLine) {
             const isVeryClose = currentScrollY >= maxScroll - window.innerHeight;
             const isApproachingFast = currentScrollY >= maxScroll - (window.innerHeight * 2) && velocity > 0.5;
             
             if (maxScroll > 0 && (isVeryClose || isApproachingFast)) {
-              hasPrefetched = true;
+              prefetchAttempt.current=prefetchKey;
               void queryClient.prefetchQuery(apiClient.pagesQuery(sourceId, mangaId, nextChapterId));
             }
           }
@@ -114,9 +117,7 @@ export function useReaderScroll({
             }
           }
           
-          ticking = false;
         });
-        ticking = true;
       }
     };
 
@@ -124,11 +125,12 @@ export function useReaderScroll({
     
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      if(frame!==null)window.cancelAnimationFrame(frame);
       if (scrollStopTimer.current) {
         clearTimeout(scrollStopTimer.current);
       }
       // Flush immediately on unmount to not lose progress
       flushProgress();
     };
-  }, [sourceId, mangaId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress, isReadyToTrack, onPageChange]);
+  }, [sourceId, mangaId, chapterId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress, isReadyToTrack, onPageChange]);
 }

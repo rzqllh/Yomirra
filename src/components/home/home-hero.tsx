@@ -2,11 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlass, Sparkle, Compass, BookmarkSimple } from "@phosphor-icons/react";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { isDiscoverySourceSelected } from "@/shared/sources/discovery-source-policy";
+import { isSourceContentVisible } from "@/shared/sources/content-policy";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import type { MangaItem } from "@/shared/sources/source-types";
 import { cn } from "@/shared/utils/cn";
@@ -70,10 +76,23 @@ const coverCardStyles = [
 ] as const;
 
 const EMPTY_CANDIDATES: HeroCandidate[] = [];
+const EMPTY_DISABLED_SOURCES: string[] = [];
 
 export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroProps) {
   const mounted = useMounted();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const effectiveHideNsfw = mounted ? hideNsfw : true;
+  const disabledSources =
+    useSourcePreferencesStore((state) => state?.disabledSources) ?? EMPTY_DISABLED_SOURCES;
+  const { data: runtimeSources } = useQuery(sourceQueryOptions);
+  const activeSourceCount = React.useMemo(() => {
+    const sourceCandidates = runtimeSources ?? dynamicSourceRegistry.getAll();
+    return sourceCandidates.filter(
+      (source) =>
+        isDiscoverySourceSelected(source, disabledSources) &&
+        isSourceContentVisible(source, effectiveHideNsfw)
+    ).length;
+  }, [runtimeSources, disabledSources, effectiveHideNsfw]);
   const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
@@ -162,14 +181,14 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
       <section
         aria-labelledby="home-hero-title"
         className={cn(
-          "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md transition-all shadow-xs",
+          "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md shadow-xs",
           className
         )}
       >
         {/* Subtle ambient accent glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-accent/[0.04] blur-3xl"
+          className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full yomirra-hero-glow"
         />
 
         <div className="relative z-10 flex flex-col gap-2.5 max-w-2xl">
@@ -198,7 +217,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}
@@ -242,25 +261,23 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
     <section
       aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/5 transition-all min-h-44 sm:min-h-48 shadow-xs",
+        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/5 min-h-44 sm:min-h-48 shadow-xs",
         className
       )}
     >
       {/* Ambient background glow behind artwork */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/5 blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full yomirra-hero-glow"
       />
 
       {/* Layered editorial artwork preview strictly for discovery sessions */}
       {visibleCovers.length > 0 && (
-        <div
-          className="absolute right-0 top-0 h-36 w-1/2 overflow-hidden sm:inset-y-0 sm:h-auto sm:w-1/2 lg:w-5/12 z-10"
-          style={{
-            maskImage: "linear-gradient(to right, transparent 0%, black 35%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%)",
-          }}
-        >
+        <div className="absolute right-0 top-0 h-36 w-1/2 overflow-hidden sm:inset-y-0 sm:h-auto sm:w-1/2 lg:w-5/12 z-10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-0 z-30 w-2/5 bg-gradient-to-r from-surface-raised via-surface-raised/65 to-transparent"
+          />
           {visibleCovers.map((cover, index) => {
             if (failedCovers.has(cover.coverUrl)) return null;
             const loaded = loadedCovers.has(cover.coverUrl);
@@ -270,7 +287,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                 key={`${cover.coverUrl}-${index}`}
                 title={cover.title}
                 className={cn(
-                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/80 bg-surface-muted shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-30 cursor-pointer",
+                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/80 bg-surface-muted shadow-md transition duration-300 hover:scale-105 hover:shadow-xl hover:z-30 cursor-pointer",
                   coverCardStyles[index] ?? coverCardStyles[2]
                 )}
               >
@@ -279,7 +296,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                   alt={cover.title}
                   referrerPolicy="no-referrer"
                   decoding="async"
-                  loading="eager"
+                  loading="lazy"
                   onLoad={() =>
                     setLoadedCovers((current) => {
                       const next = new Set(current);
@@ -315,7 +332,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
             Katalog Multi-Sumber
           </span>
           <span className="hidden sm:inline-flex items-center rounded-md bg-surface-base/80 border border-border-subtle px-2 py-0.5 text-2xs font-semibold text-text-muted">
-            9 Sumber Aktif
+            {mounted && activeSourceCount > 0 ? `${activeSourceCount} Sumber Aktif` : "Sumber Aktif"}
           </span>
         </div>
 
@@ -342,7 +359,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}

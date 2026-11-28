@@ -10,6 +10,7 @@ import {
   triggerBackgroundProbe,
   SOURCE_HEALTH_CACHE_KEY,
   getInMemoryCachedPayload,
+  isInMemoryHealthPayloadFresh,
   type CachedHealthPayload,
 } from "@/server/lib/sources/health/background-probe";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
@@ -39,6 +40,10 @@ function withCacheState(
 }
 
 async function loadHealthPayload(): Promise<CachedHealthPayload> {
+  // Fresh process-local data avoids a Redis read on every dashboard request.
+  const freshLocal = getInMemoryCachedPayload();
+  if (freshLocal && isInMemoryHealthPayloadFresh()) return withCacheState(freshLocal, true, false);
+
   // 1. Try Redis cache first
   if (isRedisConfigured && isRedisCommandAllowed()) {
     try {

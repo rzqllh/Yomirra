@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { matchMangaBakaWorks, parseMangaBakaWork } from "../mangabaka";
+import { parseCatalogRecord } from "../mangabaka-record.mjs";
 
+vi.mock("@/server/lib/cache/optional-service-budget",()=>({reserveOptionalService:vi.fn().mockResolvedValue(true)}));
 vi.mock("@/server/lib/cache/redis-cache", () => ({
   withCache: async (_key: string, load: () => Promise<unknown>) => load(),
 }));
@@ -36,20 +38,106 @@ describe("MangaBaka v2 response boundary", () => {
     expect(String(fetcher.mock.calls[0][0])).toBe("https://api.mangabaka.org/v2/series/match?q=Sousou+no+Frieren");
     expect(String(fetcher.mock.calls[1][0])).toBe("https://api.mangabaka.org/v2/series/1995?schema=full");
   });
+  it("looks up explicit tracker IDs before a title query and refuses conflicting mappings", async()=>{
+    vi.stubEnv("YOMIRRA_MANGABAKA_METADATA","permitted");
+    vi.useFakeTimers();vi.setSystemTime(new Date("2026-11-25T00:00:00Z"));
+    const response=(data:unknown)=>new Response(JSON.stringify({status:200,data}));
+    const fetcher=vi.fn().mockResolvedValueOnce(response({series:[{id:1995,state:"active"}]})).mockResolvedValueOnce(response(fixture));
+    vi.stubGlobal("fetch",fetcher);
+    const first=matchMangaBakaWorks("Sousou no Frieren",true,{anilist:"118586"});
+    await vi.advanceTimersByTimeAsync(500);
+    expect(await first).toEqual([{...parseMangaBakaWork(fixture),externalWorkIds:{anilist:"118586"}}]);
+    expect(String(fetcher.mock.calls[0][0])).toBe("https://api.mangabaka.org/v1/source/anilist/118586");
+    await vi.advanceTimersByTimeAsync(500);
+    fetcher.mockResolvedValueOnce(response({series:[{id:1995}]})).mockResolvedValueOnce(response({series:[{id:1996}]}));
+    const conflict=matchMangaBakaWorks("Sousou no Frieren",true,{anilist:"118586",my_anime_list:"126287"});
+    await vi.advanceTimersByTimeAsync(500);
+    expect(await conflict).toEqual([]);
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
   it("selects the primary English title and retains romanized aliases without third-party payloads", () => {
     expect(parseMangaBakaWork(fixture)).toEqual({
       provider: "mangabaka", externalId: 1995, title: "Frieren: Beyond Journey's End",
       aliases: ["Sousou no Frieren", "Frieren: Beyond Journey's End"], format: "manga", contentRating: "safe",
     });
   });
+  it("retains documented top-level author identities and rejects nested raw source payloads",()=>{
+    const work=parseMangaBakaWork({...fixture,authors:[" Author A ","Author A",null],source:{author:"Do not import"}});
+    expect(work?.authors).toEqual(["Author A"]);
+    expect(work).not.toHaveProperty("source");
+  });
   it("retains only normalized documented external identifiers", () => {
     const work = parseMangaBakaWork({...fixture,source_ids:{my_anime_list:126287,anilist:"118586",manga_updates:"https://example.com/untrusted"}});
     expect(work?.externalWorkIds).toEqual({my_anime_list:"126287",anilist:"118586"});
   });
 
+  it("accepts only known top-level tracker links and vetoes conflicting IDs",()=>{
+    const work=parseMangaBakaWork({...fixture,source_ids:{anilist:"118586"},links:["https://anilist.co/manga/118586/Sousou-no-Frieren/","https://myanimelist.net/manga/126287/Frieren","https://fake.example/manga/100"],links_v2:[{url:"https://www.mangaupdates.com/series/ab12c/fixture"}]});
+    expect(work?.externalWorkIds).toEqual({anilist:"118586",my_anime_list:"126287",manga_updates:"ab12c"});
+    expect(parseMangaBakaWork({...fixture,source_ids:{anilist:"100"},links:[{url:"https://anilist.co/manga/200/"}]})?.externalWorkIds).toBeUndefined();
+  });
+  it("preserves explicit canonical classification in internal rating mode only", () => {
+    for (const rating of ["safe","suggestive","erotica","pornographic"] as const) {
+      expect(parseMangaBakaWork({...fixture,content_rating:rating},true)?.contentRating).toBe(rating);
+    }
+    expect(parseMangaBakaWork({...fixture,content_rating:"unrecognized"},true)).toBeNull();
+  });
   it("rejects incomplete, merged, non-comic, and restricted records", () => {
-    for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
+    for (const invalid of [{...fixture, titles: []}, {...fixture, state: "merged"}, {...fixture, merged_with: 42}, {...fixture, type: "novel"}, {...fixture, content_rating: "erotica"}]) {
       expect(parseMangaBakaWork(invalid)).toBeNull();
     }
+  });
+  it("extracts v1 top-level secondary_titles and artists while excluding nested source.*.id by default (ENG-05)", () => {
+    const v1DumpRow = {
+      id: 1995,
+      state: "active",
+      merged_with: null,
+      type: "manga",
+      content_rating: "safe",
+      title: "Frieren: Beyond Journey's End",
+      native_title: "葬送のフリーレン",
+      secondary_titles: {
+        unknown: [
+          { type: "unknown", title: "Frieren at the Funeral", note: null },
+          { type: "unknown", title: "Sousou no Frieren", note: null },
+        ],
+      },
+      authors: ["Kanehito Yamada"],
+      artists: ["Tsukasa Abe", "Kanehito Yamada"],
+      source: {
+        anilist: { id: 118586, rating: 91 },
+        my_anime_list: { id: 126287, description: "Third-party restricted" },
+      },
+    };
+    const defaultParsed = parseCatalogRecord(v1DumpRow);
+    expect(defaultParsed).toEqual({
+      provider: "mangabaka",
+      externalId: 1995,
+      title: "Frieren: Beyond Journey's End",
+      aliases: [
+        "Frieren: Beyond Journey's End",
+        "葬送のフリーレン",
+        "Frieren at the Funeral",
+        "Sousou no Frieren",
+      ],
+      format: "manga",
+      contentRating: "safe",
+      authors: ["Kanehito Yamada", "Tsukasa Abe"],
+    });
+    expect(defaultParsed?.externalWorkIds).toBeUndefined();
+    expect(defaultParsed).not.toHaveProperty("source");
+
+    // Only explicitly verified provider keys may contribute IDs, and conflicts still veto.
+    const verifiedAnilist = parseCatalogRecord(v1DumpRow, false, {
+      verifiedThirdPartyIdProviders: ["anilist"],
+    });
+    expect(verifiedAnilist?.externalWorkIds).toEqual({ anilist: "118586" });
+
+    const conflicting = parseCatalogRecord(
+      { ...v1DumpRow, source_ids: { anilist: "999999" } },
+      false,
+      { verifiedThirdPartyIdProviders: ["anilist"] }
+    );
+    expect(conflicting?.externalWorkIds).toBeUndefined();
   });
 });

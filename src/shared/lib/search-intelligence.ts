@@ -57,6 +57,23 @@ export interface SearchCatalogCandidate {
   sourceBindings?: SearchCatalogBinding[];
 }
 
+/** Bound only the optional ranking request; never truncate displayed provider results. */
+export function boundIntelligenceCandidates(candidates:readonly SearchCatalogCandidate[]):SearchCatalogCandidate[]{
+  const short=(v:string|undefined,max:number)=>typeof v==="string"?v.slice(0,max):undefined;
+  return candidates.filter(c=>c.canonicalKey.length>0&&c.canonicalKey.length<=500&&c.sourceId.length>0&&c.sourceId.length<=80&&c.mangaId.length>0&&c.mangaId.length<=500&&c.title.trim()).slice(0,40).map(c=>({
+    ...c,title:c.title.slice(0,300),coverUrl:short(c.coverUrl,2000),originalTitle:short(c.originalTitle,300),
+    alternativeTitles:c.alternativeTitles?.filter(v=>typeof v==="string"&&v.trim()).slice(0,20).map(v=>v.slice(0,300)),
+    author:short(c.author,300),description:short(c.description,4000),format:short(c.format,80),status:short(c.status,80),
+    genres:c.genres?.filter(v=>typeof v==="string").slice(0,40).map(v=>v.slice(0,80)),
+    score:Number.isFinite(c.score)?c.score:undefined,
+    sourceBindings:c.sourceBindings?.filter(b=>b.sourceId.length>0&&b.sourceId.length<=80&&b.mangaId.length>0&&b.mangaId.length<=500&&b.title.trim()).slice(0,20).map(b=>({
+      ...b,title:b.title.slice(0,300),coverUrl:short(b.coverUrl,2000),latestChapter:short(b.latestChapter,200),
+      language:short(b.language,32),format:short(b.format,80),
+      score:typeof b.score==="string"?b.score.slice(0,80):Number.isFinite(b.score)?b.score:undefined,
+    })),
+  }));
+}
+
 const TAGS: SearchTagDefinition[] = [
   { id: "action", label: "Action", category: "genre", aliases: ["action", "aksi"] },
   { id: "adventure", label: "Adventure", category: "genre", aliases: ["adventure", "petualangan"] },
@@ -70,12 +87,13 @@ const TAGS: SearchTagDefinition[] = [
   { id: "mystery", label: "Mystery", category: "genre", aliases: ["mystery", "misteri"] },
   { id: "psychological", label: "Psychological", category: "genre", aliases: ["psychological", "psikologis"] },
   { id: "romance", label: "Romance", category: "genre", aliases: ["romance", "romansa"] },
-  { id: "school", label: "School", category: "genre", aliases: ["school", "sekolah"] },
+  { id: "school", label: "School", category: "genre", aliases: ["school", "school-life", "schoollife", "sekolah"] },
   { id: "sci-fi", label: "Sci-Fi", category: "genre", aliases: ["scifi", "sci-fi", "sciencefiction", "fiksiilmiah"] },
   { id: "slice-of-life", label: "Slice of Life", category: "genre", aliases: ["sliceoflife", "slice-of-life", "sol", "kehidupanseharihari"] },
   { id: "sports", label: "Sports", category: "genre", aliases: ["sports", "sport", "olahraga"] },
   { id: "supernatural", label: "Supernatural", category: "genre", aliases: ["supernatural", "supranatural"] },
   { id: "thriller", label: "Thriller", category: "genre", aliases: ["thriller"] },
+  { id: "webtoon", label: "Webtoon", category: "genre", aliases: ["webtoon", "webtoons", "webcomic", "webcomics"] },
   { id: "manga", label: "Manga", category: "format", aliases: ["manga"] },
   { id: "manhwa", label: "Manhwa", category: "format", aliases: ["manhwa"] },
   { id: "manhua", label: "Manhua", category: "format", aliases: ["manhua"] },
@@ -167,7 +185,12 @@ export function canonicalizeFilterValue(
   const fallbackId = normalizeTitle(id || label)
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "");
-  return { id: fallbackId || id, label: label || id };
+  const rawLabel = (label || id).trim();
+  const displayLabel =
+    rawLabel && rawLabel === rawLabel.toLowerCase()
+      ? rawLabel.replace(/\b([a-z])/g, (char) => char.toUpperCase())
+      : rawLabel;
+  return { id: fallbackId || id, label: displayLabel };
 }
 
 export function suggestSearchTags(

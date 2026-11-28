@@ -107,7 +107,7 @@ describe("ContinuousVerticalReader - Keyboard Navigation", () => {
       />
     );
 
-    // Initial mount on unread chapter calls instant scrollTo(top: 0) to ensure new chapter starts at top
+    // jsdom has no measured layout; a new chapter still starts at top.
     expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: "instant" });
     scrollToMock.mockClear();
 

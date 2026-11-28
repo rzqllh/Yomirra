@@ -1,4 +1,5 @@
 import * as React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DesktopRail } from "@/components/chrome/desktop-rail";
@@ -209,13 +210,19 @@ describe("Shell Revamp Regression Coverage", () => {
       // Ensure max-w-[78%] is eliminated
       expect(heroCode).not.toContain("max-w-[78%]");
 
-      // Collage container uses gradient mask to ensure safe text layering on mobile and desktop
-      expect(heroCode).toContain("maskImage");
+      // Collage container uses left-edge gradient scrim overlay instead of expensive maskImage compositing
+      expect(heroCode).toContain("bg-gradient-to-r from-surface-raised");
+      expect(heroCode).not.toContain("maskImage");
       expect(heroCode).toContain("pointer-events-none");
     });
 
     it("renders the actionable Home search with the platform label", () => {
-      render(<HomeHero />);
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <HomeHero />
+        </QueryClientProvider>
+      );
 
       const heading = screen.getByRole("heading", { level: 1, name: "Mau baca apa hari ini?" });
       expect(heading).toBeTruthy();

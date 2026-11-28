@@ -50,6 +50,14 @@ export const KEIYOUSHI_CANDIDATES: readonly KeiyoushiCandidate[] = [
   { id: "webcomics", name: "Webcomics", baseUrl: "https://webcomicsapp.com", category: "SFW", engine: "html", zipDirectory: "webcomics" },
 ] as const;
 
+/** Implementation inventory, not a capability or live-health assertion. */
+export type CandidatePortKind="engine"|"duplicate"|"restricted-prototype";
+export function candidatePortKind(id:string):CandidatePortKind {
+  if(id==="komikindoid")return "duplicate";
+  if(["manga-plus-by-shueisha","mangatoon-limited","webcomics"].includes(id))return "restricted-prototype";
+  return "engine";
+}
+
 export function keiyoushiNeedsRestrictedOptIn(source: KeiyoushiCandidate): boolean {
   // MIXED remains opt-in until item-level classification is verified.
   return source.category !== "SFW";

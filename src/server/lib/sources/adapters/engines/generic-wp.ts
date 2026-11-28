@@ -11,6 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { GenericWpConfig } from "./types";
 import { SourceError } from "../../error";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity, stagedComicFormat } from "./normalize-catalog";
 
 export class GenericWpEngine extends BaseEngine {
   protected seriesPathRegex: RegExp;
@@ -19,6 +20,25 @@ export class GenericWpEngine extends BaseEngine {
     super(config);
     this.seriesPathRegex =
       config.seriesPathRegex ?? /\/(manga|comic|series|komik)\/([^\/]+)\/?/;
+  }
+
+  /** Preserve the actual series route instead of rewriting /comic/ and
+   * /series/ to /manga/. Legacy plain slugs keep their existing identity. */
+  private seriesIdentity(raw: string): string | null {
+    const url = sameProviderUrl(raw, this.baseUrl);
+    if (!url || url.search) return null;
+    const match = /^\/(manga|comic|series|komik)\/([A-Za-z0-9_-][A-Za-z0-9_.-]{0,199})\/?$/.exec(url.pathname);
+    if (!match || !url.pathname.match(this.seriesPathRegex)) return null;
+    return match[1] === "manga" ? match[2] : match[1] + "/" + match[2];
+  }
+
+  private seriesPath(id: string): string {
+    const identity = /^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(id)
+      ? id : this.seriesIdentity(id);
+    if (!identity || identity !== id) {
+      throw new SourceError("Invalid series identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
+    }
+    return identity.includes("/") ? "/" + identity + "/" : "/manga/" + encodeURIComponent(identity) + "/";
   }
 
   protected parseMangaItems($: cheerio.CheerioAPI): MangaItem[] {
@@ -31,7 +51,7 @@ export class GenericWpEngine extends BaseEngine {
           $el.find("a[href*='/manga/'], a[href*='/comic/'], a[href*='/series/'], a[href*='/komik/']").attr("href") ||
           $el.find("a").first().attr("href") ||
           "";
-        if (!link) return;
+        if (!sameProviderUrl(link, this.baseUrl)) return;
 
         const title =
           $el.find(".title, .tt, h3, h4, h2").first().text().trim() ||
@@ -47,8 +67,7 @@ export class GenericWpEngine extends BaseEngine {
         const latestChapter =
           $el.find(".lsch a, .chapter, .epxs").first().text().trim() || undefined;
 
-        const match = link.match(this.seriesPathRegex);
-        const id = match ? match[2] : link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+        const id = this.seriesIdentity(link);
 
         if (id && title) {
           mangas.push({
@@ -56,8 +75,10 @@ export class GenericWpEngine extends BaseEngine {
             title,
             coverUrl,
             latestChapter,
+            format:stagedComicFormat($el.find(".typeflag, .type").first().text()),
+            author:$el.find(".author").first().text().trim()||undefined,
             isNsfw: this.isNsfw,
-            contentRating: this.isNsfw ? "pornographic" : "safe",
+            contentRating: this.isNsfw ? "pornographic" : "unknown",
           });
         }
       }
@@ -131,16 +152,15 @@ export class GenericWpEngine extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
-    const path = mangaId.startsWith("http")
-      ? mangaId
-      : `/manga/${encodeURIComponent(mangaId)}/`;
+    const path = this.seriesPath(mangaId);
 
     try {
       const html = await this.client.getHtml(path);
       const $ = cheerio.load(html);
 
       const title =
-        $("h1.entry-title, .post-title, h1").first().text().trim() || mangaId;
+        $("h1.entry-title, .post-title, h1").first().text().trim() || "";
+      if (!title) throw new SourceError("Detail title missing", { sourceId: this.id, code: "PARSER_BROKEN", stage: "detail" });
 
       const description =
         $(".entry-content, .synopsis, .desc, .summary").first().text().trim() || "";
@@ -173,13 +193,14 @@ export class GenericWpEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
-        coverUrl,
+        ...stagedDetailIdentity($),
+        coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,
         status,
         author,
         isNsfw: this.isNsfw,
-        contentRating: this.isNsfw ? "pornographic" : "safe",
+        contentRating: this.isNsfw ? "pornographic" : "unknown",
       };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
@@ -190,9 +211,7 @@ export class GenericWpEngine extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
-    const path = mangaId.startsWith("http")
-      ? mangaId
-      : `/manga/${encodeURIComponent(mangaId)}/`;
+    const path = this.seriesPath(mangaId);
 
     try {
       const html = await this.client.getHtml(path);
@@ -203,7 +222,7 @@ export class GenericWpEngine extends BaseEngine {
         (idx, el) => {
           const $el = $(el);
           const link = $el.find("a").first().attr("href") || "";
-          if (!link) return;
+          if (!sameProviderUrl(link, this.baseUrl)) return;
 
           const title =
             $el.find(".chapternum, span").first().text().trim() ||
@@ -230,12 +249,12 @@ export class GenericWpEngine extends BaseEngine {
             title,
             date,
             url: link,
-            isLocked,
+            isLocked: stagedChapterLock(isLocked, $el.attr("data-locked"), $el.find("a").first().attr("data-locked")),
           });
         }
       );
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");
@@ -245,6 +264,7 @@ export class GenericWpEngine extends BaseEngine {
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
 
+    if (!sameProviderUrl(chapterId, this.baseUrl)) throw new SourceError("Invalid provider chapter identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND", stage: "pages" });
     const path = chapterId.startsWith("http")
       ? chapterId
       : `/${chapterId.replace(/^\/+/, "")}`;
@@ -264,9 +284,10 @@ export class GenericWpEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // fallback
         }
       }
@@ -294,7 +315,7 @@ export class GenericWpEngine extends BaseEngine {
         }
       );
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

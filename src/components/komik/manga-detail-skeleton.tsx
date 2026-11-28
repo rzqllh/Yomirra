@@ -7,7 +7,7 @@ export function MangaDetailSkeleton() {
   return (
     <MangaDetailLayout
       backdrop={<div className="w-full h-full bg-surface-muted/90" />}
-      header={<PageHeader title="" showBack={true} mode="detail" variant="transparent" />}
+      header={<PageHeader title="Memuat detail komik" showBack mode="detail" variant="transparent" desktopPresentation="compact" />}
       mobileCover={<Skeleton className="w-full h-full rounded-none bg-surface-muted" />}
       mobileMeta={
         <>

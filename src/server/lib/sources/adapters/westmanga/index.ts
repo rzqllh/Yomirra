@@ -278,6 +278,7 @@ export class WestMangaSource implements MangaSource {
       number: parseFloat(String(c.number)) || 0,
       title: `Chapter ${c.number}`,
       date: c.updated_at?.formatted || c.created_at?.formatted || "",
+      isLocked: false,
     }));
   }
 

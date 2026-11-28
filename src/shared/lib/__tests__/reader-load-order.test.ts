@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   advanceReaderReveal,
+  estimateVerticalPageSize,
   getReaderLookAheadWindow,
   getReaderPageLoadState,
   transitionReaderPageQueueState,
@@ -140,5 +141,20 @@ describe("reader load order", () => {
     expect(revealedThrough).toBe(3);
     expect(eligible()).toEqual([4, 5, 6]);
     expect(eligible()).toHaveLength(windowSize);
+  });
+});
+
+describe("vertical page estimates",()=>{
+  it("reserves the decoded aspect ratio at the actual reader width including the gap",()=>{
+    expect(estimateVerticalPageSize({width:80,height:120},393,0)).toBe(589.5);
+    expect(estimateVerticalPageSize({width:800,height:1200},896,4)).toBe(1348);
+    expect(estimateVerticalPageSize({width:80,height:120},320,16)).toBe(496);
+  });
+  it("preserves the existing fallback for missing, invalid or unreasonable geometry",()=>{
+    expect(estimateVerticalPageSize(undefined,393,4)).toBe(1200);
+    expect(estimateVerticalPageSize({width:0,height:120},393,0)).toBe(1200);
+    expect(estimateVerticalPageSize({width:80,height:Infinity},393,0)).toBe(1200);
+    expect(estimateVerticalPageSize({width:1,height:1e9},393,0)).toBe(1200);
+    expect(estimateVerticalPageSize({width:80,height:120},0,0)).toBe(1200);
   });
 });

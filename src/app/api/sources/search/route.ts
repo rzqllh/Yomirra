@@ -8,6 +8,7 @@ import { createHash } from "crypto";
 
 import { assertSourceAccess, contentCacheKey, getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
+import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
 import { SourceError } from "@/server/lib/sources/error";
 import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { deduplicateResultsBySource } from "@/shared/lib/canonical-search";
@@ -147,7 +148,12 @@ export async function GET(req: NextRequest) {
       { shouldPersist: ({ resultsBySource }) => !hasSourceErrors(resultsBySource) }
     );
 
-    return limitedJson({ data: cachedData });
+    const classified=Object.fromEntries(Object.entries(cachedData.resultsBySource).map(([id,group])=>[id,{
+      ...group,results:group.results.map(applyLocalCanonicalMetadata).filter(item=>isContentVisible(item,readOptions.hideNsfw!==false)),
+    }]));
+    return limitedJson({ data: {...cachedData,resultsBySource:classified,canonicalResults:deduplicateResultsBySource(classified,{
+      mergePolicy:"verified-only",verifiedIndex:getReviewedCatalogIndex(),
+    })} });
   } catch {
     return limitedJson({ error: { message: "Internal server error" } }, { status: 500 });
   }

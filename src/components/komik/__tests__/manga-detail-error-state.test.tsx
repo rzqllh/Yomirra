@@ -93,4 +93,22 @@ describe("MangaDetailErrorState", () => {
     expect(sourcesLink).toBeDefined();
     expect(sourcesLink.getAttribute("href")).toBe("/sources");
   });
+
+  it("renders content_restricted with settings link in the action row outside the icon badge", () => {
+    const { container } = render(
+      <MangaDetailErrorState
+        sourceId="komikindo"
+        mangaId="solo-leveling"
+        type="content_restricted"
+      />
+    );
+
+    expect(screen.getAllByText("Konten disembunyikan").length).toBeGreaterThanOrEqual(1);
+    const settingsLink = screen.getByRole("link", { name: /Buka Pengaturan/i });
+    expect(settingsLink.getAttribute("href")).toBe("/settings");
+    expect(screen.queryByRole("button", { name: /Coba Lagi/i })).toBeNull();
+    const iconBadge = container.querySelector(".w-14.h-14");
+    expect(iconBadge).not.toBeNull();
+    expect(iconBadge?.contains(settingsLink)).toBe(false);
+  });
 });

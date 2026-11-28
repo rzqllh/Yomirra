@@ -48,6 +48,7 @@ export function CollectionToolbar({
         onChange={onSearchChange}
         onClear={onSearchClear}
         placeholder="Cari di koleksi tersimpan…"
+        variant="raised"
         containerClassName="w-full sm:flex-1 min-w-0 h-11"
       />
 

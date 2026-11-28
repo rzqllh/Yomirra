@@ -1,0 +1,53 @@
+name: Bounded public catalog evidence
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['scripts/collect-catalog-observations.mjs', 'scripts/__tests__/collect-catalog-observations.test.mjs', '.github/workflows/catalog-evidence.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'integrate/yomirra-complete-release-20261124')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      EVIDENCE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Collect only on evidence-tool change or explicit dispatch
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || git diff --name-only HEAD^ HEAD | grep -Eq '^scripts/(collect-catalog-observations\.mjs|__tests__/collect-catalog-observations\.test\.mjs)$|^\.github/workflows/catalog-evidence\.yml$'; then
+            echo "collect=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.scope.outputs.collect == 'true'
+        with:
+          node-version: 22
+      - name: Verify collector without network
+        if: steps.scope.outputs.collect == 'true'
+        run: node --test scripts/__tests__/collect-catalog-observations.test.mjs
+      - name: Observe public MangaDex catalog (no account or image access)
+        if: steps.scope.outputs.collect == 'true'
+        run: node scripts/collect-catalog-observations.mjs
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.scope.outputs.collect == 'true' }}
+        with:
+          name: catalog-live-observations
+          path: artifacts/catalog-live-observations.json
+          if-no-files-found: ignore
+          retention-days: 7

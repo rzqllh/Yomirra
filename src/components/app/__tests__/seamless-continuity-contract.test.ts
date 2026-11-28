@@ -135,10 +135,12 @@ describe("Seamless Continuity Contracts (WS5)", () => {
   });
 
   describe("TopNav Sticky Search & Hero Search Contract (WS1/WS5)", () => {
-    it("renders hero search trigger natively in home hero and sticky search pill in TopNav", () => {
+    it("connects the native Home hero search anchor to the shared hook", () => {
       const topNav = read("src/components/chrome/top-nav.tsx");
+      const header = read("src/components/chrome/header.tsx");
       const homeHero = read("src/components/home/home-hero.tsx");
-      expect(topNav).toContain("scrolledPastHero");
+      expect(topNav).toContain('useSearchAnchorPastHeader(isHome ? "home-hero-search"');
+      expect(header).toContain("useSearchAnchorPastHeader(heroSearchAnchorId");
       expect(homeHero).toContain('id="home-hero-search"');
       expect(homeHero).toContain('role="search"');
     });

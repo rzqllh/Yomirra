@@ -101,3 +101,13 @@ export function advanceReaderReveal(
   }
   return next;
 }
+
+/** Match the vertical reader's full-width aspect-ratio box before measuring it.
+ * Unknown or implausible metadata keeps the existing loose 1200px estimate. */
+export function estimateVerticalPageSize(page:{width?:number;height?:number}|undefined,layoutWidth:number,gap:number):number {
+  const w=page?.width,h=page?.height;
+  if(typeof w!=="number"||typeof h!=="number"||!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0||!Number.isFinite(layoutWidth)||layoutWidth<=0)return 1200;
+  const height=layoutWidth*h/w;
+  if(!Number.isFinite(height)||height<1||height>100000)return 1200;
+  return height+gap;
+}

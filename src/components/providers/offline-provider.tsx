@@ -75,7 +75,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           className="fixed top-0 left-0 right-0 z-[var(--z-drawer)] bg-surface-raised/95 text-text-primary border-b border-border-default pt-[calc(var(--safe-top,0px)+4px)] pb-1.5 px-3 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-xs pointer-events-none"
         >
           <WifiSlash size={14} weight="regular" />
-          <span>Offline — menampilkan data yang tersimpan di perangkat</span>
+          <span>Offline: menampilkan data yang tersimpan di perangkat</span>
         </div>
       )}
       {showFallback ? (

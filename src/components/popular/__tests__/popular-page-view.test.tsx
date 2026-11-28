@@ -1,6 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { PopularPageView } from "../popular-page-view";
+import { MalPopularSection } from "../mal-popular-section";
 import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
 import type { MalPopularFeed } from "@/shared/types/mal";
 
@@ -47,11 +48,105 @@ const mockMalFeed: MalPopularFeed = {
   ],
 };
 
+describe("MAL ranking filters", () => {
+  it("keeps the latest sort results when an older request resolves last", async () => {
+    const favorite = Promise.withResolvers<Response>();
+    const score = Promise.withResolvers<Response>();
+    const fetchRanking = vi.spyOn(globalThis, "fetch")
+      .mockReturnValueOnce(favorite.promise)
+      .mockReturnValueOnce(score.promise);
+
+    try {
+      const { container } = render(<MalPopularSection feed={mockMalFeed} />);
+      const sort = container.querySelector('select[aria-label="Urutkan hasil MAL"]')!;
+      fireEvent.change(sort, { target: { value: "favorite" } });
+      fireEvent.change(sort, { target: { value: "score" } });
+      expect(fetchRanking.mock.calls.map(([url]) => url)).toEqual([
+        "/api/metadata/mal/popular?type=favorite",
+        "/api/metadata/mal/popular?type=all",
+      ]);
+
+      await act(async () => {
+        score.resolve(Response.json({
+          data: {
+            ...mockMalFeed,
+            rankingType: "all",
+            works: [{ ...mockMalFeed.works[0], title: "Latest score fixture" }],
+          },
+        }));
+      });
+      expect(screen.getByText("Latest score fixture")).toBeTruthy();
+
+      await act(async () => {
+        favorite.resolve(Response.json({
+          data: {
+            ...mockMalFeed,
+            rankingType: "favorite",
+            works: [{ ...mockMalFeed.works[0], title: "Stale favorite fixture" }],
+          },
+        }));
+      });
+      expect(screen.getByText("Latest score fixture")).toBeTruthy();
+      expect(screen.queryByText("Stale favorite fixture")).toBeNull();
+    } finally {
+      fetchRanking.mockRestore();
+    }
+  });
+
+  it("keeps a failed sort selected, hides old rows, and retries that ranking", async () => {
+    const fetchRanking = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(null, { status: 503 }))
+      .mockResolvedValueOnce(Response.json({
+        data: {
+          ...mockMalFeed,
+          rankingType: "favorite",
+          works: [{ ...mockMalFeed.works[0], title: "Favorite fixture" }],
+        },
+      }));
+    try {
+      const { container } = render(<MalPopularSection feed={mockMalFeed} />);
+      expect(screen.getByText("Berserk")).toBeTruthy();
+      fireEvent.change(container.querySelector('select[aria-label="Urutkan hasil MAL"]')!, {
+        target: { value: "favorite" },
+      });
+
+      expect(screen.queryByText("Berserk")).toBeNull();
+      expect(await screen.findByText("Peringkat untuk pilihan ini gagal dimuat.")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Urutkan hasil MAL: Paling Difavoritkan" })).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Coba lagi" }));
+      expect(await screen.findByText("Favorite fixture")).toBeTruthy();
+      expect(fetchRanking.mock.calls.map(([url]) => url)).toEqual([
+        "/api/metadata/mal/popular?type=favorite",
+        "/api/metadata/mal/popular?type=favorite",
+      ]);
+    } finally {
+      fetchRanking.mockRestore();
+    }
+  });
+
+  it("keeps a failed format selected and restores the initial snapshot when switching back", async () => {
+    const fetchRanking = vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Offline"));
+    try {
+      render(<MalPopularSection feed={mockMalFeed} />);
+      fireEvent.click(screen.getByRole("button", { name: "Manga" }));
+
+      expect(await screen.findByText("Peringkat untuk pilihan ini gagal dimuat.")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Manga", pressed: true })).toBeTruthy();
+      expect(screen.queryByText("Berserk")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Semua Format" }));
+      expect(screen.getByText("Berserk")).toBeTruthy();
+      expect(fetchRanking).toHaveBeenCalledOnce();
+    } finally {
+      fetchRanking.mockRestore();
+    }
+  });
+});
+
 describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
   it("exposes source filters as a group of pressed buttons", () => {
     render(<PopularPageView feeds={mockFeeds} />);
     expect(screen.getByRole("group", { name: "Filter sumber komik" })).toBeTruthy();
-    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.getByRole("tablist", { name: "Peringkat populer" })).toBeTruthy();
     const source = screen.getByRole("button", { name: /Komiku II/i });
     fireEvent.click(source);
     expect(source.getAttribute("aria-pressed")).toBe("true");
@@ -59,17 +154,15 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
   it("defaults to 'Populer di Yomirra' tab and renders source filter pills", () => {
     render(<PopularPageView feeds={mockFeeds} mal={mockMalFeed} />);
 
-    // Check SegmentedControl options
-    expect(screen.getByRole("button", { name: "Populer di Yomirra" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Tren MyAnimeList" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Populer di Yomirra", selected: true })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Tren MyAnimeList" })).toBeTruthy();
 
     // Check Source filter pills
     expect(screen.getByRole("button", { name: /Semua Sumber/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Shinigami/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Komiku II/i })).toBeTruthy();
 
-    // Broken source has 'Down' badge
-    expect(screen.getByText("Down")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Broken Source, gagal dimuat" })).toBeTruthy();
 
     // Combined heading is displayed by default
     expect(screen.getByText("Peringkat lintas sumber")).toBeTruthy();
@@ -103,11 +196,14 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
   it("switches to 'Tren MyAnimeList' tab when clicked", () => {
     render(<PopularPageView feeds={mockFeeds} mal={mockMalFeed} />);
 
-    const malTab = screen.getByRole("button", { name: "Tren MyAnimeList" });
-    fireEvent.click(malTab);
+    const malTab = screen.getByRole("tab", { name: "Tren MyAnimeList" });
+    fireEvent.mouseDown(malTab, { button: 0, ctrlKey: false });
 
     expect(screen.getByRole("heading", { name: "Peringkat Global MyAnimeList" })).toBeTruthy();
     expect(screen.getByText("Berserk")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Tren MyAnimeList", selected: true })).toBeTruthy();
+    expect(screen.getByRole("tabpanel", { name: "Tren MyAnimeList" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Anggota terbanyak/i })).toBeTruthy();
   });
 
   it("renders empty state when no feeds and no MAL data", () => {

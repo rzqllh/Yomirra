@@ -5,6 +5,7 @@ import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { NextRequest, NextResponse } from "next/server";
 import { assertSourceAccess, contentCacheKey, getVerifiedRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
+import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { searchSchema, sourceParamsSchema } from "@/server/lib/validation/api";
@@ -72,7 +73,7 @@ export async function GET(
       CACHE_TTL.SEARCH
     );
 
-    return NextResponse.json({ data: { ...data, mangas: data.mangas.filter((item) => isContentVisible(item, readOptions.hideNsfw !== false)) } });
+    return NextResponse.json({ data: { ...data, mangas: data.mangas.map(applyLocalCanonicalMetadata).filter((item) => isContentVisible(item, readOptions.hideNsfw !== false)) } });
   } catch (error: unknown) {
     const response = sourceErrorResponse(error, sourceId, "search");
     return NextResponse.json(response.body, { status: response.status, headers: response.headers });

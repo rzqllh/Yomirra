@@ -83,6 +83,15 @@ describe("formatDailyDigest source accuracy", () => {
     expect(message).not.toContain("belum terukur");
   });
 
+  it("reports reader evidence separately from successful catalogue probes", () => {
+    const message = formatDailyDigest(["shinigami","mangadex"], {
+      shinigami: {...snapshot("shinigami"),metadata:{probeType:"lightweight"}},
+      mangadex: {...snapshot("mangadex"),stage:"pages",metadata:{probeType:"deep",sampleChapterId:"fixture"}},
+    },NOW);
+    expect(message).toContain("Referensi halaman terverifikasi: 1/2 source");
+    expect(message).toContain("Probe katalog bukan uji baca lengkap");
+  });
+
   it("handles an empty active source registry without claiming full health", () => {
     const message = formatDailyDigest([], { shinigami: snapshot("shinigami") }, NOW);
     expect(message).toContain("0 dari 0 source normal");

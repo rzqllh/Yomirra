@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { ChipRail } from "@/components/ui/chip-rail";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 
 export interface LibraryStatusRailProps {
@@ -44,7 +45,7 @@ export function LibraryStatusRail({
         <div className="w-px h-6 bg-border-subtle shrink-0 mx-1" />
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar flex-1 -mr-4 pr-4 md:mr-0 md:pr-0">
+      <ChipRail bleed={false} className="flex-1 -mr-4 pr-4 md:mr-0 md:pr-0">
         {FORMAT_OPTIONS.map(fmt => {
           const isSelected =
             fmt.id === ""
@@ -69,7 +70,7 @@ export function LibraryStatusRail({
             />
           );
         })}
-      </div>
+      </ChipRail>
     </div>
   );
 }

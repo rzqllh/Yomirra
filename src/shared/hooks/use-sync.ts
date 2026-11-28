@@ -25,6 +25,11 @@ type Tombstone = {
 
 const inFlightSyncs = new Map<string, Promise<void>>();
 
+function guestMergeBlocksSync(): boolean {
+  const state = useGuestMergeStore.getState();
+  return state.isMergePending || Boolean(state.mergeError);
+}
+
 const getSafeTimestamp = (value: unknown): number => {
   if (typeof value === "number" && !Number.isNaN(value)) return value;
   if (typeof value === "string") {
@@ -92,7 +97,7 @@ export function useSync(options = { autoSync: true }) {
   }, [userUid, isBlockedByMerge]);
 
   const runFullSync = (): Promise<void> => {
-    if (isBlockedByMerge) {
+    if (isBlockedByMerge || guestMergeBlocksSync()) {
       return Promise.reject(new Error("Sync is blocked while guest merge review is active."));
     }
     const uid = userUid;
@@ -119,7 +124,7 @@ export function useSync(options = { autoSync: true }) {
       const { auth, db: firestore } = await initFirebase();
       if (!firestore) throw new Error("Firebase is unavailable for sync.");
       if (!auth?.currentUser) throw new Error("No authenticated user is available for sync.");
-      const isCurrentUser = () => currentUidRef.current === uid && auth.currentUser?.uid === uid;
+      const isCurrentUser = () => currentUidRef.current === uid && auth.currentUser?.uid === uid && !guestMergeBlocksSync();
       if (!isCurrentUser()) return;
       const { collection, doc, getDocs, writeBatch } = await loadFirestore();
       if (!isCurrentUser()) return;
@@ -434,6 +439,7 @@ export function useSync(options = { autoSync: true }) {
     window.addEventListener("offline", handleOffline);
     return () => {
       cancelled = true;
+      if (initialSyncUidRef.current === userUid) initialSyncUidRef.current = undefined;
       cancelRetry();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
@@ -453,7 +459,7 @@ export function useSync(options = { autoSync: true }) {
       if (!db || isCancelled) return;
       const uid = userUid;
       const isCurrentAccount = () =>
-        !isCancelled && currentUidRef.current === uid && auth?.currentUser?.uid === uid;
+        !isCancelled && currentUidRef.current === uid && auth?.currentUser?.uid === uid && !guestMergeBlocksSync();
       const { collection, doc, onSnapshot } = await loadFirestore();
       if (!isCurrentAccount()) return;
       unsubscribeLibrary = onSnapshot(collection(db, `users/${uid}/libraryV2`), (remoteSnapshot) => {
@@ -539,23 +545,25 @@ export function useSync(options = { autoSync: true }) {
     };
   }, [userUid, isBlockedByMerge]);
 
-  const syncLibraryItem = async (item: LibraryItem) => {
-    const { db: firestore } = await initFirebase();
+  // The callback can outlive an auth transition or the beginning of a
+  // guest merge review. Check live auth and merge state at the write boundary.
+  const syncSingleItem = async (domain: "libraryV2" | "history", id: string, item: object) => {
     const uid = userUid;
-    if (!firestore || !uid) return;
+    if (!uid || guestMergeBlocksSync()) return;
+    const { db: firestore, auth } = await initFirebase();
+    const allowed = () => currentUidRef.current === uid &&
+      auth?.currentUser?.uid === uid && !guestMergeBlocksSync();
+    if (!firestore || !allowed()) return;
     const { doc, setDoc } = await loadFirestore();
-    const id = item.id ?? `${item.sourceId}::${item.mangaId}`;
-    await setDoc(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(item));
+    if (!allowed()) return;
+    await setDoc(doc(firestore, `users/${uid}/${domain}`, id), cleanRecord(item));
   };
 
-  const syncHistoryItem = async (item: HistoryItem) => {
-    const { db: firestore } = await initFirebase();
-    const uid = userUid;
-    if (!firestore || !uid) return;
-    const { doc, setDoc } = await loadFirestore();
-    const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
-    await setDoc(doc(firestore, `users/${uid}/history`, id), cleanRecord(item));
-  };
+  const syncLibraryItem = (item: LibraryItem) =>
+    syncSingleItem("libraryV2", item.id ?? `${item.sourceId}::${item.mangaId}`, item);
+
+  const syncHistoryItem = (item: HistoryItem) =>
+    syncSingleItem("history", `${item.sourceId}::${item.mangaId}::${item.chapterId}`, item);
 
   return { runFullSync, isSyncing, syncLibraryItem, syncHistoryItem };
 }

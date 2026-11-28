@@ -24,13 +24,10 @@ export function EmptyState({
 }: EmptyStateProps) {
   const prefersReducedMotion = useReducedMotion();
 
-  const floatAnimation = prefersReducedMotion ? {} : {
-    y: [0, -4, 0],
-    transition: {
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut" as const
-    }
+  const iconMotion = prefersReducedMotion ? undefined : {
+    initial: { opacity: 0, scale: 0.95, y: 4 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
   };
 
   return (
@@ -44,7 +41,9 @@ export function EmptyState({
     >
       {icon && (
         <motion.div 
-          animate={floatAnimation}
+          initial={iconMotion?.initial}
+          animate={iconMotion?.animate}
+          transition={iconMotion?.transition}
           className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-surface-raised/40 border border-border-subtle/40 shadow-sm"
         >
           <div className="relative z-10 text-text-muted drop-shadow-sm scale-110">

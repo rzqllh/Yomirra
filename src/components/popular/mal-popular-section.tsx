@@ -8,11 +8,13 @@ import type { MalPopularFeed, MalRankingType } from "@/shared/types/mal";
 import { getSearchHref } from "@/shared/lib/routes";
 import { ArrowRight, Sparkle, ArrowSquareOut, Star, SpinnerGap } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { ChipRail } from "@/components/ui/chip-rail";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 type FormatFilter = "all" | "manga" | "manhwa" | "manhua";
 type SortCriteria = "popularity" | "score" | "favorite" | "title-asc" | "title-desc";
+type ReadyFeed = Extract<MalPopularFeed, { status: "ready" }>;
 
 const FORMAT_OPTIONS: { value: FormatFilter; label: string }[] = [
   { value: "all", label: "Semua Format" },
@@ -22,7 +24,7 @@ const FORMAT_OPTIONS: { value: FormatFilter; label: string }[] = [
 ];
 
 const SORT_OPTIONS: { value: SortCriteria; label: string }[] = [
-  { value: "popularity", label: "Paling Populer (Member)" },
+  { value: "popularity", label: "Anggota terbanyak" },
   { value: "score", label: "Skor Tertinggi" },
   { value: "favorite", label: "Paling Difavoritkan" },
   { value: "title-asc", label: "Judul A–Z" },
@@ -46,49 +48,61 @@ export function MalPopularSection({
   onSwitchToLocal?: () => void;
 }) {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
-  const [activeFeed, setActiveFeed] = React.useState<MalPopularFeed | undefined>(feed);
+  const [loadedFeed, setLoadedFeed] = React.useState<ReadyFeed>();
   const [selectedFormat, setSelectedFormat] = React.useState<FormatFilter>("all");
   const [sortBy, setSortBy] = React.useState<SortCriteria>("popularity");
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [requestStatus, setRequestStatus] = React.useState<"idle" | "loading" | "error">("idle");
+  const targetType = resolveApiRankingType(selectedFormat, sortBy);
+  const initialFeed = feed?.status === "ready" ? feed : undefined;
+  const activeFeed = loadedFeed?.rankingType === targetType
+    ? loadedFeed
+    : (initialFeed?.rankingType ?? "bypopularity") === targetType ? initialFeed : undefined;
 
   // In-memory feed cache by rankingType to enable instant tab switching
-  const feedCacheRef = React.useRef<Record<string, MalPopularFeed>>({});
-
-  React.useEffect(() => {
-    if (feed && feed.status === "ready") {
-      const typeKey = feed.rankingType || "bypopularity";
-      feedCacheRef.current[typeKey] = feed;
-      setActiveFeed(feed);
-    }
-  }, [feed]);
+  const feedCacheRef = React.useRef<Partial<Record<MalRankingType, ReadyFeed>>>({});
+  const requestIdRef = React.useRef(0);
 
   const loadRankingFeed = React.useCallback(async (targetType: MalRankingType) => {
-    if (feedCacheRef.current[targetType]) {
-      setActiveFeed(feedCacheRef.current[targetType]);
+    const requestId = ++requestIdRef.current;
+    if (initialFeed && (initialFeed.rankingType ?? "bypopularity") === targetType) {
+      setLoadedFeed(undefined);
+      setRequestStatus("idle");
       return;
     }
 
-    setIsLoading(true);
+    const cachedFeed = feedCacheRef.current[targetType];
+    if (cachedFeed) {
+      setLoadedFeed(cachedFeed);
+      setRequestStatus("idle");
+      return;
+    }
+
+    setLoadedFeed(undefined);
+    setRequestStatus("loading");
     try {
       const res = await fetch(`/api/metadata/mal/popular?type=${encodeURIComponent(targetType)}`, {
         headers: { Accept: "application/json" },
       });
       if (res.ok) {
         const payload = (await res.json()) as { data?: MalPopularFeed };
-        if (payload?.data && payload.data.status === "ready") {
-          feedCacheRef.current[targetType] = payload.data;
-          setActiveFeed(payload.data);
+        if (payload?.data?.status === "ready" && (payload.data.rankingType ?? targetType) === targetType) {
+          const rankedFeed = { ...payload.data, rankingType: targetType };
+          if (requestId === requestIdRef.current) {
+            feedCacheRef.current[targetType] = rankedFeed;
+            setLoadedFeed(rankedFeed);
+            setRequestStatus("idle");
+          }
+          return;
         }
       }
     } catch {
-      // Retain current feed on network/timeout failure
-    } finally {
-      setIsLoading(false);
+      // Network and response errors share the same retry state.
     }
-  }, []);
+    if (requestId === requestIdRef.current) setRequestStatus("error");
+  }, [initialFeed]);
 
   const handleFormatSelect = (format: FormatFilter) => {
-    if (format === selectedFormat && activeFeed?.status === "ready") return;
+    if (format === selectedFormat) return;
     setSelectedFormat(format);
     const targetType = resolveApiRankingType(format, sortBy);
     void loadRankingFeed(targetType);
@@ -96,17 +110,12 @@ export function MalPopularSection({
 
   const handleSortChange = (sort: SortCriteria) => {
     setSortBy(sort);
-    if (selectedFormat === "all") {
-      const targetType = resolveApiRankingType("all", sort);
-      const currentType = activeFeed?.status === "ready" ? activeFeed.rankingType : undefined;
-      if (targetType !== currentType) {
-        void loadRankingFeed(targetType);
-      }
-    }
+    const nextType = resolveApiRankingType(selectedFormat, sort);
+    if (nextType !== targetType) void loadRankingFeed(nextType);
   };
 
   const formattedDate = React.useMemo(() => {
-    if (!activeFeed || activeFeed.status !== "ready") return "";
+    if (!activeFeed) return "";
     try {
       return new Date(activeFeed.fetchedAt).toLocaleDateString("id-ID", {
         dateStyle: "medium",
@@ -118,7 +127,7 @@ export function MalPopularSection({
   }, [activeFeed]);
 
   const visibleWorks = React.useMemo(() => {
-    if (!activeFeed || activeFeed.status !== "ready") return [];
+    if (!activeFeed) return [];
     let works = activeFeed.works.filter((work) => !hideNsfw || work.nsfw === "white");
 
     if (selectedFormat !== "all") {
@@ -149,7 +158,7 @@ export function MalPopularSection({
     return sorted;
   }, [activeFeed, hideNsfw, selectedFormat, sortBy]);
 
-  if (!activeFeed || activeFeed.status !== "ready") {
+  if (!initialFeed) {
     return (
       <section
         role="status"
@@ -162,7 +171,7 @@ export function MalPopularSection({
           Tren MyAnimeList belum terhubung
         </h2>
         <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-          {activeFeed?.message ??
+          {(feed?.status !== "ready" ? feed?.message : undefined) ??
             "Tren MyAnimeList belum tersedia. Lihat peringkat dari sumber bacaan Yomirra."}
         </p>
         {onSwitchToLocal && (
@@ -181,8 +190,7 @@ export function MalPopularSection({
   }
 
   return (
-    <section aria-labelledby="mal-popular-heading" className="space-y-6">
-      {/* Section Header */}
+    <section aria-labelledby="mal-popular-heading" className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h2 id="mal-popular-heading" className="text-lg sm:text-xl font-bold tracking-tight text-text-primary">
@@ -192,17 +200,16 @@ export function MalPopularSection({
             Database resmi MyAnimeList{formattedDate ? ` · Snapshot ${formattedDate}` : ""}.
           </p>
         </div>
-        {isLoading && (
-          <div className="flex items-center gap-1.5 text-xs text-accent font-semibold self-start sm:self-center">
-            <SpinnerGap size={16} className="animate-spin" />
+        {requestStatus === "loading" && (
+          <div role="status" className="flex items-center gap-1.5 text-xs text-accent font-semibold self-start sm:self-center">
+            <SpinnerGap size={16} aria-hidden="true" className="motion-safe:animate-spin" />
             <span>Memperbarui…</span>
           </div>
         )}
       </div>
 
-      {/* Unified Control Toolbar: Format Chips on Left, Sort Dropdown on Right */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle/60">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter format komik">
+      <div className="flex flex-col gap-3 border-b border-border-subtle/60 pb-3 lg:flex-row lg:items-center lg:justify-between">
+        <ChipRail bleed={false} className="min-w-0 px-1 pt-1" role="group" aria-label="Filter format komik">
           {FORMAT_OPTIONS.map((fmt) => (
             <FilterChip
               key={fmt.value}
@@ -212,22 +219,29 @@ export function MalPopularSection({
               variant={selectedFormat === fmt.value ? "accent-subtle" : "default"}
             />
           ))}
-        </div>
+        </ChipRail>
 
-        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
           <span className="text-2xs text-text-muted font-medium shrink-0">Urutkan:</span>
           <CustomSelect
             value={sortBy}
             onChange={(val) => handleSortChange(val as SortCriteria)}
             options={SORT_OPTIONS}
             label="Urutkan hasil MAL"
-            className="w-full sm:w-48"
+            className="min-w-0 flex-1 sm:w-56"
+            align="left"
           />
         </div>
       </div>
 
-      {/* Results Count & Grid */}
-      {visibleWorks.length === 0 ? (
+      {requestStatus === "loading" ? null : requestStatus === "error" ? (
+        <div className="rounded-xl border border-border-subtle bg-surface-raised p-8 text-center text-text-muted">
+          <p role="status">Peringkat untuk pilihan ini gagal dimuat.</p>
+          <Button type="button" variant="secondary" className="mt-3" onClick={() => void loadRankingFeed(targetType)}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : visibleWorks.length === 0 ? (
         <div role="status" className="rounded-xl border border-border-subtle bg-surface-raised p-8 text-center text-text-muted">
           Tidak ada judul yang memenuhi filter konten atau format pada snapshot ini.
         </div>

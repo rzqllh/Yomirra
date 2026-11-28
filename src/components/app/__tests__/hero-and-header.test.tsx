@@ -48,6 +48,20 @@ vi.mock("@/shared/store/history-store", () => ({
   useHistoryStore: (selector: any) => selector({ items: mockHistoryItems }),
 }));
 
+const mockQuerySources: any = [
+  { id: "s1", name: "Source 1", isInstalled: true, isEnabled: true, status: "online", isNsfw: false },
+  { id: "s2", name: "Source 2", isInstalled: true, isEnabled: true, status: "online", isNsfw: false },
+  { id: "s3", name: "Source 3", isInstalled: true, isEnabled: true, status: "online", isNsfw: true },
+];
+
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQuery: () => ({ data: mockQuerySources, isError: false }),
+  };
+});
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Header & Hero System (Squircle & Reusable)", () => {
@@ -67,6 +81,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
         screen.getByRole("heading", { level: 1, name: "Mau baca apa hari ini?" })
       ).toBeTruthy();
       expect(screen.getByText("BACAANMU DIMULAI DI SINI")).toBeTruthy();
+      expect(screen.getByText("2 Sumber Aktif")).toBeTruthy();
       expect(
         screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" })
       ).toBeTruthy();

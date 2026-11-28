@@ -11,20 +11,12 @@ import {
   BookOpen,
   Trash,
   Eye,
-  Compass,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { motion, useReducedMotion } from "motion/react";
-import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { getReviewedWorkHref } from "@/shared/lib/reviewed-catalog";
+import { getObservedCatalogHref } from "@/shared/lib/observed-catalog";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { sourceRegistry, getSourceDisplayName } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -49,9 +41,15 @@ import type { BaseCardProps } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
+import { normalizePublicationStatus } from "@/shared/lib/schedule-policy";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
-import { apiClient } from "@/shared/api-client";
-import { runCardDetailEnrichment } from "@/shared/lib/card-detail-enrichment";
+
+function formatComicFormat(value?: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+}
 import { toast } from "sonner";
 import {
   MangaCardCoverFrame,
@@ -60,160 +58,24 @@ import {
   mangaCardInteraction,
   mangaCardSurface,
 } from "./primitives";
+import {
+  DeadSourceFallbackDialog,
+  CollapsibleBadgeRow,
+  LazySynopsisPreview,
+  type CollapsibleBadgeRowProps,
+} from "./manga-card-parts";
 
+export { CollapsibleBadgeRow, type CollapsibleBadgeRowProps };
 
-function DeadSourceFallbackDialog({
-  open,
-  onOpenChange,
-  title,
-  sourceName,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  sourceName: string;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Compass size={20} weight="regular" className="text-accent" />
-            Sumber Tidak Aktif
-          </DialogTitle>
-          <DialogDescription>
-            Komik &ldquo;{title}&rdquo; tersimpan dari sumber{" "}
-            <span className="font-semibold text-text-primary">{sourceName}</span>, tetapi sumber ini sedang dinonaktifkan atau belum tersedia.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-2.5 pt-2">
-          <Button asChild variant="primary" className="w-full min-h-11 font-bold">
-            <Link href={`/search?q=${encodeURIComponent(title)}`}>
-              Cari di Sumber Aktif Lain
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="w-full min-h-11">
-            <Link href="/sources">
-              Kelola Pengaturan Sumber
-            </Link>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+const publicationStatusLabels = {
+  ongoing: "Sedang terbit",
+  completed: "Tamat",
+  hiatus: "Hiatus",
+  cancelled: "Dibatalkan",
+  unknown: null,
+};
 
 export type MangaCardVariant = "discovery" | "rank" | "progress";
-
-export interface CollapsibleBadgeRowProps {
-  badges: React.ReactNode[];
-  className?: string;
-  maxVisible?: number;
-}
-
-export function CollapsibleBadgeRow({
-  badges,
-  className,
-  maxVisible = 2,
-}: CollapsibleBadgeRowProps) {
-  const validBadges = badges.filter(Boolean);
-  if (validBadges.length === 0) {
-    return (
-      <div
-        aria-hidden="true"
-        className={cn("h-5 min-w-0", className)}
-        data-card-slot="badges"
-      />
-    );
-  }
-
-  const visible = validBadges.slice(0, maxVisible);
-  const overflowCount = validBadges.length - maxVisible;
-
-  return (
-    <div className={cn("flex items-center gap-1.5 flex-nowrap overflow-hidden min-w-0 h-5", className)}>
-      {visible.map((badge, idx) => (
-        <React.Fragment key={idx}>{badge}</React.Fragment>
-      ))}
-      {overflowCount > 0 && (
-        <span
-          className="shrink-0 text-3xs font-bold px-1.5 py-0.5 rounded-xs bg-surface-muted text-text-muted border border-border-subtle"
-          title={`+${overflowCount} badge lainnya`}
-        >
-          +{overflowCount}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function LazySynopsisPreview({
-  sourceId,
-  mangaId,
-  author,
-}: {
-  sourceId: string;
-  mangaId: string;
-  author?: string;
-}) {
-  const anchorRef = React.useRef<HTMLDivElement>(null);
-  const [shouldFetch, setShouldFetch] = React.useState(false);
-
-  React.useEffect(() => {
-    const element = anchorRef.current;
-    if (!element || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setShouldFetch(true);
-        observer.disconnect();
-      },
-      { rootMargin: "240px 0px" }
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  const { data } = useQuery({
-    queryKey: ["manga-card-synopsis", sourceId, mangaId],
-    queryFn: ({ signal }) =>
-      runCardDetailEnrichment(
-        () => apiClient.getDetail(sourceId, mangaId, { signal }),
-        signal
-      ),
-    enabled: shouldFetch,
-    staleTime: 30 * 60 * 1000,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  const synopsis = normalizeSynopsis(data?.description || "");
-
-  return (
-    <div
-      ref={anchorRef}
-      className="min-h-11"
-      data-card-slot="synopsis"
-    >
-      {synopsis ? (
-        <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
-          {synopsis}
-        </MangaCardMeta>
-      ) : author ? (
-        <MangaCardMeta as="p" className="mt-1.5 truncate text-2xs text-text-muted/70">
-          Karya: {author}
-        </MangaCardMeta>
-      ) : (
-        <MangaCardMeta as="p" className="mt-1.5 text-2xs text-text-muted/70">
-          Sinopsis belum tersedia
-        </MangaCardMeta>
-      )}
-    </div>
-  );
-}
 
 export interface MangaCardProps extends BaseCardProps {
   variant?: MangaCardVariant;
@@ -260,6 +122,8 @@ export function MangaCard({
   index,
   className,
 }: MangaCardProps) {
+  const publicationStatus = normalizePublicationStatus(manga.status);
+  const publicationStatusLabel = publicationStatusLabels[publicationStatus];
   const pathname = usePathname() || "";
   const searchParams = useSearchParams();
   const reducedMotion = useReducedMotion();
@@ -307,7 +171,8 @@ export function MangaCard({
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
   const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
-  const workHref = canonicalDetailHref ?? getReviewedWorkHref(sourceId,manga.id);
+  const workHref = canonicalDetailHref ?? getReviewedWorkHref(sourceId,manga.id) ??
+    getObservedCatalogHref(availableBindings, fullPath);
   const cardDetailHref = workHref ?? getMangaDetailHref(
     cardSourceId,
     cardMangaId,
@@ -363,9 +228,7 @@ export function MangaCard({
     );
   }
 
-  // ==========================================
-  // PROGRESS VARIANT (Bookmark / Riwayat)
-  // ==========================================
+  // Progress variant for bookmarks and history
   if (variant === "progress") {
     const effChapterId = chapterId || historyItem?.chapterId || "";
     const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? "Chapter" : "Detail");
@@ -587,9 +450,7 @@ export function MangaCard({
     );
   }
 
-  // ==========================================
-  // RANK VARIANT (Popular page)
-  // ==========================================
+  // Rank variant for popular items
   if (variant === "rank") {
     const timeText = getRelativeTime(effectiveTime);
     const staggerDelay = typeof index === "number" && index < 12 ? index * 0.04 : 0;
@@ -643,7 +504,7 @@ export function MangaCard({
             {effectiveRank !== undefined && (
               <div
                 className={cn(
-                  "absolute top-0 left-0 backdrop-blur-md font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
+                  "absolute top-0 left-0 font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
                   Number(effectiveRank) === 1
                     ? "bg-amber-400 text-amber-950 text-xs size-7.5 ring-1 ring-amber-300 shadow-amber-500/20"
                     : Number(effectiveRank) === 2
@@ -665,14 +526,14 @@ export function MangaCard({
               maxVisible={2}
               className="mb-2"
               badges={[
-                manga.status ? (
+                publicationStatusLabel ? (
                   <span key="status" className="text-3xs font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
-                    {manga.status}
+                    {publicationStatusLabel}
                   </span>
                 ) : null,
-                manga.format ? (
+                formatComicFormat(manga.format) ? (
                   <span key="format" className="text-3xs font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md shrink-0">
-                    {manga.format}
+                    {formatComicFormat(manga.format)}
                   </span>
                 ) : null,
               ]}
@@ -688,7 +549,7 @@ export function MangaCard({
             </MangaCardTitle>
 
             <div className="mt-1.5 flex items-center justify-between">
-              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
+              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Bab terbaru belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-2xs text-text-muted">{timeText}</MangaCardMeta>}
             </div>
             {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>}
@@ -731,14 +592,11 @@ export function MangaCard({
     );
   }
 
-  // ==========================================
-  // DISCOVERY VARIANT — COMPACT / LIST VIEW
-  // ==========================================
+  // Discovery variant for compact and list view
   if (viewMode === "compact") {
-    const mangaFormat = manga.format || (manga as any).type;
-    const rawStatus = manga.status ? String(manga.status).toUpperCase() : "";
-    const isOngoing = rawStatus.includes("ONGOING") || rawStatus.includes("RELEASING");
-    const isCompleted = rawStatus.includes("COMPLETED");
+    const mangaFormat = formatComicFormat(manga.format || (manga as any).type);
+    const isOngoing = publicationStatus === "ongoing";
+    const isCompleted = publicationStatus === "completed";
 
     const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
     const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)) : "";
@@ -747,7 +605,7 @@ export function MangaCard({
       noEligibleSource ? (
         <span key="unavailable" className="text-2xs font-semibold text-status-error-fg">Sumber tidak tersedia</span>
       ) : null,
-      manga.status ? (
+      publicationStatusLabel ? (
         <span
           key="status"
           className={cn(
@@ -757,7 +615,7 @@ export function MangaCard({
             !isOngoing && !isCompleted && "border-border-subtle bg-surface-base text-text-secondary"
           )}
         >
-          {manga.status}
+          {publicationStatusLabel}
         </span>
       ) : null,
       mangaFormat ? (
@@ -781,15 +639,12 @@ export function MangaCard({
 
     return (
       <motion.article
-        layoutId={reducedMotion ? undefined : transitionNames.card}
-        layout={reducedMotion ? false : "position"}
         initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
         whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
         viewport={shouldReveal ? { once: true, amount: 0.1 } : undefined}
         whileHover={reducedMotion ? undefined : { y: -2 }}
         whileTap={reducedMotion ? undefined : { scale: 0.99 }}
         transition={{
-          layout: { type: "spring", stiffness: 320, damping: 30 },
           ease: "easeOut",
           duration: 0.25,
           delay: shouldReveal ? staggerDelay : 0,
@@ -801,10 +656,7 @@ export function MangaCard({
         )}
         style={vtStyle}
       >
-        <motion.div
-          layoutId={reducedMotion ? undefined : transitionNames.cover}
-          className="w-21 shrink-0 sm:w-24 md:w-26"
-        >
+        <div className="w-21 shrink-0 sm:w-24 md:w-26">
           <Link
             href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
@@ -826,7 +678,7 @@ export function MangaCard({
               />
             </MangaCardCoverFrame>
           </Link>
-        </motion.div>
+        </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
           <div>
@@ -922,9 +774,7 @@ export function MangaCard({
     );
   }
 
-  // ==========================================
-  // DISCOVERY VARIANT — GRID VIEW (Canonical baseline)
-  // ==========================================
+  // Discovery variant for grid view
   const readingStatusMap: Record<string, { label: string; bg: string }> = {
     reading: { label: "Dibaca", bg: "bg-accent-dim text-accent" },
     completed: { label: "Selesai", bg: "bg-status-success-bg text-status-success-fg" },
@@ -938,15 +788,12 @@ export function MangaCard({
 
   return (
     <motion.article
-      layoutId={reducedMotion ? undefined : transitionNames.card}
-      layout={reducedMotion ? false : "position"}
       initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
       whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
       viewport={shouldReveal ? { once: true, amount: 0.1 } : undefined}
       whileHover={reducedMotion ? undefined : { y: -3 }}
       whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       transition={{
-        layout: { type: "spring", stiffness: 320, damping: 30 },
         ease: "easeOut",
         duration: 0.25,
         delay: shouldReveal ? staggerDelay : 0,
@@ -964,91 +811,87 @@ export function MangaCard({
         aria-haspopup={opensSourcePicker ? "dialog" : undefined}
         onClick={handleCardOpen}
       >
-        <motion.div
-          layoutId={reducedMotion ? undefined : transitionNames.cover}
-        >
-          <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
-            <MangaCover
-              src={manga.coverUrl}
-              sourceId={sourceId}
-              mangaId={manga.id}
-              alt={manga.title}
-              priority={priority}
-              fallbackTitle={manga.title}
-              imageClassName={mangaCardInteraction.coverImage}
-            />
+        <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
+          <MangaCover
+            src={manga.coverUrl}
+            sourceId={sourceId}
+            mangaId={manga.id}
+            alt={manga.title}
+            priority={priority}
+            fallbackTitle={manga.title}
+            imageClassName={mangaCardInteraction.coverImage}
+          />
 
-            {/* Over-cover Badges */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
-              {isUnread && (
-                <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
-                  <span className="text-xs font-bold">Baru</span>
-                </div>
-              )}
+          {/* Over-cover Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
+            {isUnread && (
+              <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
+                <span className="text-xs font-bold">Baru</span>
+              </div>
+            )}
 
-              {isMultiSource && (
-                <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
-                  <span className="text-xs font-bold text-accent">
-                    {availableBindings.length} Sumber
-                  </span>
-                </div>
-              )}
-
-              {effectiveRank !== undefined && (
-                <div
-                  className={cn(
-                    "flex items-center gap-1 rounded-xs backdrop-blur-md px-2 py-1 shadow-sm font-black text-xs",
-                    Number(effectiveRank) === 1
-                      ? "bg-amber-400 text-amber-950 ring-1 ring-amber-300 shadow-xs"
-                      : Number(effectiveRank) === 2
-                      ? "bg-slate-200 text-slate-900 ring-1 ring-slate-100 shadow-xs"
-                      : Number(effectiveRank) === 3
-                      ? "bg-amber-800 text-amber-100 ring-1 ring-amber-600/40 shadow-xs"
-                      : "bg-surface-glass text-text-primary border border-border-default/40"
-                  )}
-                >
-                  <TrendUp
-                    weight="regular"
-                    className={cn(
-                      "text-2xs",
-                      Number(effectiveRank) === 1
-                        ? "text-amber-950"
-                        : Number(effectiveRank) === 2
-                        ? "text-slate-900"
-                        : Number(effectiveRank) === 3
-                        ? "text-amber-100"
-                        : "text-accent"
-                    )}
-                  />
-                  <span>#{effectiveRank}</span>
-                </div>
-              )}
-
-              {currentReadingConfig && (
-                <div
-                  className={cn(
-                    "rounded-xs px-2 py-0.5 text-xs font-bold",
-                    currentReadingConfig.bg,
-                    currentReadingConfig.bg.includes("surface") && "border border-border-subtle"
-                  )}
-                >
-                  {currentReadingConfig.label}
-                </div>
-              )}
-            </div>
-
-            {noEligibleSource && (
-              <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
-                <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
-                  Sumber Nonaktif
-                </div>
-                <span className="mt-1 text-3xs font-semibold text-text-muted">
-                  Cari alternatif &rarr;
+            {isMultiSource && (
+              <div className="flex items-center gap-1 rounded-xs bg-surface-overlay/95 px-1.5 py-0.5 shadow-sm border border-border-default/40">
+                <span className="text-xs font-bold text-accent">
+                  {availableBindings.length} Sumber
                 </span>
               </div>
             )}
-          </MangaCardCoverFrame>
-        </motion.div>
+
+            {effectiveRank !== undefined && (
+              <div
+                className={cn(
+                  "flex items-center gap-1 rounded-xs px-2 py-1 shadow-sm font-black text-xs",
+                  Number(effectiveRank) === 1
+                    ? "bg-amber-400 text-amber-950 ring-1 ring-amber-300 shadow-xs"
+                    : Number(effectiveRank) === 2
+                    ? "bg-slate-200 text-slate-900 ring-1 ring-slate-100 shadow-xs"
+                    : Number(effectiveRank) === 3
+                    ? "bg-amber-800 text-amber-100 ring-1 ring-amber-600/40 shadow-xs"
+                    : "bg-surface-overlay/95 text-text-primary border border-border-default/40"
+                )}
+              >
+                <TrendUp
+                  weight="regular"
+                  className={cn(
+                    "text-2xs",
+                    Number(effectiveRank) === 1
+                      ? "text-amber-950"
+                      : Number(effectiveRank) === 2
+                      ? "text-slate-900"
+                      : Number(effectiveRank) === 3
+                      ? "text-amber-100"
+                      : "text-accent"
+                  )}
+                />
+                <span>#{effectiveRank}</span>
+              </div>
+            )}
+
+            {currentReadingConfig && (
+              <div
+                className={cn(
+                  "rounded-xs px-2 py-0.5 text-xs font-bold",
+                  currentReadingConfig.bg,
+                  currentReadingConfig.bg.includes("surface") && "border border-border-subtle"
+                )}
+              >
+                {currentReadingConfig.label}
+              </div>
+            )}
+          </div>
+
+          {noEligibleSource && (
+            <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
+              <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
+                Sumber Nonaktif
+              </div>
+              <span className="mt-1 text-3xs font-semibold text-text-muted">
+                Cari alternatif &rarr;
+              </span>
+            </div>
+          )}
+        </MangaCardCoverFrame>
 
         <div className="flex flex-col px-2 mt-3">
           {/* Capped Badge / Metadata Row — single line strictly fixed height */}
@@ -1056,9 +899,9 @@ export function MangaCard({
             maxVisible={2}
             className="mb-1.5"
             badges={[
-              manga.format ? (
+              formatComicFormat(manga.format) ? (
                 <MangaCardMeta key="format" className="shrink-0 font-semibold">
-                  {manga.format}
+                  {formatComicFormat(manga.format)}
                 </MangaCardMeta>
               ) : null,
               showSourceBadge && (sourceName || isMultiSource || noEligibleSource) ? (
@@ -1076,9 +919,9 @@ export function MangaCard({
                   </MangaCardMeta>
                 ) : null
               ) : null,
-              manga.status ? (
+              publicationStatusLabel ? (
                 <MangaCardMeta key="status" className="shrink-0 text-text-muted font-medium">
-                  {manga.status}
+                  {publicationStatusLabel}
                 </MangaCardMeta>
               ) : null,
             ]}

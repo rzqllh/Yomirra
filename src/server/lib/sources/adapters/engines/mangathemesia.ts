@@ -11,6 +11,7 @@ import type {
 import { BaseEngine } from "./base-engine";
 import type { MangaThemesiaConfig } from "./types";
 import { SourceError } from "../../error";
+import { sameProviderUrl, normalizeStagedMediaUrl, normalizeStagedChapters, stagedChapterLock, normalizeStagedPages, stagedDetailIdentity, stagedComicFormat } from "./normalize-catalog";
 
 export class MangaThemesiaEngine extends BaseEngine {
   protected mangaPath: string;
@@ -29,11 +30,17 @@ export class MangaThemesiaEngine extends BaseEngine {
 
     $(this.itemSelector).each((_, el) => {
       const $el = $(el);
+      const cleanPrefix = this.mangaPath.replace(/^\/+|\/+$/g, "");
+      const seriesAnchor = cleanPrefix
+        ? $el.find(`a[href*='/${cleanPrefix}/']`).attr("href")
+        : undefined;
       const link =
+        seriesAnchor ||
         $el.find("a[href*='/manga/']").attr("href") ||
         $el.find("a").first().attr("href") ||
         "";
-      if (!link) return;
+      const resolvedLink = sameProviderUrl(link, this.baseUrl);
+      if (!resolvedLink || /\/(?:chapter|ch)-/i.test(resolvedLink.pathname)) return;
 
       const title =
         $el.find(".tt, .title, h4, h3").text().trim() ||
@@ -54,16 +61,22 @@ export class MangaThemesiaEngine extends BaseEngine {
           .text()
           .trim() || undefined;
 
-      const format =
-        $el.find(".typeflag, .type").first().text().trim() || undefined;
+      const format=stagedComicFormat($el.find(".typeflag, .type").first().text());
+      const author=$el.find(".author").first().text().trim()||undefined;
 
       const scoreText =
         $el.find(".rating i, .numscore").first().text().trim() || undefined;
       const score = scoreText ? parseFloat(scoreText) || undefined : undefined;
 
-      // Extract slug from URL: /manga/slug/
-      const match = link.match(/\/manga\/([^\/]+)\/?/);
-      const id = match ? match[1] : link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+      const escapedPrefix = cleanPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const prefixMatch = cleanPrefix
+        ? new RegExp(`^/${escapedPrefix}/([^/]+)/?$`, "i").exec(resolvedLink.pathname)
+        : null;
+      const genericMatch =
+        prefixMatch ??
+        /^\/(?:manga|series|comic|komik)\/([^/]+)\/?$/i.exec(resolvedLink.pathname) ??
+        /^\/([^/]+)\/?$/.exec(resolvedLink.pathname);
+      const id = genericMatch ? genericMatch[1] : "";
 
       if (id && title) {
         mangas.push({
@@ -72,9 +85,10 @@ export class MangaThemesiaEngine extends BaseEngine {
           coverUrl,
           latestChapter,
           format,
+          author,
           score,
           isNsfw: this.isNsfw,
-          contentRating: this.isNsfw ? "pornographic" : "safe",
+          contentRating: this.isNsfw ? "pornographic" : "unknown",
         });
       }
     });
@@ -147,6 +161,7 @@ export class MangaThemesiaEngine extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
     const path = mangaId.startsWith("http")
       ? mangaId
       : `${this.mangaPath}/${encodeURIComponent(mangaId)}/`;
@@ -158,7 +173,8 @@ export class MangaThemesiaEngine extends BaseEngine {
       const title =
         $("h1.entry-title").first().text().trim() ||
         $(".post-title").first().text().trim() ||
-        mangaId;
+        "";
+      if (!title) throw new SourceError("Detail title missing", { sourceId: this.id, code: "PARSER_BROKEN", stage: "detail" });
 
       const description =
         $(".entry-content.entry-content-single, .entry-content, .synopsis")
@@ -195,13 +211,14 @@ export class MangaThemesiaEngine extends BaseEngine {
       return {
         id: mangaId,
         title,
-        coverUrl,
+        ...stagedDetailIdentity($),
+        coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,
         status,
         author,
         isNsfw: this.isNsfw,
-        contentRating: this.isNsfw ? "pornographic" : "safe",
+        contentRating: this.isNsfw ? "pornographic" : "unknown",
       };
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
@@ -212,6 +229,7 @@ export class MangaThemesiaEngine extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) throw new SourceError("Invalid provider identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND" });
     const path = mangaId.startsWith("http")
       ? mangaId
       : `${this.mangaPath}/${encodeURIComponent(mangaId)}/`;
@@ -224,7 +242,7 @@ export class MangaThemesiaEngine extends BaseEngine {
       $("#chapterlist ul li, .clstyle li, .eplister ul li").each((idx, el) => {
         const $el = $(el);
         const link = $el.find("a").first().attr("href") || "";
-        if (!link) return;
+        if (!sameProviderUrl(link, this.baseUrl)) return;
 
         const title =
           $el.find(".chapternum").first().text().trim() ||
@@ -232,7 +250,8 @@ export class MangaThemesiaEngine extends BaseEngine {
 
         const numAttr = $el.attr("data-num") || "";
         const numMatch = title.match(/(\d+(?:\.\d+)?)/);
-        const number = parseFloat(numAttr) || (numMatch ? parseFloat(numMatch[1]) : idx + 1);
+        const explicitNumber = /^\d+(?:\.\d+)?$/.test(numAttr.trim()) && Number.isFinite(Number(numAttr)) ? numAttr.trim() : undefined;
+        const number = explicitNumber !== undefined ? Number(explicitNumber) : (numMatch ? parseFloat(numMatch[1]) : idx + 1);
 
         const date =
           $el.find(".chapterdate").first().text().trim() ||
@@ -252,10 +271,11 @@ export class MangaThemesiaEngine extends BaseEngine {
           id,
           mangaId,
           number,
+          ...(explicitNumber !== undefined ? {chapterNumber:explicitNumber} : {}),
           title,
           date,
           url: link,
-          isLocked,
+          isLocked: stagedChapterLock(isLocked, $el.attr("data-locked"), $el.find("a").first().attr("data-locked")),
         });
       });
 
@@ -293,7 +313,7 @@ export class MangaThemesiaEngine extends BaseEngine {
                   title,
                   date: "",
                   url: link,
-                  isLocked: false,
+                  isLocked: undefined,
                 });
               });
             }
@@ -303,7 +323,7 @@ export class MangaThemesiaEngine extends BaseEngine {
         }
       }
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");
@@ -313,6 +333,7 @@ export class MangaThemesiaEngine extends BaseEngine {
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
 
+    if (!sameProviderUrl(chapterId, this.baseUrl)) throw new SourceError("Invalid provider chapter identity", { sourceId: this.id, code: "CONTENT_NOT_FOUND", stage: "pages" });
     const path = chapterId.startsWith("http")
       ? chapterId
       : `/${chapterId.replace(/^\/+/, "")}`;
@@ -332,9 +353,10 @@ export class MangaThemesiaEngine extends BaseEngine {
               url,
               referer: `${this.baseUrl}/`,
             }));
-            return { chapterId, pages };
+            return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
           }
-        } catch {
+        } catch (error) {
+          if (SourceError.isSourceError(error)) throw error;
           // Fall through to HTML selector
         }
       }
@@ -361,7 +383,7 @@ export class MangaThemesiaEngine extends BaseEngine {
         }
       });
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

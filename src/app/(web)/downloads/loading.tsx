@@ -7,13 +7,13 @@ export default function Loading() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="focused" hasMobileHeader>
-        <DestinationHeader destination="downloads" />
+        <DestinationHeader destination="downloads" actions={null} />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
           <Skeleton className="h-20 w-full rounded-xl" />
 
           <div className="w-full">
-            <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
+            <Skeleton className="mb-4 h-13 w-full sm:max-w-xs rounded-xl" />
             <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <div

@@ -56,6 +56,7 @@ export function PagedReader({
   const router = useRouter();
   const preferences = useEffectiveReaderPreferences(sourceId, mangaId);
   const toggleOverlay = useReaderStore(state => state.toggleOverlay);
+  const overlayVisible=useReaderStore(state=>state.isOverlayVisible);
   const setPagedProgress = useReaderStore(state => state.setPagedProgress);
   const { dataSaver } = useSettingsStore();
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
@@ -232,6 +233,9 @@ export function PagedReader({
   // Keyboard navigation listener
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        return;
+      }
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -337,10 +341,10 @@ export function PagedReader({
   const rightLabel = isRtl ? "Area ketuk halaman sebelumnya" : "Area ketuk halaman berikutnya";
 
   return (
-    <div className="relative min-h-screen w-full bg-transparent select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+80px)]">
+    <div data-reader-tap-owner="paged" className="relative min-h-screen w-full bg-transparent select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+80px)]">
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
-        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="reader-chrome-surface fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2 text-semantic-warning font-medium">
             <Warning size={18} weight="fill" className="shrink-0" />
             <span>{failedPageIndices.size} halaman gagal dimuat</span>
@@ -350,7 +354,7 @@ export function PagedReader({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 text-xs px-2.5 rounded-lg"
+                className="min-h-11 text-xs px-3 rounded-lg"
                 onClick={async () => {
                   const fresh = await onRefreshChapter();
                   if (fresh) {
@@ -366,7 +370,7 @@ export function PagedReader({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs px-2.5 rounded-lg border-semantic-warning/40 text-semantic-warning hover:bg-semantic-warning/10 font-bold"
+                className="min-h-11 text-xs px-3 rounded-lg border-semantic-warning/40 text-semantic-warning hover:bg-semantic-warning/10 font-bold"
                 onClick={onOpenAlternateSource}
               >
                 Ganti Sumber
@@ -380,18 +384,21 @@ export function PagedReader({
       <div className="pointer-events-none absolute inset-0 z-20 grid grid-cols-10">
         <button
           type="button"
+          tabIndex={-1}
           className="col-span-3 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
           aria-label={leftLabel}
           onClick={handleLeftTap}
         />
         <button
           type="button"
+          tabIndex={-1}
           className="col-span-4 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
           aria-label="Buka kontrol menu"
           onClick={toggleOverlay}
         />
         <button
           type="button"
+          tabIndex={-1}
           className="col-span-3 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
           aria-label={rightLabel}
           onClick={handleRightTap}
@@ -413,6 +420,7 @@ export function PagedReader({
           className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2 [touch-action:pan-y_pinch-zoom]!"
         >
           <ReaderImage
+            qualityRef={{sourceId,mangaId,chapterId}}
             pageIndex={currentPageIndex}
             pageUrl={currentUrl}
             isWebtoon={false}
@@ -462,11 +470,11 @@ export function PagedReader({
       )}
 
       {/* Standalone/manual fallback; the composed Reader uses its shared bottom scrubber. */}
-      {(!managedChrome || !preferences.showPageProgress) && <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
+      {!managedChrome && <div className="reader-chrome-surface fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
+          className="rounded-lg text-text-secondary hover:text-text-primary"
           onClick={previousImage}
           disabled={currentPageIndex === 0}
           aria-label="Halaman sebelumnya"
@@ -481,7 +489,7 @@ export function PagedReader({
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
+          className="rounded-lg text-text-secondary hover:text-text-primary"
           onClick={nextImage}
           disabled={currentPageIndex >= totalPages - 1}
           aria-label="Halaman berikutnya"

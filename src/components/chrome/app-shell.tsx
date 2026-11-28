@@ -128,7 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         
         <main
           className={cn(
-            "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 overflow-x-hidden",
+            "flex-1 flex flex-col w-full min-w-0 overflow-x-hidden",
             !isReader && "pb-[var(--page-bottom-safe)] md:pb-0"
           )}
         >

@@ -1,0 +1,47 @@
+name: Local canonical index verification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/build-mangabaka-index.mjs'
+      - 'scripts/canonical-review.mjs'
+      - 'scripts/__tests__/canonical-review.test.mjs'
+      - 'scripts/prepare-mangabaka-refresh.py'
+      - 'scripts/refresh-catalog-daily.py'
+      - 'scripts/__tests__/refresh-catalog-daily.test.py'
+      - 'scripts/prepare-turso-import.py'
+      - 'scripts/verify-turso-candidate.py'
+      - 'scripts/publish-turso-catalog.mjs'
+      - 'scripts/__tests__/publish-turso-catalog.test.mjs'
+      - 'scripts/renew-catalog-freshness.mjs'
+      - 'scripts/__tests__/renew-catalog-freshness.test.mjs'
+      - 'src/server/lib/metadata/catalog-slots.mjs'
+      - 'src/server/lib/metadata/catalog-freshness.ts'
+      - 'scripts/__tests__/verify-turso-candidate.test.py'
+      - 'scripts/__tests__/prepare-turso-import.test.py'
+      - 'scripts/__tests__/prepare-mangabaka-refresh.test.py'
+      - 'scripts/__tests__/build-mangabaka-index.test.mjs'
+      - 'src/server/lib/metadata/mangabaka-record.mjs'
+      - 'src/server/lib/metadata/local-catalog-index.ts'
+      - 'src/shared/lib/normalize-title.mjs'
+      - '.github/workflows/local-catalog-index.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/__tests__/build-mangabaka-index.test.mjs scripts/__tests__/canonical-review.test.mjs
+      - run: python3 scripts/__tests__/prepare-mangabaka-refresh.test.py
+      - run: python3 scripts/__tests__/prepare-turso-import.test.py
+      - run: python3 scripts/__tests__/verify-turso-candidate.test.py
+      - run: node --test scripts/__tests__/publish-turso-catalog.test.mjs scripts/__tests__/renew-catalog-freshness.test.mjs
+      - run: python3 scripts/__tests__/refresh-catalog-daily.test.py

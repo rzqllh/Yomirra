@@ -10,6 +10,7 @@ import {
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
 import {
@@ -23,7 +24,7 @@ import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
 import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
-import { projectMetadataCatalogRows } from "@/shared/lib/metadata-catalog";
+import { projectMetadataCatalogRows,metadataOnlyWorks } from "@/shared/lib/metadata-catalog";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -31,6 +32,7 @@ import {
   parseSearchExpression,
   rankHybridScore,
   type SearchCatalogCandidate,
+  boundIntelligenceCandidates,
 } from "@/shared/lib/search-intelligence";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
@@ -127,26 +129,33 @@ export function useSearchCatalog() {
   }, [isMounted, sourcesData, localSources, hideNsfw]);
 
   const searchFilterStore = useSearchFilterStore();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const selectedSources = searchFilterStore.selectedSources;
   const hasCustomizedSources = searchFilterStore.hasCustomizedSources;
+
+  const defaultActiveSourceIds = React.useMemo(() => {
+    if (!searchableSources.length) return [];
+    const disabledSet = new Set(disabledSources);
+    const active = searchableSources
+      .filter((source) => !disabledSet.has(source.id))
+      .map((source) => source.id);
+    return active.length > 0 ? active : searchableSources.map((source) => source.id);
+  }, [searchableSources, disabledSources]);
 
   const activeSelectedSources = React.useMemo(() => {
     if (!searchableSources.length) return [];
     if (!hasCustomizedSources || selectedSources === null) {
-      return searchableSources.map((source) => source.id);
+      return defaultActiveSourceIds;
     }
     const filtered = selectedSources.filter((id) =>
       searchableSources.some((source) => source.id === id)
     );
     // Explicit zero-selected-source state: user intentionally unchecked all sources
     return filtered;
-  }, [hasCustomizedSources, selectedSources, searchableSources]);
+  }, [hasCustomizedSources, selectedSources, searchableSources, defaultActiveSourceIds]);
 
   const toggleSource = (id: string) => {
-    searchFilterStore.toggleSource(
-      id,
-      searchableSources.map((source) => source.id)
-    );
+    searchFilterStore.toggleSource(id, defaultActiveSourceIds);
   };
 
   const genres = searchFilterStore.genres;
@@ -449,7 +458,7 @@ export function useSearchCatalog() {
 
   const intelligenceCandidates = React.useMemo<SearchCatalogCandidate[]>(
     () =>
-      rawSearchMangas.map((item) => ({
+      boundIntelligenceCandidates(rawSearchMangas.map((item) => ({
         canonicalKey: item.canonicalKey,
         sourceId: item.sourceId,
         mangaId: item.manga.id,
@@ -465,7 +474,7 @@ export function useSearchCatalog() {
         sourceBindings: item.sourceBindings,
         isNsfw: item.manga.isNsfw,
         contentRating: item.manga.contentRating,
-      })),
+      }))),
     [rawSearchMangas]
   );
 
@@ -564,7 +573,7 @@ export function useSearchCatalog() {
   );
 
   const searchMangas = React.useMemo(() => {
-    const results = [...combinedResults];
+    const results = combinedResults.filter(row => !hideNsfw || classifyContent(row.manga) !== "NSFW");
 
     if (sort === "rating") {
       return results.sort((a, b) => {
@@ -631,6 +640,7 @@ export function useSearchCatalog() {
     });
   }, [
     combinedResults,
+    hideNsfw,
     sort,
     parsedQuery.textQuery,
     intelligenceQuery.data?.scores,
@@ -699,6 +709,7 @@ export function useSearchCatalog() {
     activeSelectedSources,
     toggleSource,
     searchMangas,
+    metadataOnly:page===1&&!hasActiveFilters&&Boolean(parsedQuery.textQuery)?metadataOnlyWorks(combinedResults,[...(intelligenceQuery.data?.metadataWorks??[]),...(intelligenceQuery.data?.metadataDiscovery??[])]):[],
     hasNextPage,
     errorsToDisplay,
     isInitialLoading,

@@ -30,8 +30,10 @@ export function PopularPageSkeleton() {
       <PageContainer hasMobileHeader>
         <DestinationHeader destination="popular" />
 
-        <PopularFeedSkeleton cardCount={8} />
-        <PopularFeedSkeleton cardCount={8} />
+        <div role="status" aria-label="Memuat peringkat populer">
+          <Skeleton className="mb-4 h-13 w-full rounded-xl sm:max-w-xs" />
+          <PopularFeedSkeleton cardCount={8} />
+        </div>
       </PageContainer>
     </Surface>
   );

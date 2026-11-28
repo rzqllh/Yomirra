@@ -5,6 +5,7 @@ import { X } from "@phosphor-icons/react"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
+import { useMediaQuery } from "@/shared/hooks/use-media-query"
 
 export interface ReaderPanelShellProps {
   isOpen: boolean
@@ -32,6 +33,8 @@ export function ReaderPanelShell({
   contentClassName,
 }: ReaderPanelShellProps) {
   const reducedMotion = useReducedMotion()
+  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const isDockedSidePanel = desktopMode === "side-panel" && isDesktop
   const panelRef = React.useRef<HTMLDivElement>(null)
   const previousFocusRef = React.useRef<HTMLElement | null>(null)
   const titleId = React.useId()
@@ -43,13 +46,13 @@ export function ReaderPanelShell({
   }, [])
 
   React.useLayoutEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || isDockedSidePanel) return
 
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null
 
     panelRef.current?.focus()
-  }, [isOpen])
+  }, [isOpen, isDockedSidePanel])
 
   React.useEffect(() => {
     return () => restorePreviousFocus()
@@ -59,15 +62,18 @@ export function ReaderPanelShell({
     if (!isOpen) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      const panel = panelRef.current
       if (event.key === "Escape") {
+        if (isDockedSidePanel && (!panel || !panel.contains(document.activeElement))) {
+          return
+        }
         event.preventDefault()
         onClose()
         return
       }
 
-      if (event.key !== "Tab") return
+      if (isDockedSidePanel || event.key !== "Tab") return
 
-      const panel = panelRef.current
       if (!panel) return
 
       const focusable = Array.from(
@@ -97,7 +103,7 @@ export function ReaderPanelShell({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen, isDockedSidePanel, onClose])
 
   const containerClasses =
     desktopMode === "side-panel"
@@ -128,7 +134,7 @@ export function ReaderPanelShell({
           <motion.div
             ref={panelRef}
             role="dialog"
-            aria-modal="true"
+            aria-modal={isDockedSidePanel ? undefined : true}
             aria-labelledby={titleId}
             tabIndex={-1}
             initial={reducedMotion ? false : { y: "100%", opacity: 0 }}

@@ -16,19 +16,8 @@ import { transitions } from "@/shared/lib/motion/tokens";
 import { Button } from "@/components/ui/button";
 import { Surface } from "@/components/ui/surface";
 
-const ROUTE_LABELS: Record<string, string> = {
-  "": "Beranda",
-  library: "Jelajah",
-  bookmark: "Library",
-  search: "Cari",
-  popular: "Populer",
-  sources: "Sumber",
-  updates: "Jadwal",
-  downloads: "Unduhan",
-  settings: "Pengaturan",
-  account: "Akun & Sinkronisasi",
-  manga: "Manga",
-};
+import { allowsTopNavSearch, getNavigationTrail, navigationLabels } from "./navigation-labels";
+import { useSearchAnchorPastHeader } from "./use-search-anchor-past-header";
 
 export function TopNav() {
   const mounted = useMounted();
@@ -37,63 +26,16 @@ export function TopNav() {
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
   const { modifier, searchShortcut } = usePlatformShortcut();
 
-  const segments = (pathname || "").split("/").filter(Boolean);
-  const primarySegment = segments[0] || "";
-  const pageLabel = ROUTE_LABELS[primarySegment] || primarySegment;
-  const isHome = pathname === "/";
+  const currentPath = pathname || "/";
+  const { label, parent } = getNavigationTrail(currentPath);
+  const isHome = currentPath === "/";
   const shouldReduceMotion = useReducedMotion();
+  const headerRef = React.useRef<HTMLElement>(null);
+  const isPastHero = useSearchAnchorPastHeader(isHome ? "home-hero-search" : undefined, 68, headerRef);
+  const searchAllowed = allowsTopNavSearch(currentPath);
 
-  // Profile dropdown state
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
-  const [scrolledPastHero, setScrolledPastHero] = React.useState(!isHome);
-
-  const shouldShowSearch =
-    pathname !== "/library" &&
-    pathname !== "/search" &&
-    (!isHome || scrolledPastHero);
-
-  React.useEffect(() => {
-    if (!isHome) {
-      setScrolledPastHero(true);
-      return;
-    }
-
-    const updateVisibility = () => {
-      const heroEl = document.getElementById("home-hero-search");
-      if (!heroEl) {
-        setScrolledPastHero(window.scrollY > 140);
-        return;
-      }
-      const rect = heroEl.getBoundingClientRect();
-      // TopNav is 68px tall. When hero search leaves the viewport under top-nav, show header search.
-      const isPast = rect.bottom < 68 && window.scrollY > 50;
-      setScrolledPastHero(isPast);
-    };
-
-    let observer: IntersectionObserver | null = null;
-    const heroEl = document.getElementById("home-hero-search");
-    if (heroEl && typeof IntersectionObserver !== "undefined") {
-      observer = new IntersectionObserver(
-        () => {
-          updateVisibility();
-        },
-        {
-          threshold: 0,
-          rootMargin: "-68px 0px 0px 0px",
-        }
-      );
-      observer.observe(heroEl);
-    }
-
-    window.addEventListener("scroll", updateVisibility, { passive: true });
-    updateVisibility();
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("scroll", updateVisibility);
-    };
-  }, [isHome]);
 
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -113,28 +55,35 @@ export function TopNav() {
 
       <Surface asChild variant="glassHeader">
         <header
+          ref={headerRef}
           style={{ top: "var(--announcement-height, 0px)" }}
           className={cn(
-            "hidden md:flex fixed right-0 z-40 h-17 items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            "hidden md:flex fixed right-0 z-40 h-17 items-center gap-4 px-8 xl:px-10 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
             isCollapsed ? "left-19" : "left-19 xl:left-60"
           )}
         >
         {/* LEFT: Global Editorial Breadcrumb (Phase 3) */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2">
-          <ol className="flex items-center gap-2 text-xs">
+        <nav aria-label="Breadcrumb" className="min-w-0">
+          <ol className="flex min-w-0 items-center gap-2 text-xs">
             <li className="flex items-center gap-2">
               <Link
                 href="/"
-                className="font-bold uppercase tracking-widest text-accent hover:opacity-80 transition-opacity"
+                className="shrink-0 rounded-xs font-bold text-accent hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent"
               >
                 Yomirra
               </Link>
               <span className="text-border-default/80 font-medium" aria-hidden="true">/</span>
             </li>
-            <li className="flex items-center">
-              <span className="font-bold text-text-secondary capitalize" aria-current="page">
-                {pageLabel}
-              </span>
+            {parent && (
+              <li className="flex shrink-0 items-center gap-2">
+                <Link href={parent.href} className="rounded-xs text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent">
+                  {parent.label}
+                </Link>
+                <span className="text-border-default" aria-hidden="true">/</span>
+              </li>
+            )}
+            <li className="min-w-0 truncate font-bold text-text-secondary" aria-current="page" title={label}>
+              {label}
             </li>
           </ol>
         </nav>
@@ -142,40 +91,37 @@ export function TopNav() {
         {/* RIGHT: Search + Bell + Theme + Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5 h-full">
           {/* Sticky search pill: visible on non-home pages or when scrolled past hero */}
-          <AnimatePresence>
-            {shouldShowSearch && (
-              <motion.div
-                key="top-nav-search-pill"
-                initial={{ opacity: 0, scale: 0.95, y: -6 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -6 }}
-                transition={
-                  shouldReduceMotion
-                    ? { duration: 0 }
-                    : transitions.layout
-                }
-                className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end"
+          {searchAllowed && (!isHome || isPastHero) && (
+            <motion.div
+              initial={isHome && !shouldReduceMotion ? { opacity: 0, scale: 0.95, y: -6 } : false}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={
+                shouldReduceMotion
+                  ? { duration: 0 }
+                  : transitions.layout
+              }
+              className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end"
+            >
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={!mounted}
+                onClick={() => {
+                  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("open-command-menu"));
+                }}
+                aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
+                className={cn(
+                  "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-9 w-full cursor-pointer select-none",
+                  "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
+                  "transition-colors duration-200 ease-out"
+                )}
               >
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={!mounted}
-                  onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                  aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
-                  className={cn(
-                    "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-9 w-full cursor-pointer select-none",
-                    "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
-                    "transition-all duration-200 ease-out"
-                  )}
-                >
-                  <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
-                  <span className="flex-1 text-left truncate">Cari komik…</span>
-                  <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-2xs font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+                <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
+                <span className="flex-1 text-left truncate">Cari komik…</span>
+                <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-2xs font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
+              </Button>
+            </motion.div>
+          )}
 
           {/* Notification Bell */}
           <UpdatesBell />
@@ -219,7 +165,7 @@ export function TopNav() {
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
-                        <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
+                        <UserCircle size={18} weight="regular" /> {navigationLabels.account}
                       </Link>
 
                       <Link
@@ -227,7 +173,7 @@ export function TopNav() {
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
-                        <Question size={18} weight="regular" /> Pusat bantuan
+                        <Question size={18} weight="regular" /> {navigationLabels.help}
                       </Link>
 
                       <div className="my-1 border-t border-border-subtle/80" />

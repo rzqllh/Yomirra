@@ -54,7 +54,12 @@ export default function SourcesPage() {
   const { data: healthStats, refetch: refetchHealth } = useQuery({
     queryKey: ["sources-health"],
     queryFn: () => apiClient.getHealth(),
-    refetchInterval: 60000, // Refetch every 1 minute
+    // Server health snapshots have a ten-minute cache lifetime. Polling
+    // every minute provides no additional evidence and consumes quota.
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 
   const handleRefresh = async () => {
@@ -77,6 +82,8 @@ export default function SourcesPage() {
     return s.map(source => {
       const health = healthStats?.[source.id];
       if (source.maintenance) return { ...source, status: "in-fix" as const };
+      // Health is observation, not authorization to promote a staged source.
+      if (source.status === "in-fix" || source.status === "in-dev") return source;
       if (health) {
         const observedAt = Date.parse(health.checkedAt || "");
         const isFresh = Number.isFinite(observedAt)
@@ -90,6 +97,7 @@ export default function SourcesPage() {
             uptime: isFresh ? health.uptime : "-",
             lastChecked: Number.isFinite(observedAt) ? new Date(observedAt).toLocaleString("id-ID") : "Belum diperiksa",
             message: isFresh ? health.message : "Belum ada pemeriksaan terbaru. Status sumber belum dapat dipastikan.",
+            coverage: isFresh && health.status === "online" ? health.coverage : undefined,
           }
         };
       }

@@ -7,6 +7,9 @@ import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-sour
 import type { Chapter, MangaSource, SourceReadOptions } from "@/shared/sources/source-types";
 import { SourceError } from "./error";
 import { loadSourceUpstream } from "./source-upstream";
+import { applyLocalCanonicalMetadata } from "@/server/lib/metadata/local-catalog-index";
+import { isTursoCatalogEnabled, lookupTursoCatalog } from "@/server/lib/metadata/turso-catalog";
+import { comicFormat, inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
 
 /** Public request options are always safe. Do not treat a browser cookie as age proof. */
 export function getRequestReadOptions(request: NextRequest): SourceReadOptions {
@@ -70,14 +73,21 @@ export async function loadSourceCatalog(source: MangaSource, operation: "popular
   assertSourceAccess(source, options);
   const result = await withCache(contentCacheKey(source, operation, String(page), options),
     () => loadSourceUpstream(source.id, "search", null, () => operation === "popular" ? source.getPopular(page, options) : source.getLatest(page, options), source.cacheFingerprint), CACHE_TTL.DISCOVERY);
-  return { ...result, mangas: result.mangas.filter((item) => isContentVisible(item, options.hideNsfw !== false)) };
+  return { ...result, mangas: result.mangas.map(applyLocalCanonicalMetadata).filter((item) => isContentVisible(item, options.hideNsfw !== false)) };
 }
 
 export async function loadSourceDetail(source: MangaSource, mangaId: string, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
   const key = contentCacheKey(source, "manga", mangaId, options);
-  const detail = await withCache(key,
+  const rawDetail = await withCache(key,
     () => loadSourceUpstream(source.id, "detail", key, () => source.getDetail(mangaId, options), source.cacheFingerprint), CACHE_TTL.DETAIL);
+  let detail=applyLocalCanonicalMetadata(rawDetail);
+  // Explicit detail/reader access only; never remote lookup for every cover.
+  // Preserve legacy visibility when optional metadata is unavailable.
+  if(isTursoCatalogEnabled() && !source.isDynamic && detail.id===mangaId && comicFormat(detail.format)){
+    const observed=await lookupTursoCatalog(detail.title,detail.externalWorkIds);
+    if(observed)detail=inheritCanonicalRating(detail,matchCanonicalMetadata(detail,observed.works));
+  }
   if (!isContentVisible(detail, options.hideNsfw !== false)) {
     throw new SourceError("Konten disembunyikan oleh pengaturan konten", {
       code: "CONTENT_RESTRICTED", sourceId: source.id, stage: "detail", statusCode: 403,

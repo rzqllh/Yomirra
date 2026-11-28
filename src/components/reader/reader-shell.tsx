@@ -27,7 +27,9 @@ const ReaderChapterDrawer = dynamic(() => import("./reader-chapter-drawer").then
 import { StatusBarBlur } from "@/components/ui/status-bar-blur"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
+import { useReaderDockGate } from "@/shared/hooks/use-reader-dock-gate"
 import { useMounted } from "@/shared/hooks/use-mounted"
+import { useMediaQuery } from "@/shared/hooks/use-media-query"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
 interface ReaderShellProps {
@@ -69,6 +71,11 @@ export function ReaderShell({
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const readerRoot=React.useRef<HTMLDivElement>(null);
+  const {endVisible,dockAwaitingTap}=useReaderDockGate(readerRoot,`${sourceId}::${mangaId}::${currentChapterId??""}`,preferences.readingMode);
+  const dockAllowed=!endVisible&&(!dockAwaitingTap||preferences.toolbarBehavior==="always-visible");
+  const showDock=isOverlayVisible&&dockAllowed;
 
   const isScrubbingRef = React.useRef(false);
   const scrubbingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,14 +88,13 @@ export function ReaderShell({
 
     if (isScrubbing) {
       isScrubbingRef.current = true;
-      setOverlayVisible(true);
     } else {
       // Grace period to allow smooth-scroll inertia and frame settlement
       scrubbingTimerRef.current = setTimeout(() => {
         isScrubbingRef.current = false;
       }, 600);
     }
-  }, [setOverlayVisible]);
+  }, []);
 
   React.useEffect(() => {
     return () => {
@@ -97,6 +103,13 @@ export function ReaderShell({
       }
     };
   }, []);
+  React.useEffect(()=>{
+    const release=()=>{if(isScrubbingRef.current)handleScrubbingChange(false);};
+    window.addEventListener("pointerup",release);
+    window.addEventListener("pointercancel",release);
+    window.addEventListener("blur",release);
+    return()=>{window.removeEventListener("pointerup",release);window.removeEventListener("pointercancel",release);window.removeEventListener("blur",release);};
+  },[handleScrubbingChange]);
 
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
@@ -197,7 +210,7 @@ export function ReaderShell({
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.defaultPrevented || e.target instanceof Element && e.target.closest("input,textarea,select,[contenteditable=true],[role=dialog]") || document.querySelector("[role=dialog][aria-modal=true]")) return;
 
       if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
         toggleOverlay();
@@ -247,91 +260,46 @@ export function ReaderShell({
     };
   }, [preferences.keepScreenAwake]);
 
-  // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
-  useReaderGesture();
+  // Actual readers own their horizontal tap zones; shell handles only
+  // fallback content. A single physical tap must never toggle twice.
+  useReaderGesture(readerRoot);
 
-  // Immediate overlay auto-dismiss on scroll down, show on scroll up with delta accumulation
   React.useEffect(() => {
-    let ticking = false;
-    let lastScrollY = window.scrollY;
-    let accumulatedDiff = 0;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const diff = currentScrollY - lastScrollY;
-          const activeId = document.activeElement?.id;
-          const isRangeActive = activeId === "reader-page-range" || activeId === "reader-webtoon-range";
-
-          if (isScrubbingRef.current || isRangeActive) {
-            lastScrollY = currentScrollY;
-            accumulatedDiff = 0;
-            ticking = false;
-            return;
-          }
-
-          setShowBackToTop(currentScrollY > 1200);
-
-          // Reset accumulator if scrolling changes direction
-          if (Math.sign(diff) !== Math.sign(accumulatedDiff)) {
-            accumulatedDiff = 0;
-          }
-          accumulatedDiff += diff;
-
-          const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
-
-          if (isAtBottom) {
-            setOverlayVisible(true);
-          } else if (accumulatedDiff > 60) {
-            setOverlayVisible(false);
-            accumulatedDiff = 0; // Reset after triggering
-          } else if (accumulatedDiff < -30) {
-            setOverlayVisible(true);
-            accumulatedDiff = 0; // Reset after triggering
-          }
-
-          lastScrollY = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
+    let frame:number|null=null;
+    let lastScrollY=Math.max(0,window.scrollY);
+    let distance=0;
+    const handleScroll=()=>{
+      if(frame!==null)return;
+      frame=window.requestAnimationFrame(()=>{
+        frame=null;
+        const y=Math.max(0,window.scrollY),delta=y-lastScrollY;
+        lastScrollY=y;
+        setShowBackToTop(y>1200);
+        // Slider focus alone is not an active scrub; release/blur ends it.
+        if(isScrubbingRef.current||preferences.toolbarBehavior==="always-visible"){
+          distance=0;return;
+        }
+        distance+=Math.abs(delta);
+        if(distance>=60){setOverlayVisible(false);distance=0;}
+      });
+    };
+    // Explicit show intent wins over scroll events already queued before it.
+    // Snapshot the current position synchronously; later genuine movement can
+    // still hide the chrome normally.
+    const unsubscribe=useReaderStore.subscribe((state,prior)=>{
+      if(state.isOverlayVisible&&!prior.isOverlayVisible){
+        if(frame!==null)window.cancelAnimationFrame(frame);
+        frame=null;distance=0;lastScrollY=Math.max(0,window.scrollY);
+        setShowBackToTop(lastScrollY>1200);
       }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [setOverlayVisible]);
-
-  // Desktop mouse proximity & arrow key awareness for showing chrome without forcing click
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (window.innerWidth < 768) return;
-      const isNearTop = e.clientY <= 70;
-      const isNearBottom = e.clientY >= window.innerHeight - 90;
-
-      if (isNearTop || isNearBottom) {
-        setOverlayVisible(true);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowUp" || e.key === "PageUp") {
-        setOverlayVisible(true);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("keydown", handleKeyDown, { passive: true });
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [setOverlayVisible]);
+    });
+    window.addEventListener("scroll",handleScroll,{passive:true});
+    return()=>{unsubscribe();window.removeEventListener("scroll",handleScroll);if(frame!==null)window.cancelAnimationFrame(frame);};
+  },[setOverlayVisible,preferences.toolbarBehavior,currentChapterId]);
 
   return (
     <div
+      ref={readerRoot}
       className={cn(
         "reader-contrast-scope relative min-h-screen w-full transition-[padding,background-color] duration-150",
         isDesktopPanelOpen && "md:pr-80",
@@ -367,7 +335,7 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <header
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden border border-border-glass grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-14 sm:h-14.5 px-2 sm:px-3 rounded-2xl transition-colors duration-200 text-text-primary bg-surface-overlay shadow-none"
+                  "pointer-events-auto relative overflow-hidden border border-border-glass reader-chrome-surface grid grid-cols-[92px_minmax(0,1fr)_92px] items-center w-full max-w-lg md:max-w-2xl min-h-14 sm:min-h-15 px-1.5 sm:px-3 rounded-2xl transition-colors duration-200 text-text-primary bg-surface-overlay shadow-none"
                 )}
               >
                 {/* Left Cluster: Back to Detail + Home Navigation */}
@@ -375,7 +343,7 @@ export function ReaderShell({
                   <motion.button
                     aria-label="Kembali ke detail komik"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={handleBack}
                   >
                     <ArrowLeft size={18} weight="regular" />
@@ -384,7 +352,7 @@ export function ReaderShell({
                   <motion.button
                     aria-label="Kembali ke Beranda"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(event) => {
                       event.stopPropagation();
                       if (beginNavigationIntent("/")) router.replace("/");
@@ -397,21 +365,21 @@ export function ReaderShell({
                 {/* Center Cluster: Mathematically & Visually Centered Manga & Chapter Hierarchy */}
                 <div className="flex flex-col items-center justify-center px-1.5 min-w-0 select-none text-center overflow-hidden">
                   <span
-                    className="text-xs font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
+                    className="reader-chrome-muted text-xs font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
                     title={mangaTitle || chapterTitle}
                   >
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
                     <span
-                      className="text-xs sm:text-sm font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="reader-chrome-primary text-xs sm:text-sm font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={chapterTitle}
                     >
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
                     <span
-                      className="text-xs font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="reader-chrome-muted text-xs font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={`${pageCount} halaman`}
                     >
                       {pageCount} halaman
@@ -423,9 +391,10 @@ export function ReaderShell({
                 <div className="flex items-center justify-end shrink-0">
                   <motion.button
                     aria-label={isSaved ? "Hapus dari Library" : "Simpan ke Library"}
+                    aria-pressed={isSaved}
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-xl transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       isSaved
                         ? "bg-accent text-accent-on border-accent shadow-xs"
                         : "text-text-muted hover:text-text-primary hover:bg-surface-hover/80 "
@@ -449,9 +418,9 @@ export function ReaderShell({
         )}
       </AnimatePresence>
 
-      {/* Bottom Overlay (Option A: Compact High-Contrast Squircle Dock with Spring Animation) */}
-      <AnimatePresence>
-        {isOverlayVisible && (
+      {/* End card owns bottom navigation; unmount immediately while visible. */}
+      {dockAllowed && <AnimatePresence>
+        {showDock && (
           <motion.div
             key="reader-bottom-overlay"
             initial={reducedMotion ? false : { y: 80, opacity: 0 }}
@@ -483,7 +452,7 @@ export function ReaderShell({
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
-                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  className="reader-chrome-surface reader-chrome-control reader-back-to-top pointer-events-auto self-end flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   aria-label="Kembali ke bagian atas pembaca"
                 >
                   <CaretUp size={18} weight="regular" />
@@ -491,7 +460,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
+              <div role="group" aria-label="Kontrol pembaca" className="reader-chrome-surface yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -501,7 +470,7 @@ export function ReaderShell({
                       format={format}
                       onScrubbingChange={handleScrubbingChange}
                     />
-                    <div className="h-px w-full bg-border-subtle" />
+                    <div className="reader-chrome-divider h-px w-full" />
                   </>
                 )}
 
@@ -511,8 +480,8 @@ export function ReaderShell({
                     aria-label="Chapter sebelumnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                      !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !prevChapterId && "cursor-not-allowed"
                     )}
                     disabled={!prevChapterId}
                     onClick={(e) => {
@@ -528,13 +497,13 @@ export function ReaderShell({
 
                   <motion.button
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="min-w-0 flex-1 h-9 rounded-full bg-surface-base/60 hover:bg-surface-raised border border-border-subtle/80 text-xs font-semibold text-text-secondary hover:text-text-primary transition-all px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent "
+                    className="reader-chrome-control reader-chapter-control min-w-0 flex-1 h-11 rounded-full text-xs font-semibold transition-colors px-2.5 flex items-center justify-center gap-1.5 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsChapterDrawerOpen(true);
                     }}
                   >
-                    <List size={16} weight="regular" className="shrink-0 text-accent" />
+                    <List size={18} weight="regular" className="shrink-0" />
                     <span className="truncate">Daftar chapter</span>
                   </motion.button>
 
@@ -542,8 +511,8 @@ export function ReaderShell({
                     aria-label="Chapter berikutnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                      !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                      "yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !nextChapterId && "cursor-not-allowed"
                     )}
                     disabled={!nextChapterId}
                     onClick={(e) => {
@@ -559,11 +528,12 @@ export function ReaderShell({
 
                   <motion.button
                     aria-label="Pengaturan pembaca"
+                    aria-expanded={isDrawerOpen || (isDesktopPanelOpen && isDesktop)}
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control reader-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 transition-colors motion-reduce:transition-none shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.innerWidth >= 768) {
+                      if (isDesktop) {
                         toggleDesktopPanel();
                       } else {
                         setIsDrawerOpen(true);
@@ -577,10 +547,10 @@ export function ReaderShell({
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>}
 
       {/* Unobtrusive Minimal Page Badge while reading (overlay hidden) */}
-      {!isOverlayVisible && preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
+      {dockAllowed && !isOverlayVisible && preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
         <div
           className={cn(
             "fixed right-3 z-30 pointer-events-none transition-all duration-200",

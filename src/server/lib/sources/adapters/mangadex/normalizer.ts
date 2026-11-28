@@ -54,13 +54,18 @@ export function normalizeMangaDexStatus(status: string): "ONGOING" | "COMPLETED"
 }
 
 function getFormat(manga: MangaDexManga): string | undefined {
-  const formatTag = manga.attributes.tags.find(t => t.attributes.group === "format");
-  if (formatTag) return pickTitle(formatTag.attributes.name);
-  // Infer from originalLanguage
+  // Long Strip, Oneshot and Full Color describe an edition, not the
+  // manga/manhwa/manhua medium. Keep these in genres/tags, never as identity.
+  const explicit = manga.attributes.tags.filter(t => t.attributes.group === "format")
+    .map(t => pickTitle(t.attributes.name))
+    .find(name => /^(manga|manhwa|manhua)$/i.test(name));
+  if (explicit) return explicit[0].toUpperCase() + explicit.slice(1).toLowerCase();
+  // Language is a conventional classification hint, not identity proof.
   switch (manga.attributes.originalLanguage) {
     case "ja": return "Manga";
     case "ko": return "Manhwa";
-    case "zh": return "Manhua";
+    case "zh":
+    case "zh-hk": return "Manhua";
     default: return undefined;
   }
 }
@@ -126,7 +131,7 @@ export function normalizeChapter(chapter: MangaDexChapter, mangaId: string): Cha
   const lang = chapter.attributes.translatedLanguage;
   const isEn = lang === "en";
 
-  let title = chapter.attributes.title || `Chapter ${num || "?"}`;
+  let title = chapter.attributes.title || `Chapter ${chapter.attributes.chapter ?? "?"}`;
   // Add EN warning if not Indonesian
   if (isEn) {
     title = `${title} [EN]`;

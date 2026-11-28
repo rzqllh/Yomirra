@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "fix/yomirra-cleanup-consolidation-20261030": false,
       "ci/enterprise-browser-smoke-20261030": false,
-      "integrate/enterprise-safety-gates-20261030": false
+      "integrate/enterprise-safety-gates-20261030": false,
+      "integrate/yomirra-complete-release-20261124": false
     }
   }
 }

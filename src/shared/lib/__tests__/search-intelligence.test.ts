@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildHardFilterTags,
+  canonicalizeFilterValue,
   parseSearchExpression,
   resolveSearchTag,
   rankHybridScore,
@@ -125,5 +126,20 @@ describe("search intelligence", () => {
     );
 
     expect(exact).toBeGreaterThan(semanticOnly);
+  });
+
+  it("deduplicates School/School Life, Webtoon/Webtoons genres and title-cases lowercase fallback labels", () => {
+    expect(canonicalizeFilterValue("genre", "school-life", "School Life")).toEqual({
+      id: "school",
+      label: "School",
+    });
+    expect(canonicalizeFilterValue("genre", "webtoons", "Webtoons")).toEqual({
+      id: "webtoon",
+      label: "Webtoon",
+    });
+    expect(canonicalizeFilterValue("genre", "apocalypse", "apocalypse")).toEqual({
+      id: "apocalypse",
+      label: "Apocalypse",
+    });
   });
 });

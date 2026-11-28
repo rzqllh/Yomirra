@@ -3,6 +3,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import type { ResolvedSearchTag, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 import type { GlobalSearchResponse } from "@/shared/types/search";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
 
 export class ApiRequestError extends Error {
   constructor(message: string, readonly code: string, readonly status: number) {
@@ -21,6 +22,11 @@ export interface SearchResponse {
   hasNextPage?: boolean;
 }
 
+interface CatalogRequestOptions {
+  /** Pass null for a registered provider. Omitting this uses the browser registry. */
+  manifestUrl?: string | null;
+}
+
 class ApiClient {
   private async fetcher<T>(url: string, options?: RequestInit): Promise<T> {
     const res = await fetch(url, options);
@@ -34,13 +40,16 @@ class ApiClient {
     return data.data;
   }
 
-  private async fetchSource<T>(sourceId: string, url: string, options?: RequestInit): Promise<T> {
+  private async fetchSource<T>(sourceId: string, url: string, options?: RequestInit, mangaId?: string): Promise<T> {
     const start = performance.now();
     try {
       const result = await this.fetcher<T>(url, options);
       const latency = performance.now() - start;
       const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
       useSourceHealthStore.getState().recordSuccess(sourceId, latency);
+      if (!options?.signal?.aborted) useSourceQualityStore.getState().record(sourceId,mangaId,{
+        kind:"api",ok:true,ms:latency,at:Date.now(),key:String(start)+":"+String(Math.random()),
+      });
       return result;
     } catch (error: any) {
       // Local transport failures and client-side 4xx responses are not evidence of source health.
@@ -50,8 +59,12 @@ class ApiClient {
           (typeof navigator !== "undefined" && navigator.onLine === false) ||
           (error instanceof ApiRequestError && error.status >= 400 && error.status < 500) ||
           ["CONTENT_RESTRICTED", "MAPPING_UNAVAILABLE", "CHAPTER_UNAVAILABLE", "CONTENT_NOT_FOUND", "SOURCE_DISABLED"].includes(error?.code)) throw error;
-      const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
-      useSourceHealthStore.getState().recordError(sourceId, error);
+      // Unknown application errors and Redis failures are not upstream evidence.
+      if (error instanceof ApiRequestError && ["SOURCE_DOWN","DOMAIN_CHANGED","ROUTE_CHANGED","PARSER_BROKEN","SCHEMA_CHANGED","UPSTREAM_TIMEOUT","UPSTREAM_BLOCKED","IMAGE_CDN_FAILURE"].includes(error.code)) {
+        const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
+        useSourceHealthStore.getState().recordError(sourceId, error);
+        useSourceQualityStore.getState().record(sourceId,mangaId,{kind:"api",ok:false,ms:performance.now()-start,at:Date.now(),key:String(start)+":"+String(Math.random())});
+      }
       throw error;
     }
   }
@@ -67,15 +80,22 @@ class ApiClient {
       uptime: string;
       message: string;
       checkedAt?: string;
-    }>>("/api/sources/health");
+      sampleCount?:number;
+      p95Latency?:string;
+      hasSufficientData?:boolean;
+      coverage?:import("@/shared/sources/source-types").SourceProbeCoverage;
+    }>>("/api/sources/health").then(data=>{
+      if(data&&typeof data==="object")useSourceQualityStore.getState().recordShared(data);
+      return data;
+    });
   }
 
-  private appendManifest(url: string, sourceId: string): string {
+  private appendManifest(url: string, sourceId: string, manifestUrl?: string | null): string {
     url = this.appendReadPreferences(url);
-    const customSource = dynamicSourceRegistry.get(sourceId);
-    if (customSource?.manifestUrl) {
+    const resolvedManifestUrl = manifestUrl === undefined ? dynamicSourceRegistry.get(sourceId)?.manifestUrl : manifestUrl;
+    if (resolvedManifestUrl) {
       const sep = url.includes("?") ? "&" : "?";
-      return `${url}${sep}manifestUrl=${encodeURIComponent(customSource.manifestUrl)}`;
+      return `${url}${sep}manifestUrl=${encodeURIComponent(resolvedManifestUrl)}`;
     }
     return url;
   }
@@ -94,12 +114,12 @@ class ApiClient {
     return this.fetchSource<FilterList>(sourceId, this.appendManifest(`/api/sources/${sourceId}/filters`, sourceId));
   }
 
-  getPopular(sourceId: string, page: number = 1) {
-    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId));
+  getPopular(sourceId: string, page: number = 1, options?: CatalogRequestOptions) {
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId, options?.manifestUrl));
   }
 
-  getLatest(sourceId: string, page: number = 1) {
-    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
+  getLatest(sourceId: string, page: number = 1, options?: CatalogRequestOptions) {
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId, options?.manifestUrl));
   }
 
   search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, options?: { signal?: AbortSignal }) {
@@ -160,6 +180,7 @@ class ApiClient {
       scores: Record<string, number>;
       catalogMatches: SearchCatalogCandidate[];
       metadataWorks?: import("@/shared/lib/metadata-catalog").MetadataWork[];
+      metadataDiscovery?: import("@/shared/lib/metadata-catalog").MetadataWork[];
     }>(this.appendReadPreferences("/api/search/intelligence"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -193,11 +214,14 @@ class ApiClient {
   }
 
   getDetail(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetchSource<MangaDetail>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options);
+    return this.fetchSource<MangaDetail>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options, mangaId);
   }
 
   getChapters(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
+    return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options, mangaId).then(chapters=>{
+      if (!options?.signal?.aborted) useSourceQualityStore.getState().recordChapters(sourceId,mangaId,chapters);
+      return chapters;
+    });
   }
 
   pagesQuery(sourceId: string, mangaId: string, chapterId: string) {
@@ -208,7 +232,7 @@ class ApiClient {
 
     return {
       queryKey: ["pages", url] as const,
-      queryFn: () => this.fetchSource<ChapterPages>(sourceId, url),
+      queryFn: () => this.fetchSource<ChapterPages>(sourceId, url, undefined, mangaId),
     };
   }
 

@@ -2,10 +2,14 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { rasterImageContentType } from "@/shared/lib/raster-image";
 import { env } from "@/env";
-import { KEIYOUSHI_CANDIDATES } from "@/shared/sources/keiyoushi-candidates";
+import { KEIYOUSHI_CANDIDATES, candidatePortKind } from "@/shared/sources/keiyoushi-candidates";
 import { classifyContent } from "@/shared/sources/content-policy";
 import type { MangaItem } from "@/shared/sources/source-types";
 import { getStagedKeiyoushiSource } from "./adapters/keiyoushi";
+import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
+import { inheritCanonicalRating, matchCanonicalMetadata } from "@/shared/lib/metadata-catalog";
+import { applyLocalCanonicalMetadata, findLocalMetadataWorks } from "@/server/lib/metadata/local-catalog-index";
+import { isTursoCatalogEnabled, lookupTursoCatalogBatch } from "@/server/lib/metadata/turso-catalog";
 
 /** Only non-restricted, implemented candidates may be considered for private
  * metadata testing. No duplicate, DRM, login/paywall prototype or explicit
@@ -15,9 +19,14 @@ const supported = new Set(["manhwa-list", "izanamiscans", "ainzscansid", "soul-s
 
 export function privateBetaSources(approved = process.env.YOMIRRA_PRIVATE_BETA_SOURCE_IDS ?? "") {
   const allowed = new Set(approved.split(",").map(id => id.trim()).filter(Boolean));
-  return KEIYOUSHI_CANDIDATES.filter(c => c.category === "SFW" && supported.has(c.id)).map(c => ({
-    id: c.id, name: c.name, available: allowed.has(c.id),
-  }));
+  return KEIYOUSHI_CANDIDATES.map(c => {
+    const implementation=candidatePortKind(c.id);
+    const eligible=c.category==="SFW"&&supported.has(c.id)&&implementation==="engine";
+    const available=eligible&&allowed.has(c.id);
+    const state=implementation==="duplicate"?"duplicate":implementation==="restricted-prototype"?"restricted-prototype":
+      !eligible?"validation-pending":available?"configured":"permission-required";
+    return {id:c.id,name:c.name,category:c.category,implementation,eligible,available,state,liveVerified:false as const};
+  });
 }
 
 export function privateBetaAllowsSource(id: string): boolean {
@@ -41,32 +50,86 @@ export function validBetaIdentity(value: unknown): value is string {
     value.split("/").every(part => /^[A-Za-z0-9_-][A-Za-z0-9_.-]*$/.test(part) && part !== "." && part !== "..");
 }
 
-export async function readPrivateBetaCatalog(id: string, query: string) {
+/** Only the generic SFW adapter's known series routes may contain a
+ * slash. Never authorize an arbitrary same-host endpoint as a manga ID. */
+function validBetaMangaId(sourceId: string, value: unknown): value is string {
+  if (!validBetaIdentity(value)) return false;
+  return !value.includes("/") || (sourceId === "soul-scans" &&
+    /^(comic|series|komik)\/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(value));
+}
+
+export type PrivateBetaCatalogMode = "popular" | "latest" | "search";
+export const PRIVATE_BETA_MAX_PAGE = 20;
+
+export async function readPrivateBetaCatalog(
+  id: string, query: string, page = 1, mode: PrivateBetaCatalogMode = query.trim() ? "search" : "popular",
+) {
+  if (!Number.isSafeInteger(page) || page < 1 || page > PRIVATE_BETA_MAX_PAGE ||
+      !["popular","latest","search"].includes(mode) || query.length > 160 ||
+      (mode === "search" ? !query.trim() : Boolean(query.trim()))) {
+    throw new Error("PRIVATE_BETA_INVALID_CATALOG_REQUEST");
+  }
   const adapter = authorizedAdapter(id);
-  const result = query ? await adapter.search(query, 1, undefined, options) : await adapter.getPopular(1, options);
-  if (!Array.isArray(result?.mangas)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
-  const rows = result.mangas.filter((m: MangaItem) =>
-    m && typeof m.id === "string" && typeof m.title === "string" &&
-    validBetaIdentity(m.id) && !m.id.includes("/") && m.title.trim() && classifyContent(m) === "SAFE"
-  ).slice(0, 24).map(m => ({ id: m.id.slice(0, 300), title: m.title.slice(0, 300), format: m.format?.slice(0, 40) }));
-  return { items: rows, received: result.mangas.length };
+  const result = mode === "search" ? await adapter.search(query.trim(), page, undefined, options) :
+    mode === "latest" ? await adapter.getLatest(page, options) : await adapter.getPopular(page, options);
+  if (!Array.isArray(result?.mangas) || typeof result.hasNextPage !== "boolean") throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+  // Bound candidate work before classification. Restrictive source evidence
+  // never enters the visible result or needs remote enrichment.
+  const candidates=result.mangas.filter((m:MangaItem)=>
+    m&&validBetaMangaId(id,m.id)&&typeof m.title==="string"&&m.title.trim()&&classifyContent(m)!=="NSFW"
+  ).slice(0,24);
+  const local=candidates.map(m=>findLocalMetadataWorks({
+    titles:[m.title,m.originalTitle??"",...(m.alternativeTitles??[])],externalWorkIds:m.externalWorkIds
+  }));
+  // The deployed catalog may reside in Turso rather than local SQLite.
+  // Use ONE shared-budget batch for unresolved local lookups, no source
+  // API fan-out. Do not fall through to per-item metadata API requests.
+  const remoteRows=candidates.filter((_,i)=>local[i]===null);
+  const useRemote=isTursoCatalogEnabled()&&remoteRows.length>0;
+  const remote=useRemote?await lookupTursoCatalogBatch(remoteRows):null;
+  const works=mode==="search"&&!useRemote&&local.some(bucket=>bucket===null)?await matchMangaBakaWorks(query.trim(),true):[];
+  let remoteIndex=0;
+  const normalized=candidates.map((m,i)=>{
+    const bucket=local[i]!==null?local[i]:useRemote?(remote?.[remoteIndex++]??[]):works;
+    return inheritCanonicalRating(m,matchCanonicalMetadata(m,bucket));
+  });
+  const rows=normalized.filter(m=>classifyContent(m)==="SAFE").map(m=>({
+    id:m.id.slice(0,300),title:m.title.slice(0,300),format:m.format?.slice(0,40)
+  }));
+  return { items: rows, received: result.mangas.length, page, hasNextPage: page < PRIVATE_BETA_MAX_PAGE && result.hasNextPage };
 }
 
 /** Only proven safe detail and explicitly unlocked chapters may be opened.
  * Never accept an upstream URL as a user-supplied identity. */
 export async function readPrivateBetaDetail(id: string, mangaId: string) {
-  if (!validBetaIdentity(mangaId) || mangaId.includes("/")) throw new Error("PRIVATE_BETA_INVALID_ID");
+  if (!validBetaMangaId(id, mangaId)) throw new Error("PRIVATE_BETA_INVALID_ID");
   const adapter = authorizedAdapter(id);
-  const detail = await adapter.getDetail(mangaId, options);
-  if (!detail || detail.id !== mangaId || typeof detail.title !== "string" ||
-      !detail.title.trim() || classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+  const rawDetail = await adapter.getDetail(mangaId, options);
+  if (!rawDetail || rawDetail.id !== mangaId || typeof rawDetail.title !== "string" ||
+      !rawDetail.title.trim() || classifyContent(rawDetail) === "NSFW") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
+  const local=applyLocalCanonicalMetadata(rawDetail);
+  // A provider safe label must not override stronger restrictive canonical evidence.
+  const works = await matchMangaBakaWorks(rawDetail.title,true,rawDetail.externalWorkIds);
+  const detail = inheritCanonicalRating(local,matchCanonicalMetadata(local,works));
+  if (classifyContent(detail) !== "SAFE") throw new Error("PRIVATE_BETA_DETAIL_UNAVAILABLE");
   const chapters = await adapter.getChapters(mangaId, options);
   if (!Array.isArray(chapters)) throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+  const identities = new Map<string, { id: string; title: string; readable: boolean }>();
+  // Check every row before truncating; a conflicting later entry must not
+  // leave an earlier unlocked entry readable.
+  for (const ch of chapters) {
+    if (!ch || ch.mangaId !== mangaId || !validBetaIdentity(ch.id) ||
+        typeof ch.title !== "string" || !ch.title.trim()) continue;
+    const entry = { id: ch.id, title: ch.title.trim(), readable: ch.isLocked === false };
+    const previous = identities.get(ch.id);
+    if (previous && (previous.title !== entry.title || previous.readable !== entry.readable)) {
+      throw new Error("PRIVATE_BETA_SCHEMA_CHANGED");
+    }
+    if (!previous) identities.set(ch.id, entry);
+  }
   return {
     title: detail.title.slice(0,300),
-    chapters: chapters.filter(ch => ch && ch.mangaId === mangaId && validBetaIdentity(ch.id) &&
-      typeof ch.title === "string" && ch.title.trim())
-      .slice(0,500).map(ch => ({ id: ch.id, title: ch.title.slice(0,200), readable: ch.isLocked === false })),
+    chapters: [...identities.values()].slice(0,500).map(ch => ({...ch,title:ch.title.slice(0,200)})),
   };
 }
 
@@ -112,7 +175,7 @@ export async function readPrivateBetaChapter(uid: string, id: string, mangaId: s
   const result = await adapter.getPages(chapterId,{...options,mangaId});
   if (!result || result.chapterId !== chapterId || !Array.isArray(result.pages) ||
       result.pages.length === 0 || result.pages.length > 300 ||
-      result.pages.some(p => !p || !safePageUrl(p.url))) throw new Error("PRIVATE_BETA_PAGES_UNAVAILABLE");
+      result.pages.some((p,i) => !p || p.index!==i+1 || !safePageUrl(p.url))) throw new Error("PRIVATE_BETA_PAGES_UNAVAILABLE");
   return {
     title: chapter.title,
     pages: result.pages.map(p => issuePageTicket({uid,source:id,url:p.url,exp:Math.floor(Date.now()/1000)+TICKET_TTL})),

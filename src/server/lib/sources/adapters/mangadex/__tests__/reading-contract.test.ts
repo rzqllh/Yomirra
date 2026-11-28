@@ -58,6 +58,15 @@ describe("MangaDex safe catalog and actual reading contract", () => {
     expect((await source.getChapters("work", { preferredLanguages: ["en", "id"] })).map((item) => item.id)).toEqual(["two", "en"]);
   });
 
+  it("keeps chapter zero and records explicit public-feed evidence only for internal matching releases", async () => {
+    const {source} = sourceWith([chapter("zero","0","en","2")]);
+    expect(await source.getChapters("work")).toEqual([expect.objectContaining({
+      id:"zero", mangaId:"work", chapterNumber:"0", number:0, title:"Chapter 0 [EN]", volume:"2", isLocked:false,
+    })]);
+    const foreign = chapter("foreign");
+    foreign.relationships = [{id:"other",type:"manga"}];
+    await expect(sourceWith([foreign]).source.getChapters("work")).rejects.toMatchObject({code:"SCHEMA_CHANGED"});
+  });
   it("does not merge equal chapter numbers from different volumes or unnumbered specials", async () => {
     const { source } = sourceWith([chapter("v1"), chapter("v2", "1", "id", "2"), chapter("s1", null), chapter("s2", null)]);
     const result = await source.getChapters("work");

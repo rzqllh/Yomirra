@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import type {MetadataWork} from "@/shared/lib/metadata-catalog";
 import { motion, LayoutGroup, useReducedMotion } from "motion/react";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { WarningCircle, MagnifyingGlass } from "@phosphor-icons/react";
@@ -9,7 +11,6 @@ import { EmptyState } from "@/components/states/empty-state";
 import { MangaGrid } from "@/components/komik/manga-grid";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
-import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -38,6 +39,7 @@ export interface SearchResultsProps {
   isInitialLoading: boolean;
   allSourcesFailed: boolean;
   searchMangas: { canonicalKey?: string; manga: any; sourceId: string; sourceBindings?: any[] }[];
+  metadataOnly?:MetadataWork[];
   query: string;
   hasActiveFilters: boolean;
   page: number;
@@ -54,6 +56,7 @@ export function SearchResults({
   isInitialLoading,
   allSourcesFailed,
   searchMangas,
+  metadataOnly=[],
   query,
   hasActiveFilters,
   page,
@@ -123,35 +126,7 @@ export function SearchResults({
       {/* Content Area */}
       {isInitialLoading && searchMangas.length === 0 ? (
         <SearchResultSkeleton showControls={false} />
-      ) : activeSelectedSources.length === 0 ? (
-          <motion.div
-            key="no-source"
-            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={reducedMotion ? { duration: 0 } : transitions.page}
-            className="pt-8"
-          >
-            <EmptyState
-              icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-              title="Pilih sumber untuk mulai mencari"
-              description="Aktifkan setidaknya satu sumber pencarian."
-            />
-          </motion.div>
-        ) : !hasSearchIntent ? (
-          <motion.div
-            key="search-initial"
-            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={reducedMotion ? { duration: 0 } : transitions.page}
-            className="pt-8"
-          >
-            <EmptyState
-              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-              title="Cari komik"
-              description="Ketik judul atau kreator untuk mulai mencari."
-            />
-          </motion.div>
-        ) : allSourcesFailed && searchMangas.length === 0 ? (
+      ) : allSourcesFailed && searchMangas.length === 0 ? (
           <motion.div
             key="global-error"
             initial={reducedMotion ? false : { opacity: 0, y: 4 }}
@@ -192,6 +167,34 @@ export function SearchResults({
               }
             />
           </motion.div>
+        ) : metadataOnly.length > 0 && searchMangas.length === 0 ? null : activeSelectedSources.length === 0 ? (
+          <motion.div
+            key="no-source"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
+            className="pt-8"
+          >
+            <EmptyState
+              icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
+              title="Pilih sumber untuk mulai mencari"
+              description="Aktifkan setidaknya satu sumber pencarian."
+            />
+          </motion.div>
+        ) : !hasSearchIntent ? (
+          <motion.div
+            key="search-initial"
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.page}
+            className="pt-8"
+          >
+            <EmptyState
+              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+              title="Cari komik"
+              description="Ketik judul atau kreator untuk mulai mencari."
+            />
+          </motion.div>
         ) : searchMangas.length > 0 ? (
           <motion.div
             key="results-grid"
@@ -209,7 +212,6 @@ export function SearchResults({
                 <span className="text-xs font-semibold text-text-muted">
                   {searchMangas.length} {query.trim().length === 0 ? "judul" : "hasil"}
                 </span>
-                <ViewModeToggle />
               </div>
             </div>
 
@@ -347,6 +349,11 @@ export function SearchResults({
           </motion.div>
         )}
 
+      {metadataOnly.length>0&&<section className="mt-8 space-y-3" aria-label="Katalog metadata">
+        <h2 className="text-base font-bold text-text-primary">Judul dari katalog metadata</h2>
+        <p className="text-xs text-text-secondary">Sumber bacaan belum terverifikasi. Data: <a className="underline" href="https://mangabaka.org/">MangaBaka</a> · <a className="underline" href="https://mangabaka.org/about/data-license">Lisensi</a>.</p>
+        {metadataOnly.map(work=><Link key={work.externalId} prefetch={false} href={`/catalog/metadata/${work.externalId}`} className="block rounded-lg border border-border-subtle p-3 hover:bg-surface-hover"><span className="font-semibold text-text-primary">{work.title}</span><span className="block text-xs text-text-secondary">{work.format}{work.authors?.length?` · ${work.authors.join(", ")}`:""}</span></Link>)}
+      </section>}
     </>
   );
 }

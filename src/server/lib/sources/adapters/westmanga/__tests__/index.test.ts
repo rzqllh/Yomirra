@@ -197,6 +197,7 @@ describe("WestMangaSource", () => {
         number: 12.5,
         title: "Chapter 12.5",
         date: "12 Oct 2026",
+        isLocked: false,
       });
     });
 

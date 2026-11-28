@@ -16,6 +16,9 @@ import type { MangaItem } from "@/shared/sources/source-types";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { isContentVisible } from "@/shared/sources/content-policy";
+import { useMounted } from "@/shared/hooks/use-mounted";
+
+const noop = () => {};
 
 function SpotlightMetadataFallback({
   manga,
@@ -169,6 +172,7 @@ export function EditorialSpotlight({
   className,
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
+  const mounted = useMounted();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const source = getSourceMetadata(sourceId);
   const restricted = hideNsfw && (source?.isNsfw === true || !isContentVisible(manga, true));
@@ -200,12 +204,14 @@ export function EditorialSpotlight({
       <motion.div
         key={`${sourceId}:${manga.id}`}
         initial={
-          reducedMotion
+          reducedMotion || !mounted
             ? false
             : { opacity: 0.92, x: direction === 1 ? 8 : -8 }
         }
         animate={{ opacity: 1, x: 0 }}
         transition={reducedMotion ? { duration: 0 } : transitions.gentle}
+        onUpdate={noop}
+        data-testid="editorial-spotlight-slide"
         className="absolute inset-0 grid min-w-0 grid-cols-[116px_minmax(0,1fr)] sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[210px_minmax(0,1fr)]"
       >
         <Link

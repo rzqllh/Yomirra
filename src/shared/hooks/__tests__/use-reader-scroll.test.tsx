@@ -72,6 +72,27 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
     expect(queryClient.getQueryData(apiClient.pagesQuery("shinigami", "title-a", "ch-2").queryKey)).toBeDefined();
   });
 
+  it("does not prefetch while restoring, scrolling upward, or after unmount",async()=>{
+    const prefetch=vi.spyOn(queryClient,"prefetchQuery").mockResolvedValue(undefined);
+    const virtualizer=createMockVirtualizer();
+    window.scrollY=4100;
+    const {rerender,unmount}=renderHook(({ready})=>useReaderScroll({
+      streamItems:mockStreamItems,virtualizer,sourceId:"shinigami",mangaId:"title-a",
+      chapterId:"ch-1",nextChapterId:"ch-2",saveProgress,queryClient,isReadyToTrack:ready,
+    }),{initialProps:{ready:false}});
+    window.scrollY=4150;
+    act(()=>{window.dispatchEvent(new Event("scroll"));vi.advanceTimersByTime(50);});
+    rerender({ready:true});
+    window.scrollY=4000;
+    act(()=>{window.dispatchEvent(new Event("scroll"));vi.advanceTimersByTime(50);});
+    expect(prefetch).not.toHaveBeenCalled();
+    window.scrollY=4100;
+    act(()=>{window.dispatchEvent(new Event("scroll"));});
+    unmount();
+    await act(async()=>{await vi.advanceTimersByTimeAsync(300);});
+    expect(prefetch).not.toHaveBeenCalled();
+  });
+
   it("registers scroll listener and does not invoke saveProgress before debounce interval (Q84)", () => {
     const virtualizer = createMockVirtualizer(1);
 

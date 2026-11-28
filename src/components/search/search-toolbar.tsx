@@ -4,6 +4,7 @@ import * as React from "react";
 import { SearchTagInput } from "@/components/search/search-tag-input";
 import type { MergedFilterList } from "@/shared/utils/filter-helpers";
 import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
+import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 
 export interface SearchToolbarProps {
   localQuery: string;
@@ -33,6 +34,7 @@ export function SearchToolbar({
         onClear={onQueryClear}
         filters={filters}
       />
+      <ViewModeToggle className="min-h-11" />
       <SearchFilterDrawer
         committedQuery={committedQuery}
         onResetRouteIntent={onResetRouteIntent}

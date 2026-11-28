@@ -7,6 +7,7 @@ import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 import { MangaDetailErrorState } from "@/components/komik/manga-detail-error-state";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { SourceError, getFriendlyErrorMessage, type SourceErrorCode } from "@/server/lib/sources/error";
+import { loadMangaUpdatesReference } from "@/server/lib/metadata/manga-updates";
 
 export async function generateMetadata({
   params
@@ -139,6 +140,7 @@ export default async function MangaDetailPage({
     );
   }
 
+  const metadataReference = await loadMangaUpdatesReference(normalizedSourceId, detail);
   return (
     <MangaDetailView
       sourceId={normalizedSourceId}
@@ -146,6 +148,7 @@ export default async function MangaDetailPage({
       detail={detail}
       chapters={chapters}
       chapterLoadError={chapterLoadError}
+      metadataReference={metadataReference ?? undefined}
     />
   );
 }

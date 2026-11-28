@@ -8,25 +8,16 @@ import { motion } from "motion/react";
 export default function NotFound() {
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-8 px-4 text-center">
-      {/* Animated 404 Graphic */}
+      {/* 404 Graphic */}
       <div className="relative flex items-center justify-center select-none pointer-events-none">
         <motion.h1 
           initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
           animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-8xl md:text-9xl font-black leading-none tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-text-primary via-text-primary/80 to-surface-muted"
+          className="text-8xl md:text-9xl font-black leading-none tracking-tighter text-text-primary"
         >
           404
         </motion.h1>
-        
-        {/* Abstract Orbiting Element to add premium touch */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 20, ease: "linear", repeat: Infinity }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"
-        >
-          <div className="size-full scale-125 border border-dashed border-text-muted rounded-full" />
-        </motion.div>
       </div>
       
       {/* Text Content */}
@@ -53,8 +44,9 @@ export default function NotFound() {
       >
         <Button 
           variant="accent" 
+          size="lg"
           asChild
-          className="min-h-13 px-8 rounded-full shadow-lg shadow-accent/20 font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+          className="w-full sm:w-auto"
         >
           <Link href="/">
             <House className="mr-2" size={20} weight="fill" />
@@ -63,8 +55,9 @@ export default function NotFound() {
         </Button>
         <Button 
           variant="secondary" 
+          size="lg"
           asChild
-          className="min-h-13 px-8 rounded-full font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+          className="w-full sm:w-auto"
         >
           <Link href="/popular">
             <Compass className="mr-2" size={20} weight="fill" />

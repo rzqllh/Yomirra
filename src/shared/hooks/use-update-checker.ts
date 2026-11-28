@@ -11,8 +11,6 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null);
   const unreadCount = useUpdateStore((state) => state.getUnreadCount());
-  const checkOnAppStart = useSettingsStore((state) => state.checkOnAppStart);
-  const minimumCheckIntervalMinutes = useSettingsStore((state) => state.minimumCheckIntervalMinutes);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Stable ref so the mount-only effect doesn't re-fire when caller's options object is recreated
@@ -31,6 +29,7 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
 
     setIsScanning(true);
     try {
+      const { minimumCheckIntervalMinutes } = useSettingsStore.getState();
       // Convert minutes to ms safely, fallback to 360 mins (6 Jam) if invalid (SET-02)
       const safeInterval = typeof minimumCheckIntervalMinutes === "number" && minimumCheckIntervalMinutes >= 60
         ? minimumCheckIntervalMinutes * 60 * 1000
@@ -47,13 +46,12 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
     } finally {
       setIsScanning(false);
     }
-  // options object removed from deps — only stable scalars here to prevent infinite loop
-  // when callers pass an inline object like { checkOnMount: true } on every render
-  }, [minimumCheckIntervalMinutes]);
+  }, []);
 
   // Run once on mount — reads from ref to avoid triggering on every re-render
   useEffect(() => {
-    if (checkOnMountRef.current && checkOnAppStart) {
+    // During hydration the render snapshot can still contain the defaults.
+    if (checkOnMountRef.current && useSettingsStore.getState().checkOnAppStart) {
       triggerScan({
         forceRefresh: false,
         prioritizeRecent: optionsRef.current.prioritizeRecent ?? true,
@@ -65,8 +63,7 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
         abortControllerRef.current.abort();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally empty — must only fire once on mount
+  }, [triggerScan]);
 
   return {
     isScanning,

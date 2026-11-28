@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { ChipRail } from "@/components/ui/chip-rail";
 import { cn } from "@/shared/utils/cn";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import type { Collection, MangaKey } from "@/shared/types/collection";
@@ -44,7 +45,7 @@ export function LibraryCollectionRail({
       <h3 className="text-xs font-black tracking-widest text-text-muted uppercase mb-3 px-1">
         Koleksi
       </h3>
-      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 overscroll-x-contain touch-pan-x snap-x snap-mandatory">
+      <ChipRail className="snap-x snap-mandatory">
         <FilterChip
           onClick={() => {
             onPageReset();
@@ -97,7 +98,7 @@ export function LibraryCollectionRail({
             />
           );
         })}
-      </div>
+      </ChipRail>
     </div>
   );
 }

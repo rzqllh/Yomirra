@@ -5,6 +5,7 @@ import { SlidersHorizontal, ImageSquare, Layout, Lightning, BoundingBox, ArrowsO
 import { useReaderStore } from "@/shared/store/reader-store"
 import { cn } from "@/shared/utils/cn"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
+import { useMediaQuery } from "@/shared/hooks/use-media-query"
 import { ReaderPanelShell } from "./reader-panel-shell"
 
 interface ReaderSettingsDrawerProps {
@@ -127,21 +128,17 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
     }
   }, [sourceId, mangaId, resetTitlePreferences]);
 
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
   // On desktop (>=768px), settings drawer visibility is also driven by store's isDesktopPanelOpen
-  const effectiveIsOpen = React.useMemo(() => {
-    if (isOpen) return true;
-    if (typeof window !== "undefined" && window.innerWidth >= 768 && isDesktopPanelOpen) {
-      return true;
-    }
-    return false;
-  }, [isOpen, isDesktopPanelOpen]);
+  const effectiveIsOpen = isOpen || (isDesktop && isDesktopPanelOpen);
 
   const handleClose = React.useCallback(() => {
     onClose();
-    if (typeof window !== "undefined" && window.innerWidth >= 768 && isDesktopPanelOpen) {
+    if (isDesktop && isDesktopPanelOpen) {
       toggleDesktopPanel();
     }
-  }, [onClose, isDesktopPanelOpen, toggleDesktopPanel]);
+  }, [onClose, isDesktop, isDesktopPanelOpen, toggleDesktopPanel]);
 
   return (
     <ReaderPanelShell

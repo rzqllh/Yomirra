@@ -71,8 +71,8 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: 'Library',
         short_name: 'Library',
-        description: 'Buka bookmark dan bacaan yang kamu simpan.',
-        url: '/bookmark',
+        description: 'Buka koleksi komik yang kamu simpan.',
+        url: '/bookmark?tab=collection',
         icons: [
           {
             src: '/icons/shortcut-library.png',

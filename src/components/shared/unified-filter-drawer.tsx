@@ -7,6 +7,7 @@ import { FilterChip } from "@/components/ui/filter-chip";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -123,6 +124,8 @@ export function UnifiedFilterDrawer({
   children,
 }: UnifiedFilterDrawerProps) {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const disabledSet = React.useMemo(() => new Set(disabledSources), [disabledSources]);
   const effectiveTrigger = trigger || children;
 
   // Search stores
@@ -141,9 +144,7 @@ export function UnifiedFilterDrawer({
   const [selectedReadingStatuses, setSelectedReadingStatuses] = React.useState<string[]>([]);
   const [localSources, setLocalSources] = React.useState<SourceMetadata[]>([]);
 
-  // ----------------------------------------------------
-  // Dynamic Sources & Filters for Search context
-  // ----------------------------------------------------
+  // Dynamic sources and filters for search context
   React.useEffect(() => {
     const loadLocal = () => setLocalSources(dynamicSourceRegistry.getAll());
     loadLocal();
@@ -175,10 +176,13 @@ export function UnifiedFilterDrawer({
   }, [context, allSources, hideNsfw]);
 
   const activeSelectedSources = searchStore.hasCustomizedSources ? searchStore.selectedSources : null;
-  const sourcesToFetch =
-    activeSelectedSources !== null
-      ? searchableSources.filter((source) => activeSelectedSources.includes(source.id))
-      : searchableSources;
+  const sourcesToFetch = React.useMemo(() => {
+    if (activeSelectedSources !== null) {
+      return searchableSources.filter((source) => activeSelectedSources.includes(source.id));
+    }
+    const active = searchableSources.filter((source) => !disabledSet.has(source.id));
+    return active.length > 0 ? active : searchableSources;
+  }, [activeSelectedSources, searchableSources, disabledSet]);
   const filterSourcesToFetch = sourcesToFetch.filter(
     (source) => source.capabilities?.filters === true
   );
@@ -192,17 +196,22 @@ export function UnifiedFilterDrawer({
     })),
   });
 
-  // ----------------------------------------------------
-  // Single Source or All Sources Filters for Library context
-  // ----------------------------------------------------
+  // Single source or all sources filters for library context
   const isAllLibrary = context === "library" && (activeSourceId === "all" || !activeSourceId);
   const activeLibrarySource = allSources.find((source) => source.id === activeSourceId);
   const supportsLibraryProviderFilters =
     activeLibrarySource?.capabilities?.filters === true;
 
   const eligibleLibrarySources = React.useMemo(() => {
-    return allSources.filter((s) => !s.maintenance && isDiscoverySourceSystemEligible(s) && (!hideNsfw || !s.isNsfw) && s.capabilities?.filters);
-  }, [allSources, hideNsfw]);
+    return allSources.filter(
+      (s) =>
+        !s.maintenance &&
+        isDiscoverySourceSystemEligible(s) &&
+        !disabledSet.has(s.id) &&
+        (!hideNsfw || !s.isNsfw) &&
+        s.capabilities?.filters
+    );
+  }, [allSources, disabledSet, hideNsfw]);
 
   const libraryAllFiltersQueries = useQueries({
     queries: isAllLibrary ? eligibleLibrarySources.map((source) => ({
@@ -223,9 +232,7 @@ export function UnifiedFilterDrawer({
       supportsLibraryProviderFilters,
   });
 
-  // ----------------------------------------------------
-  // Unified Dynamic Filters with NSFW filtering applied
-  // ----------------------------------------------------
+  // Unified dynamic filters with NSFW filtering applied
   const dynamicFilters = React.useMemo<MergedFilterList>(() => {
     if (context === "search" || isAllLibrary) {
       const sourcesList = context === "search" ? filterSourcesToFetch : eligibleLibrarySources;
@@ -595,7 +602,7 @@ export function UnifiedFilterDrawer({
 
           {/* Genre — Standardized compact auto-width wrap-chip layout across both contexts */}
           {dynamicFilters.genres.length > 0 && (
-            <FilterSection title="Genre" layout="wrap">
+            <FilterSection title="Genre" layout="wrap" className="col-span-full">
               {dynamicFilters.genres.map((genre: any) => {
                 if (context === "search") {
                   const isRouteExcluded =

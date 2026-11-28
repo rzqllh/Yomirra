@@ -187,6 +187,36 @@ describe("useSync cloud correctness", () => {
     expect(useHistoryStore.getState().items).toEqual({});
   });
 
+  it("does not write a direct item from a stale callback after account switch", async () => {
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await waitFor(() => expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true));
+    const { syncLibraryItem, syncHistoryItem } = result.current;
+    mocks.user = { uid: "user-b" };
+    await syncLibraryItem(libraryItem());
+    await syncHistoryItem(historyItem());
+    expect(mocks.firestore.setDoc).not.toHaveBeenCalled();
+  });
+
+  it("does not write a direct item while a guest merge review is active", async () => {
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await waitFor(() => expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true));
+    const { syncLibraryItem, syncHistoryItem } = result.current;
+    act(() => useGuestMergeStore.getState().setMergeError({ user: { uid: "user-a" }, errorMessage: "fixture" }));
+    await syncLibraryItem(libraryItem());
+    await syncHistoryItem(historyItem());
+    expect(mocks.firestore.setDoc).not.toHaveBeenCalled();
+  });
+
+  it("writes direct items only to the current authenticated account", async () => {
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await waitFor(() => expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true));
+    await result.current.syncLibraryItem(libraryItem());
+    await result.current.syncHistoryItem(historyItem());
+    expect(mocks.firestore.setDoc).toHaveBeenCalledTimes(2);
+    expect(mocks.firestore.setDoc).toHaveBeenCalledWith({path:"users/user-a/libraryV2/saved-title"}, expect.objectContaining({title:"Title"}));
+    expect(mocks.firestore.setDoc).toHaveBeenCalledWith({path:"users/user-a/history/source::manga::chapter"}, expect.objectContaining({readAt:1000}));
+  });
+
   it("ignores queued realtime changes from the old account before React can rerender", async () => {
     renderHook(() => useSync({ autoSync: false }));
     await waitFor(() => {

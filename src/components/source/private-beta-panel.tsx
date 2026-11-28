@@ -6,8 +6,16 @@ import { initFirebase } from "@/shared/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { PrivateBetaReader } from "./private-beta-reader";
 
-type Candidate = { id: string; name: string; available: boolean };
-type Catalog = { items: { id: string; title: string; format?: string }[]; received: number };
+type Candidate = { id: string; name: string; available: boolean; eligible:boolean; implementation:"engine"|"duplicate"|"restricted-prototype"; state:string; liveVerified:false };
+const inventoryStateLabels:Record<string,string>={
+  "duplicate":"Duplikat sumber existing",
+  "restricted-prototype":"Prototipe terbatas",
+  "validation-pending":"Validasi dan izin belum lengkap",
+  "permission-required":"Izin upstream belum dikonfigurasi",
+  "configured":"Pengujian diizinkan; hasil belum diverifikasi",
+};
+type Catalog = { items: { id: string; title: string; format?: string }[]; received: number; page: number; hasNextPage: boolean };
+type CatalogMode = "popular" | "latest" | "search";
 
 async function betaRequest(user: User, signal: AbortSignal, params = "") {
   const { auth } = await initFirebase();
@@ -30,6 +38,8 @@ export function PrivateBetaPanel({ user }: { user: User }) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [selected, setSelected] = useState("");
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<CatalogMode>("popular");
+  const [executedQuery, setExecutedQuery] = useState("");
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [selectedManga, setSelectedManga] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,13 +70,13 @@ export function PrivateBetaPanel({ user }: { user: User }) {
   }, [user]);
 
   if (!candidates) return null;
-  const load = async (id: string, text: string) => {
+  const load = async (id: string, text: string, nextMode: CatalogMode = text.trim() ? "search" : "popular", page = 1) => {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setSelected(id); setBusy(true); setFailed(false); setCatalog(null); setSelectedManga(null);
+    setSelected(id); setMode(nextMode); setExecutedQuery(text.trim()); setBusy(true); setFailed(false); setCatalog(null); setSelectedManga(null);
     try {
-      const params = "?" + new URLSearchParams({source:id,q:text}).toString();
+      const params = "?" + new URLSearchParams({source:id,q:text.trim(),mode:nextMode,page:String(page)}).toString();
       const body = await betaRequest(user, controller.signal, params);
       if (!controller.signal.aborted) setCatalog(body.data);
     } catch {
@@ -80,31 +90,49 @@ export function PrivateBetaPanel({ user }: { user: User }) {
     <section aria-label="Beta privat" className="space-y-3 rounded-xl border border-border-subtle bg-surface-raised p-4">
       <h2 className="text-lg font-bold text-text-primary">Beta privat</h2>
       <p className="text-sm text-text-secondary">Katalog pengujian khusus akun ini. Tidak memengaruhi sumber publik, Library, atau riwayat baca.</p>
+      <p className="text-xs text-text-secondary">{candidates.length} kandidat · {candidates.filter(source=>source.implementation==="engine").length} adapter engine · {candidates.filter(source=>source.available).length} diizinkan untuk diuji. Belum ada klaim lulus uji live.</p>
       <div className="grid gap-2 sm:grid-cols-2">
-        {candidates.map(source => (
+        {candidates.filter(source=>source.eligible).map(source => (
           <div key={source.id} className="flex items-center justify-between gap-2 rounded-lg border border-border-subtle p-3">
             <div>
               <p className="text-sm font-semibold">{source.name}</p>
-              <p className="text-xs text-text-secondary">{source.available ? "Uji katalog tersedia" : "Izin akses upstream belum dikonfigurasi"}</p>
+              <p className="text-xs text-text-secondary">{inventoryStateLabels[source.state]??"Belum diverifikasi"}</p>
             </div>
             <Button disabled={!source.available || busy} onClick={() => void load(source.id, "")}>Uji katalog</Button>
           </div>
         ))}
       </div>
+      <details className="rounded-lg border border-border-subtle p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-text-primary">Kandidat lain ({candidates.filter(source=>!source.eligible).length})</summary>
+        <ul className="mt-2 divide-y divide-border-subtle">
+          {candidates.filter(source=>!source.eligible).map(source=><li key={source.id} className="flex flex-wrap justify-between gap-1 py-2 text-xs"><span className="font-medium text-text-primary">{source.name}</span><span className="text-text-secondary">{inventoryStateLabels[source.state]??"Belum diverifikasi"}</span></li>)}
+        </ul>
+      </details>
       {selected && (
-        <form className="flex gap-2" onSubmit={event => { event.preventDefault(); void load(selected, query); }}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={mode === "popular" ? "primary" : "outline"} disabled={busy} onClick={() => void load(selected, "", "popular")}>Populer</Button>
+          <Button variant={mode === "latest" ? "primary" : "outline"} disabled={busy} onClick={() => void load(selected, "", "latest")}>Terbaru</Button>
+        </div>
+      )}
+      {selected && (
+        <form className="flex gap-2" onSubmit={event => { event.preventDefault(); if (query.trim()) void load(selected, query, "search"); }}>
           <input aria-label="Cari judul beta" className="min-w-0 flex-1 rounded-lg border border-border-subtle bg-surface-base px-3 py-2 text-sm" value={query} maxLength={160} onChange={event => setQuery(event.target.value)} />
-          <Button type="submit" disabled={busy}>Cari</Button>
+          <Button type="submit" disabled={busy || !query.trim()}>Cari</Button>
         </form>
       )}
       {busy && <p role="status" className="text-sm text-text-secondary">Memeriksa katalog…</p>}
       {failed && <p role="alert" className="text-sm text-semantic-error">Pemeriksaan gagal. Coba lagi nanti.</p>}
       {selectedManga && selected && <PrivateBetaReader key={JSON.stringify([user.uid,selected,selectedManga])} user={user} source={selected} mangaId={selectedManga} onClose={() => setSelectedManga(null)} />}
       {catalog && <div aria-live="polite">
-        <p className="text-xs text-text-secondary">{catalog.items.length} judul dengan klasifikasi aman dari {catalog.received} hasil.</p>
+        <p className="text-xs text-text-secondary">{catalog.items.length} judul dengan klasifikasi aman dari {catalog.received} hasil. Rating yang belum terverifikasi tidak menandakan adapter rusak.</p>
         <ul className="mt-2 divide-y divide-border-subtle">
           {catalog.items.map((item, index) => <li key={JSON.stringify([item.id,index])} className="py-2 text-sm"><button type="button" className="text-left font-semibold hover:underline" onClick={() => setSelectedManga(item.id)}>{item.title}{item.format ? ` · ${item.format}` : ""}</button></li>)}
         </ul>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <Button variant="outline" disabled={busy || catalog.page <= 1} onClick={() => void load(selected, executedQuery, mode, catalog.page - 1)}>Sebelumnya</Button>
+          <span className="text-xs text-text-secondary">Halaman {catalog.page}</span>
+          <Button variant="outline" disabled={busy || !catalog.hasNextPage} onClick={() => void load(selected, executedQuery, mode, catalog.page + 1)}>Berikutnya</Button>
+        </div>
       </div>}
     </section>
   );

@@ -214,7 +214,39 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(snapshot.metadata?.probeType).toBe("deep");
     expect(mockAdapter.getDetail).toHaveBeenCalledWith("solo-leveling");
     expect(mockAdapter.getChapters).toHaveBeenCalledWith("solo-leveling");
-    expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1");
+    expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1", { mangaId: "solo-leveling" });
+  });
+
+  it("rejects non-HTTPS page references in deep probes and preserves lastSuccessAt on subsequent failure", async () => {
+    const getPopular = vi.fn()
+      .mockResolvedValueOnce({ mangas: [{ id: "work-1", title: "Work 1" }], hasNextPage: false })
+      .mockResolvedValueOnce({ mangas: [{ id: "work-1", title: "Work 1" }], hasNextPage: false });
+    const getDetail = vi.fn().mockResolvedValue({ id: "work-1", title: "Work 1" });
+    const getChapters = vi.fn().mockResolvedValue([
+      { id: "ch-1", mangaId: "work-1", number: 1, title: "Chapter 1", isLocked: false },
+    ]);
+    const getPages = vi.fn().mockResolvedValue({
+      chapterId: "ch-1",
+      pages: [{ index: 0, url: "http://insecure.example/page1.jpg" }],
+    });
+
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "asurascans",
+      getPopular,
+      getDetail,
+      getChapters,
+      getPages,
+    } as any);
+
+    const healthy = await probeSourceHealth("asurascans", { deep: false });
+    expect(healthy.status).toBe("HEALTHY");
+    expect(healthy.lastSuccessAt).toBeTruthy();
+
+    const failedDeep = await probeSourceHealth("asurascans", { deep: true });
+    expect(failedDeep.status).toBe("DEGRADED");
+    expect(failedDeep.stage).toBe("pages");
+    expect(failedDeep.lastFailureCode).toBe("SCHEMA_CHANGED");
+    expect(failedDeep.lastSuccessAt).toBe(healthy.lastSuccessAt);
   });
 
   it("does not request locked chapter pages or mark a valid empty chapter list broken", async () => {
@@ -228,6 +260,20 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(locked.stage).toBe("chapters");
     expect(locked.metadata?.pagesSkipped).toBe("locked");
     expect((await probeSourceHealth("asurascans", { deep: true })).metadata?.pagesSkipped).toBe("no-chapters");
+    expect(getPages).not.toHaveBeenCalled();
+  });
+
+  it("does not inspect unknown-access chapters or foreign parents", async () => {
+    const getPages = vi.fn();
+    const getChapters = vi.fn()
+      .mockResolvedValueOnce([{ id: "unknown", mangaId: "sample" }])
+      .mockResolvedValueOnce([{ id: "foreign", mangaId: "other", isLocked: false }]);
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "asurascans", getPopular: vi.fn().mockResolvedValue({ mangas: [{ id: "sample", title: "Sample" }] }),
+      getDetail: vi.fn().mockResolvedValue({ id: "sample", title: "Sample" }), getChapters, getPages,
+    } as any);
+    expect((await probeSourceHealth("asurascans", { deep: true })).metadata?.pagesSkipped).toBe("access-unknown");
+    expect((await probeSourceHealth("asurascans", { deep: true })).lastFailureCode).toBe("SCHEMA_CHANGED");
     expect(getPages).not.toHaveBeenCalled();
   });
 

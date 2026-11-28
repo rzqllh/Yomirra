@@ -18,6 +18,16 @@ describe("EditorialCard", () => {
     document.body.innerHTML = "";
   });
 
+  it.each([
+    ["ONGOING", "Sedang terbit"],
+    ["COMPLETED", "Tamat"],
+    ["UNKNOWN", null],
+  ])("renders the publication label for %s", (status, label) => {
+    render(<EditorialCard sourceId="test-source" manga={{ id: "fixture", title: "Fixture", coverUrl: "", status }} />);
+    expect(screen.queryByText(status)).toBeNull();
+    if (label) expect(screen.getByText(label)).toBeTruthy();
+  });
+
   it("keeps the primary link and bookmark action as sibling interactions", () => {
     render(
       <EditorialCard
@@ -38,5 +48,24 @@ describe("EditorialCard", () => {
     expect(primaryLink.contains(bookmark)).toBe(false);
     expect(primaryLink.querySelector("button, a")).toBeNull();
     expect(bookmark.className).toContain("size-11");
+  });
+
+  it("normalizes uppercase comic format and uses unified chapter fallback copy", () => {
+    render(
+      <EditorialCard
+        sourceId="test-source"
+        manga={{
+          id: "manga-2",
+          title: "Solo Test",
+          coverUrl: "https://example.com/cover.jpg",
+          format: "MANHWA",
+        }}
+      />
+    );
+
+    expect(screen.getByText("Manhwa")).toBeTruthy();
+    expect(screen.queryByText("MANHWA")).toBeNull();
+    expect(screen.getByText("Bab terbaru belum tersedia")).toBeTruthy();
+    expect(screen.queryByText("Chapter belum tersedia")).toBeNull();
   });
 });

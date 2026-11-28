@@ -25,7 +25,7 @@ describe("owner ZIP Ainz response normalization", () => {
       }
       get.mockResolvedValueOnce({ chapters: [{ id: "c", number: 0, scan: "Team" }] });
       expect(await adapter.getChapters("12")).toEqual([{
-        id: "12/c", mangaId: "12", number: 0, title: "Chapter 0", date: "", scanlator: "Team", url: undefined,
+        id: "12/c", mangaId: "12", number: 0, chapterNumber: "0", title: "Chapter 0", date: "", scanlator: "Team", url: undefined,
       }]);
     } finally { get.mockRestore(); }
   });
@@ -43,6 +43,10 @@ describe("owner ZIP Ainz response normalization", () => {
       await expect(adapter.getPages("12/c")).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
       get.mockResolvedValueOnce({});
       await expect(adapter.getPages("12/c")).rejects.toMatchObject({ code: "SCHEMA_CHANGED" });
+      for(const identity of [{mangaId:"13"},{chapterId:"other"}]){
+        get.mockResolvedValueOnce({...identity,pages:["https://example.test/p1.jpg"]});
+        await expect(adapter.getPages("12/c")).rejects.toMatchObject({code:"SCHEMA_CHANGED"});
+      }
     } finally { get.mockRestore(); }
   });
   it("does not retry provider access denials or rate limits through search", async () => {

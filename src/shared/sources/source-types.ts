@@ -1,5 +1,8 @@
 import { SourceCapabilities } from "./source-capabilities";
 
+/** Scope of a successful probe, not a full reading or image decode test. */
+export type SourceProbeCoverage = "transport" | "catalog" | "chapters" | "page-references" | "unknown";
+
 export interface SourceMetadata {
   id: string;
   name: string;
@@ -21,6 +24,7 @@ export interface SourceMetadata {
     latency: string;
     lastChecked: string;
     message?: string;
+    coverage?: SourceProbeCoverage;
   };
   isNsfw: boolean;
   manifestUrl?: string;

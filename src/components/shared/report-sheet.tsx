@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { Spinner, Flag, PaperPlaneRight } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 import type { ReportType, UserReportPayload } from "@/shared/types/report";
+import { ReportTurnstile } from "@/components/shared/report-turnstile";
+const reportSiteKey=process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()??"";
 
 // ─── Template Definitions ──────────────────────────────────────────────────
 
@@ -77,16 +79,20 @@ export function ReportSheet({
   const [selected, setSelected] = React.useState<ReportTemplate | null>(null);
   const [detail, setDetail] = React.useState("");
   const [isSending, setIsSending] = React.useState(false);
+  const [challengeToken,setChallengeToken]=React.useState("");
+  const [challengeAttempt,setChallengeAttempt]=React.useState(0);
+  const sending=React.useRef(false);
+  const resetChallenge=React.useCallback(()=>{setChallengeToken("");setChallengeAttempt(n=>n+1)},[]);
 
   const templates = context === "chapter" ? CHAPTER_TEMPLATES : SOURCE_TEMPLATES;
   const showDetail = selected !== null;
 
   React.useEffect(() => {
     if (!open) {
+      setChallengeToken("");
       const t = setTimeout(() => {
         setSelected(null);
         setDetail("");
-        setIsSending(false);
       }, 300);
       return () => clearTimeout(t);
     }
@@ -101,8 +107,8 @@ export function ReportSheet({
   }, [open, pageIndex, selected]);
 
   const handleSend = async () => {
-    if (!selected) return;
-
+    if (!selected||sending.current||(reportSiteKey&&!challengeToken)) return;
+    sending.current=true;
     setIsSending(true);
     try {
       const payload: UserReportPayload = {
@@ -119,7 +125,7 @@ export function ReportSheet({
       const res = await fetch("/api/ops/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({...payload,...(reportSiteKey?{turnstileToken:challengeToken}:{})}),
       });
 
       if (res.ok) {
@@ -127,6 +133,13 @@ export function ReportSheet({
           description: "Terima kasih atas bantuanmu membuat Yomirra lebih baik!",
         });
         onOpenChange(false);
+      } else if (res.status === 403 || res.status === 503) {
+        const failure=await res.json().catch(()=>null);
+        if(failure?.code==="CHALLENGE_INVALID"||failure?.code==="CHALLENGE_UNAVAILABLE"){
+          toast.error("Verifikasi belum berhasil",{description:"Coba verifikasi ulang sebelum mengirim laporan."});
+        }else{
+          toast.error("Laporan belum terkirim",{description:"Layanan laporan belum tersedia. Coba lagi beberapa saat."});
+        }
       } else if (res.status === 429) {
         toast.warning("Mohon Tunggu Sebentar", {
           description: "Terlalu banyak laporan dikirim. Silakan tunggu beberapa saat.",
@@ -141,7 +154,9 @@ export function ReportSheet({
         description: "Tidak ada sambungan. Periksa kembali koneksi internetmu.",
       });
     } finally {
+      sending.current=false;
       setIsSending(false);
+      resetChallenge();
     }
   };
 
@@ -181,9 +196,9 @@ export function ReportSheet({
                 <button
                   key={tpl.label}
                   type="button"
-                  onClick={() => setSelected(isSelected ? null : tpl)}
+                  onClick={() => {resetChallenge();setSelected(isSelected ? null : tpl)}}
                   className={cn(
-                    "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left text-sm font-medium transition-all active:scale-[0.97]",
+                    "flex min-h-11 items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-left text-sm font-medium transition-colors",
                     isSelected
                       ? "bg-accent/15 border-accent/60 text-accent"
                       : "bg-surface-raised/50 border-border-default text-text-secondary hover:bg-surface-raised hover:text-text-primary hover:border-border-strong"
@@ -200,7 +215,7 @@ export function ReportSheet({
           {showDetail && (
             <div className="mb-4 animate-in fade-in slide-in-from-top-1 duration-150">
               <label className="text-xs font-semibold text-text-secondary mb-1.5 block">
-                Tambah detail <span className="font-normal text-text-tertiary">(opsional)</span>
+                Tambah detail <span className="font-normal text-text-muted">(opsional)</span>
               </label>
               <textarea
                 value={detail}
@@ -211,11 +226,12 @@ export function ReportSheet({
                     : "Contoh: chapter langsung loncat ke bab 10..."
                 }
                 maxLength={500}
-                className="w-full p-3.5 bg-surface-base border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all text-text-primary resize-none h-24 placeholder:text-text-tertiary"
+                className="w-full p-3.5 bg-surface-base border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all text-text-primary resize-none h-24 placeholder:text-text-muted"
               />
             </div>
           )}
 
+          {open&&selected&&reportSiteKey&&<ReportTurnstile key={challengeAttempt} siteKey={reportSiteKey} onToken={setChallengeToken}/>}
           {/* Actions */}
           <div className="flex gap-2.5">
             <Button
@@ -230,7 +246,7 @@ export function ReportSheet({
               variant="accent"
               className="flex-1 h-11 rounded-xl font-semibold"
               onClick={handleSend}
-              disabled={isSending || !selected}
+              disabled={isSending || !selected || Boolean(reportSiteKey&&!challengeToken)}
             >
               {isSending ? (
                 <>

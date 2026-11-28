@@ -128,4 +128,44 @@ describe("CollectionTab smart collections", () => {
     ).toBeTruthy();
     expect(screen.getByText("Belum ada bookmark yang masuk kategori ini.")).toBeTruthy();
   });
+
+  it("places Otomatis helper label inline, uses raised SearchInput surface, and links empty CTA to Katalog", () => {
+    const { container } = render(
+      <CollectionTab
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSearchClear={vi.fn()}
+        sortBy="updatedAt"
+        onSortChange={vi.fn()}
+        isSelectionMode={false}
+        onToggleSelectionMode={vi.fn()}
+        selectedItems={new Set()}
+        onToggleSelectItem={vi.fn()}
+        onSelectAll={vi.fn()}
+        isDeleteDialogOpen={false}
+        onOpenDeleteDialogChange={vi.fn()}
+        onConfirmBulkDelete={vi.fn()}
+        totalItemsCount={0}
+        filteredCount={0}
+        paginatedCollection={[]}
+        collectionPage={1}
+        setCollectionPage={vi.fn()}
+        totalPages={1}
+        smartCollections={[]}
+        selectedSmartCollectionId={null}
+        onSelectSmartCollectionId={vi.fn()}
+        selectedCollectionId={null}
+      />
+    );
+
+    const autoHeading = screen.getByText("Otomatis").parentElement;
+    expect(autoHeading?.className).toContain("gap-2");
+    expect(autoHeading?.className).not.toContain("justify-between");
+
+    const searchForm = container.querySelector("form");
+    expect(searchForm?.className).toContain("bg-surface-raised");
+
+    const cta = screen.getByRole("link", { name: /Jelajahi Katalog/i });
+    expect(cta.getAttribute("href")).toBe("/library");
+  });
 });

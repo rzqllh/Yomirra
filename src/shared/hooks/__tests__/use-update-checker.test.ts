@@ -1,4 +1,6 @@
-import { renderHook, act } from "@testing-library/react";
+import { render, renderHook, act } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useUpdateChecker } from "../use-update-checker";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -40,6 +42,23 @@ describe("useUpdateChecker Integration with Preferences", () => {
   it("app-start scan tidak berjalan saat disabled", () => {
     useSettingsStore.setState({ checkOnAppStart: false });
     renderHook(() => useUpdateChecker({ checkOnMount: true }));
+    expect(updateCheckerLib.scanLibraryUpdates).not.toHaveBeenCalled();
+  });
+
+  it("honors the persisted startup opt-out during React hydration", async () => {
+    function AppStartScan() {
+      useUpdateChecker({ checkOnMount: true });
+      return null;
+    }
+
+    const app = createElement(AppStartScan);
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(app);
+    const { name, version } = useSettingsStore.persist.getOptions();
+    localStorage.setItem(name!, JSON.stringify({ state: { checkOnAppStart: false }, version }));
+    await useSettingsStore.persist.rehydrate();
+    render(app, { container, hydrate: true });
+
     expect(updateCheckerLib.scanLibraryUpdates).not.toHaveBeenCalled();
   });
 

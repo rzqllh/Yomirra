@@ -48,6 +48,7 @@ export function SearchPageView() {
           isInitialLoading={search.isInitialLoading}
           allSourcesFailed={search.allSourcesFailed}
           searchMangas={search.searchMangas}
+          metadataOnly={search.metadataOnly}
           query={search.query}
           hasActiveFilters={search.hasActiveFilters}
           page={search.page}

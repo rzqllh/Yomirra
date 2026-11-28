@@ -5,8 +5,10 @@ import { GuestMergeDialog } from "../guest-merge-dialog";
 import { useGuestMergeStore } from "@/shared/store/guest-merge-store";
 import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
 import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
 import { getLocalDataOwnerUid, clearLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
+import * as guestMergeEngine from "@/shared/lib/guest-merge-engine";
 import { restoreGuestBackup } from "@/shared/lib/guest-merge-engine";
 import { toast } from "sonner";
 
@@ -283,6 +285,45 @@ describe("GuestMergeDialog Production Regression Suite (Q64 & Q127)", () => {
     // Local data remains unchanged
     expect(useLibraryStore.getState().items["local-manga-1"]).toBeDefined();
     expect(getLocalDataOwnerUid()).toBeNull();
+  });
+
+  it("preserves guest per-title preferred sources when retrying after a cloud snapshot error", async () => {
+    useSettingsStore.setState({
+      perTitleSourcePreferences: {
+        "work:mangadex::m1": "shinigami",
+      },
+    });
+    vi.spyOn(guestMergeEngine, "fetchCloudSnapshot").mockResolvedValueOnce({
+      library: sampleCloudLib,
+      history: sampleCloudHist,
+      preferredSources: {
+        "work:mangadex::m1": "mangadex",
+      },
+    });
+
+    useGuestMergeStore.getState().setMergeError({
+      user: sampleUser,
+      errorMessage: "Temporary network timeout",
+    });
+
+    render(<GuestMergeDialog />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Coba Lagi/i }));
+
+    await waitFor(() => {
+      expect(useGuestMergeStore.getState().mergeError).toBeNull();
+      expect(useGuestMergeStore.getState().guestSnapshot?.preferredSources).toEqual({
+        "work:mangadex::m1": "shinigami",
+      });
+      expect(useGuestMergeStore.getState().diff?.conflictingPreferredSources).toEqual([
+        expect.objectContaining({
+          canonicalId: "work:mangadex::m1",
+          guestSourceId: "shinigami",
+          cloudSourceId: "mangadex",
+          choices: ["shinigami", "mangadex"],
+        }),
+      ]);
+    });
   });
 
   it("safeguards Cloud-Replace with destructive confirmation and creates local backup before replacing", async () => {

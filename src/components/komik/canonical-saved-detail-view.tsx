@@ -9,6 +9,7 @@ import { MangaCover } from "@/components/komik/manga-cover";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useDownloadStore } from "@/shared/store/download-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
@@ -18,16 +19,26 @@ import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-sour
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { rankQualityRefs, type QualitySort } from "@/shared/lib/source-quality";
+import { SourceQualitySort } from "./source-quality-sort";
+import { useSourceQualityStore } from "@/shared/store/source-quality-store";
+import { useSharedChapterEvidence } from "@/shared/hooks/use-shared-chapter-evidence";
+
 
 export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: string }) {
   const mounted = useMounted();
   const router = useRouter();
   const libraryItems = useLibraryStore(state => state.items);
   const historyItems = useHistoryStore(state => state.items);
+  const downloads = useDownloadStore(state => state.downloads);
   const perTitlePrefs = useSettingsStore(state => state.perTitleSourcePreferences);
   const setPreferred = useSettingsStore(state => state.setPerTitleSourcePreference);
   const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
+  const qualityEvidence=useSourceQualityStore(state=>state.evidence);
+  const shared=useSourceQualityStore(state=>state.shared);
+  const [qualitySort,setQualitySort]=React.useState<QualitySort>("quality");
+  const languages=useSettingsStore(state=>state.preferredLanguages);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [offline, setOffline] = React.useState(false);
@@ -79,26 +90,39 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     return !isNsfw && !nsfwSourceIds.has(sourceId) && source?.isNsfw !== true;
   };
 
-  if (!mounted) return <main className="mx-auto max-w-3xl p-5 text-text-muted">Memuat katalog…</main>;
-
-  const visibleMembers = group?.members.filter(member => mayShow(member.sourceId, member.isNsfw)) ?? [];
-  if (!group || visibleMembers.length === 0) {
-    return (
-      <main className="mx-auto max-w-3xl px-4 py-10 space-y-3">
-        <h1 className="text-xl font-semibold text-text-primary">Katalog tidak tersedia</h1>
-        <p className="text-sm text-text-secondary">Judul tidak ditemukan pada Library di perangkat ini atau tidak dapat ditampilkan dengan filter konten saat ini.</p>
-        <Link className="text-sm text-accent underline" href="/library">Kembali ke Library</Link>
-      </main>
-    );
-  }
-
-  const selected = visibleMembers.find(member => !disabledSources.includes(member.sourceId)) ?? visibleMembers[0];
   const explicitNsfwRefs = new Set([
     ...Object.values(libraryItems),
     ...Object.values(historyItems),
   ].filter(item => item.isNsfw === true).map(item =>
     canonicalSourceKey(item.sourceId, item.mangaId)
   ));
+  const sharedChapters=useSharedChapterEvidence(group?.sourceBindings.filter(ref=>
+    !disabledSources.includes(ref.sourceId)&&mayShow(ref.sourceId)&&
+    !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId,ref.mangaId)))??[],
+    mounted&&pickerOpen&&hideNsfw&&nsfwStatus==="KNOWN"&&!offline&&Boolean(group?.members.some(member=>mayShow(member.sourceId,member.isNsfw))));
+
+  if (!mounted) {
+    return (
+      <div className="mx-auto max-w-3xl p-5 text-text-muted">
+        <h1 className="sr-only">Detail katalog</h1>
+        <p role="status">Memuat katalog…</p>
+      </div>
+    );
+  }
+
+  const visibleMembers = group?.members.filter(member => mayShow(member.sourceId, member.isNsfw)) ?? [];
+  if (!group || visibleMembers.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10 space-y-3">
+        <h1 className="text-xl font-semibold text-text-primary">Katalog tidak tersedia</h1>
+        <p className="text-sm text-text-secondary">Judul tidak ditemukan pada Library di perangkat ini atau tidak dapat ditampilkan dengan filter konten saat ini.</p>
+        <Link className="inline-flex min-h-11 items-center text-sm text-accent underline focus-visible:outline-2 focus-visible:outline-accent" href="/bookmark">Kembali ke Library</Link>
+      </div>
+    );
+  }
+
+  const selected = visibleMembers.find(member => !disabledSources.includes(member.sourceId)) ?? visibleMembers[0];
+
   // A safe primary must not expose a known-adult alternate from the same
   // general-purpose provider through a confirmed linkedSources entry.
   const safeBindings = group.sourceBindings.filter(ref =>
@@ -132,6 +156,9 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const missing = safeBindings.filter(ref => !available.some(ok =>
     ok.sourceId === ref.sourceId && ok.mangaId === ref.mangaId
   ));
+  const cachedSourceRefs = Object.values(downloads)
+    .filter(item => item.status === "downloaded" && referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)))
+    .map(item => ({ sourceId: item.sourceId, mangaId: item.mangaId }));
   const decision = legacyConflict
     ? { action: "pick-source" as const, reason: "preference-conflict" as const }
     : resolveCanonicalResume({
@@ -141,6 +168,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         disabledSourceIds: disabledSources,
         unavailableSourceIds: missing.map(ref => ref.sourceId),
         deviceOffline: offline,
+        cachedSourceRefs,
       });
   const resume = () => {
     if (decision.action === "resume") {
@@ -154,9 +182,9 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
-      <Link href="/library" className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary">
-        <ArrowLeft size={18} /> Kembali ke Library
+    <div className="mx-auto max-w-4xl px-4 py-6 pb-28 space-y-6">
+      <Link href="/bookmark" className="inline-flex min-h-11 items-center gap-2 text-sm text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent">
+        <ArrowLeft size={18} aria-hidden="true" /> Kembali ke Library
       </Link>
       <section className="flex flex-col sm:flex-row gap-5 rounded-xl border border-border-subtle bg-surface-raised p-4 sm:p-5">
         <div className="w-32 sm:w-40 shrink-0 aspect-[2/3] overflow-hidden rounded-lg border border-border-default">
@@ -208,7 +236,8 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
         )}
         {available.length === 0 && <div className="flex items-center gap-2 text-sm text-text-muted"><WarningCircle size={18} /> Belum ada sumber yang dapat dibuka</div>}
         <div className="grid gap-3">
-          {available.map(ref => {
+          {available.length>1&&<SourceQualitySort value={qualitySort} onChange={setQualitySort}/>}
+          {rankQualityRefs(available.map(ref=>({...ref,language:getSourceMetadata(ref.sourceId)?.language})),qualityEvidence,{preferred:preferredSourceId,languages,verifiedGroup:true,shared,sharedChapters,sort:qualitySort}).map(({ref,quality,scope}) => {
             const recent = lastRead.filter(item => item.sourceId === ref.sourceId && item.mangaId === ref.mangaId)
               .sort((a,b) => b.readAt - a.readAt)[0];
             const isPreferred = preferredSourceId === ref.sourceId;
@@ -220,6 +249,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
                   <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
                     {sourceName} {isPreferred && <CheckCircle className="text-accent" size={16} aria-label="Pilihan utama" />}
                   </p>
+                  <p className="text-xs text-text-muted">{quality.score===null?"SQS: Belum cukup data":`SQS ${quality.score}/100 · bukti ${quality.coverage}% · ${scope==="title"?"judul":scope==="monitor"?"monitor":"perangkat"}`}</p>
                   <p className="text-xs text-text-muted">{recent ? `Terakhir: ${recent.chapterId}` : "Belum ada riwayat pada sumber ini"}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -235,6 +265,6 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
           })}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

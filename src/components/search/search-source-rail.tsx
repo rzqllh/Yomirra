@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CheckCircle } from "@phosphor-icons/react";
 import { FilterChip } from "@/components/ui/filter-chip";
+import { ChipRail } from "@/components/ui/chip-rail";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 
 export interface SearchSourceRailProps {
@@ -28,7 +29,7 @@ export function SearchSourceRail({
             : `${activeSelectedSources.length} dipilih`}
         </span>
       </div>
-      <div className="flex overflow-x-auto [scrollbar-width:thin] snap-x pb-1 gap-2 overscroll-x-contain touch-pan-x md:flex-wrap md:overflow-visible md:snap-none">
+      <ChipRail bleed={false} className="snap-x md:flex-wrap md:overflow-visible md:snap-none">
         {searchableSources.map((source) => {
           const isSelected = activeSelectedSources.includes(source.id);
           const isOffline = source.status === "unavailable" || source.status === "in-fix";
@@ -51,7 +52,7 @@ export function SearchSourceRail({
             />
           );
         })}
-      </div>
+      </ChipRail>
     </div>
   );
 }

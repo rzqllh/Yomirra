@@ -10,6 +10,12 @@ import type {
 } from "@/shared/sources/source-types";
 import { BaseEngine } from "./base-engine";
 import { SourceError } from "../../error";
+import {
+  normalizeStagedChapters,
+  normalizeStagedMediaUrl,
+  normalizeStagedPages,
+  sameProviderUrl,
+} from "./normalize-catalog";
 
 export class AkumaSource extends BaseEngine {
   constructor() {
@@ -31,6 +37,8 @@ export class AkumaSource extends BaseEngine {
     $("a[href*='/manga/'], a[href*='/series/'], a[href*='/comic/']").each((_, el) => {
       const $el = $(el);
       const link = $el.attr("href") || "";
+      const resolvedLink = sameProviderUrl(link, this.baseUrl);
+      if (!resolvedLink || /\/(?:chapter|ch)-/i.test(resolvedLink.pathname)) return;
       const title = $el.attr("title")?.trim() || $el.find("h3, h4, .title").text().trim();
       const coverUrl =
         $el.find("img").attr("data-src") ||
@@ -38,8 +46,8 @@ export class AkumaSource extends BaseEngine {
         $el.find("img").attr("src") ||
         "";
 
-      const match = link.match(/\/(manga|series|comic)\/([^\/]+)\/?/);
-      const id = match ? match[2] : link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+      const match = /^\/(?:manga|series|comic)\/([^/]+)\/?$/i.exec(resolvedLink.pathname);
+      const id = match ? match[1] : "";
 
       if (id && title && !mangas.some((m) => m.id === id)) {
         mangas.push({
@@ -66,7 +74,7 @@ export class AkumaSource extends BaseEngine {
       const $ = cheerio.load(html);
       const mangas = this.parseMangaItems($);
       const hasNextPage = $(".pagination .next, a.next").length > 0;
-      return { mangas, hasNextPage };
+      return this.filterListingResults({ mangas, hasNextPage }, options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -84,7 +92,7 @@ export class AkumaSource extends BaseEngine {
       const $ = cheerio.load(html);
       const mangas = this.parseMangaItems($);
       const hasNextPage = $(".pagination .next, a.next").length > 0;
-      return { mangas, hasNextPage };
+      return this.filterListingResults({ mangas, hasNextPage }, options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -107,7 +115,7 @@ export class AkumaSource extends BaseEngine {
       const $ = cheerio.load(html);
       const mangas = this.parseMangaItems($);
       const hasNextPage = $(".pagination .next, a.next").length > 0;
-      return { mangas, hasNextPage };
+      return this.filterListingResults({ mangas, hasNextPage }, options);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "search");
@@ -117,6 +125,13 @@ export class AkumaSource extends BaseEngine {
   async getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail> {
     this.enforceContentPolicy("detail", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) {
+      throw new SourceError("Invalid provider identity", {
+        sourceId: this.id,
+        code: "CONTENT_NOT_FOUND",
+        stage: "detail",
+      });
+    }
     const path = mangaId.startsWith("http")
       ? mangaId
       : `/manga/${encodeURIComponent(mangaId)}/`;
@@ -126,7 +141,14 @@ export class AkumaSource extends BaseEngine {
       const $ = cheerio.load(html);
 
       const title =
-        $("h1").first().text().trim() || $(".title").first().text().trim() || mangaId;
+        $("h1").first().text().trim() || $(".title").first().text().trim() || "";
+      if (!title) {
+        throw new SourceError("Detail title missing", {
+          sourceId: this.id,
+          code: "PARSER_BROKEN",
+          stage: "detail",
+        });
+      }
 
       const description =
         $(".entry-content, .synopsis, .description").first().text().trim() || "";
@@ -145,7 +167,7 @@ export class AkumaSource extends BaseEngine {
       return {
         id: mangaId,
         title,
-        coverUrl,
+        coverUrl: normalizeStagedMediaUrl(coverUrl, this.baseUrl),
         description,
         genres,
         status: "COMPLETED",
@@ -161,6 +183,13 @@ export class AkumaSource extends BaseEngine {
   async getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]> {
     this.enforceContentPolicy("chapters", options);
 
+    if (!sameProviderUrl(mangaId, this.baseUrl)) {
+      throw new SourceError("Invalid provider identity", {
+        sourceId: this.id,
+        code: "CONTENT_NOT_FOUND",
+        stage: "chapters",
+      });
+    }
     const path = mangaId.startsWith("http")
       ? mangaId
       : `/manga/${encodeURIComponent(mangaId)}/`;
@@ -174,7 +203,7 @@ export class AkumaSource extends BaseEngine {
         (idx, el) => {
           const $el = $(el);
           const link = $el.attr("href") || "";
-          if (!link) return;
+          if (!sameProviderUrl(link, this.baseUrl)) return;
 
           const title = $el.text().trim() || `Chapter ${idx + 1}`;
           const numMatch = title.match(/(\d+(?:\.\d+)?)/);
@@ -205,7 +234,7 @@ export class AkumaSource extends BaseEngine {
         });
       }
 
-      return chapters;
+      return normalizeStagedChapters(chapters, mangaId, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "chapters");
@@ -215,6 +244,13 @@ export class AkumaSource extends BaseEngine {
   async getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages> {
     this.enforceContentPolicy("pages", options);
 
+    if (!sameProviderUrl(chapterId, this.baseUrl)) {
+      throw new SourceError("Invalid provider chapter identity", {
+        sourceId: this.id,
+        code: "CONTENT_NOT_FOUND",
+        stage: "pages",
+      });
+    }
     const path = chapterId.startsWith("http")
       ? chapterId
       : `/${chapterId.replace(/^\/+/, "")}`;
@@ -242,7 +278,7 @@ export class AkumaSource extends BaseEngine {
         }
       });
 
-      return { chapterId, pages };
+      return normalizeStagedPages(chapterId, pages, path, this.baseUrl, this.id);
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;
       throw SourceError.classify(err, this.id, "pages");

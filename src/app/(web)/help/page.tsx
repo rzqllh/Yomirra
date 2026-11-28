@@ -52,7 +52,7 @@ export default function HelpPage() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="management" hasMobileHeader>
-        <DestinationHeader destination="help" />
+        <DestinationHeader destination="help" headingOwner="content" />
         <ContentLane variant="focused" className="space-y-6 pb-36 md:pb-14">
           <section className="space-y-2">
             <h1 className="text-xl font-bold tracking-tight text-text-primary md:text-2xl">Ada yang tidak berjalan semestinya?</h1>

@@ -43,6 +43,83 @@ describe("filter-helpers", () => {
       const merged = mergeFilters([{ sourceId: "empty", filters: { genres: [], formats: [], statuses: [], sorts: [] } }]);
       expect(merged.genres).toHaveLength(0);
     });
+
+    it("removes catch-alls, localizes sorts while preserving upstream IDs, and prunes compound genres", () => {
+      const merged = mergeFilters([
+        {
+          sourceId: "src1",
+          filters: {
+            genres: [
+              { id: "action", name: "Action" },
+              { id: "adventure", name: "Adventure" },
+              { id: "fantasy", name: "Fantasy" },
+              { id: "action-adventure-fantasy", name: "Action Adventure Fantasy" },
+              { id: "school-life", name: "School Life" },
+              { id: "webtoons", name: "Webtoons" },
+              { id: "apocalypse", name: "apocalypse" },
+            ],
+            formats: [
+              { id: "all", name: "All Types" },
+              { id: "manhwa", name: "Manhwa" },
+            ],
+            statuses: [
+              { id: "all-status", name: "Semua Status" },
+              { id: "ongoing", name: "Ongoing" },
+            ],
+            sorts: [
+              { id: "update", name: "Latest Update" },
+              { id: "highest_rating", name: "Highest Rating" },
+              { id: "az", name: "A-Z" },
+            ],
+          },
+        },
+        {
+          sourceId: "src2",
+          filters: {
+            genres: [
+              { id: "school", name: "School" },
+              { id: "webtoon", name: "Webtoon" },
+            ],
+            formats: [],
+            statuses: [],
+            sorts: [{ id: "latest", name: "Terbaru" }],
+          },
+        },
+      ]);
+
+      expect(merged.formats.map((f) => f.id)).toEqual(["manhwa"]);
+      expect(merged.statuses.map((s) => s.id)).toEqual(["ongoing"]);
+
+      const genreIds = merged.genres.map((g) => g.id);
+      expect(genreIds).not.toContain("action-adventure-fantasy");
+      expect(genreIds).toContain("school");
+      expect(genreIds).toContain("webtoon");
+      expect(merged.genres.find((g) => g.id === "apocalypse")?.label).toBe("Apocalypse");
+
+      expect(merged.sorts.map((s) => [s.id, s.label])).toEqual([
+        ["latest", "Terbaru"],
+        ["rating", "Rating Tertinggi"],
+        ["alphabetical", "A-Z"],
+      ]);
+
+      const payload1 = buildPayloadForSource("src1", merged, {
+        genres: ["school"],
+        formats: [],
+        status: "",
+        sort: "latest",
+      });
+      expect(payload1["genre[]"]).toEqual(["school-life"]);
+      expect(payload1["sort"]).toBe("update");
+
+      const payload2 = buildPayloadForSource("src2", merged, {
+        genres: ["school"],
+        formats: [],
+        status: "",
+        sort: "latest",
+      });
+      expect(payload2["genre[]"]).toEqual(["school"]);
+      expect(payload2["sort"]).toBe("latest");
+    });
   });
 
   describe("pruneUnsupportedFilters", () => {

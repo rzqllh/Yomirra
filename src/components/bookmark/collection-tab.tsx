@@ -217,7 +217,7 @@ export function CollectionTab({
         <div className="space-y-3">
           {/* Row 1: System Reading Status (Smart Collections) */}
           <div>
-            <div className="mb-2 flex items-center justify-between px-0.5">
+            <div className="mb-2 flex items-center gap-2 px-0.5">
               <span className="text-2xs font-bold uppercase tracking-wider text-text-muted">
                 Otomatis
               </span>
@@ -272,7 +272,7 @@ export function CollectionTab({
 
           {/* Row 2: User Custom Collections */}
           <div>
-            <div className="mb-2 flex items-center justify-between px-0.5">
+            <div className="mb-2 flex items-center gap-2 px-0.5">
               <span className="text-2xs font-bold uppercase tracking-wider text-text-muted">
                 Koleksi Kamu
               </span>
@@ -392,7 +392,7 @@ export function CollectionTab({
             <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
               <Link href={getLibraryHref()}>
                 <Compass size={20} weight="regular" className="mr-1.5" />
-                Jelajahi Library
+                Jelajahi Katalog
               </Link>
             </Button>
           }

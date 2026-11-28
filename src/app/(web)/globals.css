@@ -560,6 +560,14 @@ body.reader-active {
     }
   }
 
+  .yomirra-hero-glow {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent) 9%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
   .yomirra-dock-frame {
     padding-inline: max(var(--dock-inset), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
     padding-bottom: max(var(--dock-inset), var(--safe-bottom));
@@ -601,7 +609,7 @@ body.reader-active {
 
   @media (prefers-reduced-motion: no-preference) {
     .yomirra-dock-indicator[data-positioned] {
-      transition: transform 220ms ease-out, width 220ms ease-out;
+      transition: transform 220ms var(--ease-snappy);
     }
   }
 
@@ -919,6 +927,14 @@ body.reader-active section[aria-label*="Notifications" i] {
   z-index: 10 !important;
 }
 
+[data-sonner-toast] [data-close-button]::after,
+.yomirra-toast-close::after,
+[data-close-button]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -8px !important;
+}
+
 [data-sonner-toast] [data-close-button]:hover {
   background: rgba(0, 0, 0, 0.08) !important;
   color: var(--text-primary) !important;
@@ -956,7 +972,7 @@ body.reader-active section[aria-label*="Notifications" i] {
   inset: 0;
   display: grid;
   place-items: center;
-  transition: opacity 300ms cubic-bezier(.2, .8, .2, 1), transform 420ms cubic-bezier(.18, 1.35, .32, 1);
+  transition: opacity 300ms var(--ease-standard), transform 420ms var(--ease-snappy);
 }
 [aria-pressed="true"] > .icon-morph > *:first-child,
 .theme-morph[data-on="true"] > *:first-child {
@@ -1012,6 +1028,10 @@ body.reader-active section[aria-label*="Notifications" i] {
   --color-accent: #ed7964;
   --color-accent-hover: #ef806a;
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 32px rgba(0, 0, 0, 0.45);
+  --reader-chrome-edge: #858da1;
+  --reader-chrome-track: #858da1;
+  --reader-chrome-disabled: #858da1;
+  --reader-chrome-focus: #f4f4f6;
   --border-subtle: rgb(255 255 255 / 22%);
   --border-default: rgb(255 255 255 / 30%);
   --border-strong: rgb(255 255 255 / 47%);
@@ -1036,13 +1056,80 @@ body.reader-active section[aria-label*="Notifications" i] {
   --border-strong: rgb(34 44 64 / 30%);
   --border-glass: rgb(34 44 64 / 15%);
   --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 5px 20px rgb(34 44 64 / 13%);
+  --reader-chrome-edge: #737b8a;
+  --reader-chrome-track: #737b8a;
+  --reader-chrome-disabled: #737b8a;
+  --reader-chrome-focus: #121316;
 }
-/* Page scrubber keeps a 44px gesture target with an 8px track and a visible thumb. */
+/* Reader chrome is intentionally opaque: the adjacent pixels are the
+   reader surface, never arbitrary manga artwork or browser glass.
+   Scoped outside utility layers so inherited app-theme utilities cannot
+   replace the reader palette. WCAG 2.2 AA text/UI contrast target. */
+.reader-contrast-scope .reader-chrome-surface {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  border: 1px solid var(--reader-chrome-edge);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+}
+.reader-contrast-scope .reader-chrome-primary { color: var(--text-primary); }
+.reader-contrast-scope .reader-chrome-muted { color: var(--text-muted); }
+/* Apply the palette together so controls and labels never crossfade against
+   a surface from the opposite reader theme. */
+.reader-contrast-scope .reader-chrome-surface,
+.reader-contrast-scope .reader-chrome-control,
+.reader-contrast-scope .reader-chrome-primary,
+.reader-contrast-scope .reader-chrome-muted {
+  transition-property: none;
+}
+.reader-contrast-scope .reader-chrome-control {
+  color: var(--text-primary);
+  background: transparent;
+  opacity: 1;
+  min-width: 44px;
+  min-height: 44px;
+}
+.reader-contrast-scope .reader-chrome-control:not(:disabled):hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.reader-contrast-scope .reader-chrome-control[aria-pressed="true"] {
+  color: var(--text-on-accent);
+  background: var(--color-accent);
+}
+.reader-contrast-scope .reader-chrome-control[aria-pressed="true"]:hover {
+  color: var(--text-on-accent);
+  background: var(--color-accent-hover);
+}
+.reader-contrast-scope .reader-chrome-control:disabled {
+  color: var(--reader-chrome-disabled);
+  cursor: not-allowed;
+}
+.reader-contrast-scope .reader-chapter-control,
+.reader-contrast-scope .reader-back-to-top {
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--reader-chrome-edge);
+}
+.reader-contrast-scope .reader-chrome-control:focus-visible,
+.reader-contrast-scope .reader-page-range:focus-visible {
+  outline: 2px solid var(--reader-chrome-focus);
+  outline-offset: -3px;
+}
+.reader-contrast-scope .reader-chrome-control[aria-pressed="true"]:focus-visible {
+  outline-color: var(--text-on-accent);
+}
+.reader-contrast-scope .reader-chrome-divider { background: var(--reader-chrome-edge); }
+.reader-contrast-scope .reader-dot-active { color: var(--color-accent); fill: currentColor; }
+.reader-contrast-scope .reader-dot-inactive { color: var(--reader-chrome-track); fill: currentColor; }
+/* Page scrubber: 44px target; opaque track and two-tone thumb so its
+   boundary is visible against both the track and the dock surface. */
 .reader-page-range { appearance: none; -webkit-appearance: none; touch-action: pan-x; }
-.reader-page-range::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 40%, var(--surface-base)); }
-.reader-page-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: var(--color-accent); border: 2px solid var(--surface-base); }
-.reader-page-range::-moz-range-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 40%, var(--surface-base)); }
-.reader-page-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-accent); border: 2px solid var(--surface-base); }
+.reader-page-range::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: var(--reader-chrome-track, var(--text-muted)); }
+.reader-page-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: var(--color-accent); border: 3px solid var(--surface-overlay); }
+.reader-page-range::-moz-range-track { height: 8px; border-radius: 999px; background: var(--reader-chrome-track, var(--text-muted)); }
+.reader-page-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--color-accent); border: 3px solid var(--surface-overlay); }
 
 .chapter-scroll-viewport {
   max-height: min(60dvh, 520px);

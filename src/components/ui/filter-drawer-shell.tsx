@@ -15,12 +15,13 @@ import { getVisualViewportBounds, type DrawerViewportBounds } from "@/shared/lib
 interface FilterSectionProps {
   title: string;
   layout?: "wrap" | "grid";
+  className?: string;
   children: React.ReactNode;
 }
 
-export function FilterSection({ title, layout = "wrap", children }: FilterSectionProps) {
+export function FilterSection({ title, layout = "wrap", className, children }: FilterSectionProps) {
   return (
-    <div>
+    <div className={className}>
       <h3 className="text-xs font-bold text-text-muted uppercase tracking-widest mb-2.5">{title}</h3>
       <div
         className={cn(
@@ -73,8 +74,21 @@ export function FilterDrawerShell({
 }: FilterDrawerShellProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [desktopTarget, setDesktopTarget] = React.useState<HTMLElement | null>(null);
+  const triggerRef = React.useRef<HTMLSpanElement | null>(null);
   const headingId = React.useId();
   const prefersReducedMotion = useReducedMotion();
+
+  React.useEffect(() => {
+    if (!desktopTarget || !isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      onOpen?.();
+      setIsOpen(false);
+      triggerRef.current?.querySelector<HTMLElement>("button, [role='button'], a")?.focus();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [desktopTarget, isOpen, onOpen]);
   React.useEffect(() => {
     if (!desktopPortalId || !window.matchMedia) return;
     const media = window.matchMedia("(min-width: 1024px)");
@@ -135,9 +149,14 @@ export function FilterDrawerShell({
     const desktopTrigger = React.isValidElement(trigger)
       ? React.cloneElement(trigger as React.ReactElement<typeof triggerProps>, triggerProps)
       : <Button variant="outline" {...triggerProps}><Funnel size={18} weight="regular" />Filter {activeCount > 0 ? `(${activeCount})` : ""}</Button>;
+    const closeDesktopPanel = () => {
+      onOpen?.();
+      setIsOpen(false);
+      triggerRef.current?.querySelector<HTMLElement>("button, [role='button'], a")?.focus();
+    };
     return (
       <>
-        {desktopTrigger}
+        <span ref={triggerRef} className="contents">{desktopTrigger}</span>
         {createPortal(
           <AnimatePresence initial={false}>
             {isOpen && (
@@ -150,6 +169,12 @@ export function FilterDrawerShell({
                 transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 style={{ overflow: "hidden" }}
                 aria-labelledby={headingId}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.stopPropagation();
+                    closeDesktopPanel();
+                  }
+                }}
                 className="rounded-xl border border-border-subtle bg-surface-base p-4 xl:p-5"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
@@ -158,8 +183,8 @@ export function FilterDrawerShell({
                 </div>
                 <div tabIndex={0} aria-label="Pilihan filter" className="grid max-h-[min(42dvh,380px)] grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto pr-1 xl:grid-cols-3">{children}</div>
                 <div className="mt-5 flex justify-end gap-2 border-t border-border-subtle pt-3">
-                  <Button variant="ghost" onClick={() => { onOpen?.(); setIsOpen(false); }}>Batal</Button>
-                  <Button onClick={handleApply}>{applyLabel}</Button>
+                  <Button variant="ghost" onClick={closeDesktopPanel}>Batal</Button>
+                  <Button variant="primary" onClick={handleApply}>{applyLabel}</Button>
                 </div>
               </motion.section>
             )}

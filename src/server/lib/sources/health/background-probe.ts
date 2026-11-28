@@ -32,6 +32,7 @@ export interface CachedHealthPayload {
 let nextProbeAttemptAt = 0;
 let inMemoryLockToken: string | null = null;
 let inMemoryCachedPayload: CachedHealthPayload | null = null;
+let inMemoryPayloadExpiresAt = 0;
 
 export function getInMemoryCachedPayload(): CachedHealthPayload | null {
   return inMemoryCachedPayload;
@@ -39,6 +40,12 @@ export function getInMemoryCachedPayload(): CachedHealthPayload | null {
 
 export function setInMemoryCachedPayload(payload: CachedHealthPayload | null): void {
   inMemoryCachedPayload = payload;
+  inMemoryPayloadExpiresAt = payload ? Date.now() + TTL_SECONDS * 1000 : 0;
+}
+
+/** Freshness is based on cache insertion, not an upstream timestamp. */
+export function isInMemoryHealthPayloadFresh(): boolean {
+  return inMemoryCachedPayload !== null && Date.now() < inMemoryPayloadExpiresAt;
 }
 
 /**
@@ -49,7 +56,7 @@ export async function triggerBackgroundProbe(
   registerTask: (task: Promise<void>) => void = () => {},
 ): Promise<boolean> {
   const now = Date.now();
-  if (now < nextProbeAttemptAt) return false;
+  if (isInMemoryHealthPayloadFresh() || now < nextProbeAttemptAt) return false;
   nextProbeAttemptAt = now + PROBE_RETRY_DELAY_MS;
 
   const token =
@@ -107,7 +114,7 @@ export async function triggerBackgroundProbe(
         },
       };
 
-      inMemoryCachedPayload = freshPayload;
+      setInMemoryCachedPayload(freshPayload);
 
       if (isRedisConfigured && isRedisCommandAllowed()) {
         try {

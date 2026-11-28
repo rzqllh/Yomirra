@@ -1,9 +1,12 @@
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
+import { hasReaderPageEvidence } from "@/server/lib/sources/health/probe-coverage";
 import { AlertSeverity } from "./severity";
 import { sendTelegramMessage } from "./telegram-notifier";
 import { logger } from "@/shared/logger";
+import { catalogBudgetSummary } from "@/server/lib/metadata/catalog-budget";
+import { optionalServiceSummary } from "@/server/lib/cache/optional-service-budget";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import {
   failureGuidance,
@@ -82,6 +85,8 @@ export function formatDailyDigest(
     message += "Tidak ada gangguan aktif pada pemeriksaan terbaru\n";
   }
 
+  const readerEvidenceCount = healthy.filter(([, snapshot]) => hasReaderPageEvidence(snapshot)).length;
+  message += `Referensi halaman terverifikasi: ${readerEvidenceCount}/${ids.length} source. Probe katalog bukan uji baca lengkap.\n`;
   if (unmeasuredCount) message += `${unmeasuredCount} belum terukur atau belum diperbarui\n`;
   if (expiredCount) message += `${expiredCount} snapshot kedaluwarsa (>12 jam)\n`;
 
@@ -126,7 +131,8 @@ export async function sendDailyDigest(): Promise<boolean> {
     );
     const sourceIds = activeSources.map((source) => source.id);
     const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);
-    const message = formatDailyDigest(sourceIds, snapshots);
+    const budgets=await Promise.all([catalogBudgetSummary(),optionalServiceSummary("mangabaka"),optionalServiceSummary("gemini"),optionalServiceSummary("mangaupdates"),optionalServiceSummary("sqs")]);
+    const message = formatDailyDigest(sourceIds, snapshots)+"\n\n*Batas layanan opsional*\n"+budgets.join("\n")+"\nMeter billing Vercel/Redis/Firebase/Turso/Gemini: cek dashboard resmi; hitungan ini bukan pemakaian akun.";
 
     return await sendTelegramMessage(message, {
       severity: AlertSeverity.INFO,

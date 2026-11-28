@@ -64,10 +64,10 @@ describe("Listing View Mode & CompactCard", () => {
 
     expect(screen.getByText("Solo Leveling")).not.toBeNull();
     expect(screen.getByText("9.8")).not.toBeNull();
-    expect(screen.getByText("manhwa")).not.toBeNull();
+    expect(screen.getByText("Manhwa")).not.toBeNull();
     expect(screen.getByText("Shinigami")).not.toBeNull();
     expect(screen.getByText("Chapter 200")).not.toBeNull();
-    expect(screen.getByText(/Completed/)).not.toBeNull();
+    expect(screen.getByText(/Tamat/)).not.toBeNull();
     expect(screen.getByRole("button", { name: "Simpan Solo Leveling ke rak" })).not.toBeNull();
   });
 

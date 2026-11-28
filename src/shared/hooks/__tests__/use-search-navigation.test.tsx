@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider, focusManager } from "@tanstack/react-
 import { useSearchCatalog } from "../use-search-catalog";
 import { apiClient } from "@/shared/api-client";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
 import type { SourceMetadata } from "@/shared/sources/source-types";
@@ -239,6 +240,44 @@ describe("search URL navigation", () => {
       expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
         "Latest One",
       ]);
+    });
+  });
+
+  it("excludes disabledSources by default but preserves explicit manual selection", async () => {
+    useSourcePreferencesStore.setState({ disabledSources: ["source-b"] });
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "source-a",
+        name: "Source A",
+        isEnabled: true,
+        isInstalled: true,
+        isNsfw: false,
+        status: "online",
+        capabilities: { search: true, popular: true, latest: true, filters: true },
+      } as any,
+      {
+        id: "source-b",
+        name: "Source B",
+        isEnabled: true,
+        isInstalled: true,
+        isNsfw: false,
+        status: "online",
+        capabilities: { search: true, popular: true, latest: true, filters: true },
+      } as any,
+    ]);
+
+    const { result } = mountSearch();
+    await waitFor(() => {
+      expect(result.current.activeSelectedSources).toEqual(["source-a"]);
+    });
+
+    act(() => {
+      result.current.toggleSource("source-b");
+    });
+
+    await waitFor(() => {
+      expect(useSearchFilterStore.getState().hasCustomizedSources).toBe(true);
+      expect(result.current.activeSelectedSources).toEqual(["source-a", "source-b"]);
     });
   });
 });
