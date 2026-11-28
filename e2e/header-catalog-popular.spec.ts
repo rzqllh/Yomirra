@@ -157,10 +157,12 @@ test("Populer merges matched source cards and fits both tabs in landscape and de
       if (viewport === desktop) {
         await page.setViewportSize(viewport);
         await expect(desktopNav).toBeVisible();
-        const first = (await cards.nth(0).boundingBox())!;
-        const second = (await cards.nth(1).boundingBox())!;
-        expect(Math.abs(first.y - second.y)).toBeLessThanOrEqual(1);
-        expect(first.x + first.width).toBeLessThan(second.x);
+        await expect(async () => {
+          const first = (await cards.nth(0).boundingBox())!;
+          const second = (await cards.nth(1).boundingBox())!;
+          expect(Math.abs(first.y - second.y)).toBeLessThanOrEqual(1);
+          expect(first.x + first.width).toBeLessThan(second.x);
+        }).toPass();
       }
       await expectNoHorizontalOverflow(page);
 
