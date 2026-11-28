@@ -15,7 +15,7 @@ describe("manga card partial-data contract", () => {
 
   it("keeps explicit reader-facing fallbacks for optional metadata", () => {
     expect(source).toContain("Sinopsis belum tersedia");
-    expect(source).toContain("Chapter belum tersedia");
+    expect(source).toContain("Bab terbaru belum tersedia");
     expect(source).toContain('data-card-slot="synopsis"');
     expect(source).toContain('data-card-slot="badges"');
   });

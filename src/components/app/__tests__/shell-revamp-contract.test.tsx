@@ -1,4 +1,5 @@
 import * as React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DesktopRail } from "@/components/chrome/desktop-rail";
@@ -216,7 +217,12 @@ describe("Shell Revamp Regression Coverage", () => {
     });
 
     it("renders the actionable Home search with the platform label", () => {
-      render(<HomeHero />);
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <HomeHero />
+        </QueryClientProvider>
+      );
 
       const heading = screen.getByRole("heading", { level: 1, name: "Mau baca apa hari ini?" });
       expect(heading).toBeTruthy();

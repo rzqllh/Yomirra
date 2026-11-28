@@ -78,7 +78,7 @@ describe("LibraryPageView hierarchy", () => {
     render(<LibraryPageView />);
 
     expect(screen.getByTestId("header-actions")).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 2, name: "Jelajah" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Jelajah" })).toBeTruthy();
     expect(screen.getAllByText("Jelajahi katalog dari sumber yang kamu pilih.").length).toBeGreaterThan(0);
   });
 

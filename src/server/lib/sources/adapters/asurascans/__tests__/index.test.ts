@@ -78,7 +78,7 @@ describe("AsuraScansSource Adapter", () => {
       expect(item.title).toBe("War of Extinction");
       expect(item.coverUrl).toContain("war-of-extinction.f60b25.webp");
       expect(item.status).toBe("ONGOING");
-      expect(item.format).toBe("MANHWA");
+      expect(item.format).toBe("Manhwa");
       expect(item.latestChapter).toBe("Chapter 7");
       expect(item.rank).toBe(140);
       expect(item.score).toBe(8.6);
